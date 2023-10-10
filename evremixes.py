@@ -42,7 +42,8 @@ spinner.succeed(text=colored("Downloaded track details.", "green"))
 default_output_folder = os.path.expanduser("~/Downloads")
 
 # Notify the user of the download location
-print(colored(f"Downloading to {default_output_folder}...", "cyan"))
+album_name = metadata.get("album_name")
+print(colored(f"Downloading {album_name} to {default_output_folder}...", "green"))
 
 # Determine the output folder based on the album name for the entire set of tracks
 album_folder = metadata.get("album_name", "Unknown Album")
