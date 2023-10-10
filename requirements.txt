@@ -1,0 +1,5 @@
+requests==2.26.0
+pydub==0.25.1
+mutagen==1.45.1
+termcolor==1.1.0
+halo==0.0.31

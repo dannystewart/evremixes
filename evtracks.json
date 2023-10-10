@@ -1,0 +1,158 @@
+{
+    "tracks": [
+        {
+            "track_name": "Better Without You",
+            "track_number": 6,
+            "artist_name": "Danny Stewart",
+            "album_artist": "Danny Stewart",
+            "album_name": "Evanescence Remixes",
+            "file_url": "https://files.dannystewart.com/music/ev/Better-Without-You.flac",
+            "year": 2023,
+            "genre": "Electronic",
+            "cover_art_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Evanescence-Remixes-1024x1024.png"
+        },
+        {
+            "track_name": "Bring Me To Life",
+            "track_number": 2,
+            "artist_name": "Danny Stewart",
+            "album_artist": "Danny Stewart",
+            "album_name": "Evanescence Remixes",
+            "file_url": "https://files.dannystewart.com/music/ev/Bring-Me-To-Life.flac",
+            "year": 2023,
+            "genre": "Electronic",
+            "cover_art_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Evanescence-Remixes-1024x1024.png"
+        },
+        {
+            "track_name": "Broken Pieces Shine",
+            "track_number": 7,
+            "artist_name": "Danny Stewart",
+            "album_artist": "Danny Stewart",
+            "album_name": "Evanescence Remixes",
+            "file_url": "https://files.dannystewart.com/music/ev/Broken-Pieces-Shine.flac",
+            "year": 2023,
+            "genre": "Electronic",
+            "cover_art_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Evanescence-Remixes-1024x1024.png"
+        },
+        {
+            "track_name": "Call Me When You're Sober",
+            "track_number": 4,
+            "artist_name": "Danny Stewart",
+            "album_artist": "Danny Stewart",
+            "album_name": "Evanescence Remixes",
+            "file_url": "https://files.dannystewart.com/music/ev/Call-Me-When-Youre-Sober.flac",
+            "year": 2023,
+            "genre": "Electronic",
+            "cover_art_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Evanescence-Remixes-1024x1024.png"
+        },
+        {
+            "track_name": "Everybody's Fool",
+            "track_number": 9,
+            "artist_name": "Danny Stewart",
+            "album_artist": "Danny Stewart",
+            "album_name": "Evanescence Remixes",
+            "file_url": "https://files.dannystewart.com/music/ev/Everybodys-Fool.flac",
+            "year": 2023,
+            "genre": "Electronic",
+            "cover_art_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Evanescence-Remixes-1024x1024.png"
+        },
+        {
+            "track_name": "Going Under",
+            "track_number": 3,
+            "artist_name": "Danny Stewart",
+            "album_artist": "Danny Stewart",
+            "album_name": "Evanescence Remixes",
+            "file_url": "https://files.dannystewart.com/music/ev/Going-Under.flac",
+            "year": 2023,
+            "genre": "Electronic",
+            "cover_art_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Evanescence-Remixes-1024x1024.png"
+        },
+        {
+            "track_name": "Imaginary",
+            "track_number": 10,
+            "artist_name": "Danny Stewart",
+            "album_artist": "Danny Stewart",
+            "album_name": "Evanescence Remixes",
+            "file_url": "https://files.dannystewart.com/music/ev/Imaginary.flac",
+            "year": 2023,
+            "genre": "Electronic",
+            "cover_art_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Evanescence-Remixes-1024x1024.png"
+        },
+        {
+            "track_name": "Lithium",
+            "track_number": 12,
+            "artist_name": "Danny Stewart",
+            "album_artist": "Danny Stewart",
+            "album_name": "Evanescence Remixes",
+            "file_url": "https://files.dannystewart.com/music/ev/Lithium.flac",
+            "year": 2023,
+            "genre": "Electronic",
+            "cover_art_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Evanescence-Remixes-1024x1024.png"
+        },
+        {
+            "track_name": "My Heart Is Broken",
+            "track_number": 14,
+            "artist_name": "Danny Stewart",
+            "album_artist": "Danny Stewart",
+            "album_name": "Evanescence Remixes",
+            "file_url": "https://files.dannystewart.com/music/ev/My-Heart-Is-Broken.flac",
+            "year": 2023,
+            "genre": "Electronic",
+            "cover_art_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Evanescence-Remixes-1024x1024.png"
+        },
+        {
+            "track_name": "My Last Breath",
+            "track_number": 13,
+            "artist_name": "Danny Stewart",
+            "album_artist": "Danny Stewart",
+            "album_name": "Evanescence Remixes",
+            "file_url": "https://files.dannystewart.com/music/ev/My-Last-Breath.flac",
+            "year": 2023,
+            "genre": "Electronic",
+            "cover_art_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Evanescence-Remixes-1024x1024.png"
+        },
+        {
+            "track_name": "Taking Over Me",
+            "track_number": 11,
+            "artist_name": "Danny Stewart",
+            "album_artist": "Danny Stewart",
+            "album_name": "Evanescence Remixes",
+            "file_url": "https://files.dannystewart.com/music/ev/Taking-Over-Me.flac",
+            "year": 2023,
+            "genre": "Electronic",
+            "cover_art_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Evanescence-Remixes-1024x1024.png"
+        },
+        {
+            "track_name": "The Game Is Over",
+            "track_number": 8,
+            "artist_name": "Danny Stewart",
+            "album_artist": "Danny Stewart",
+            "album_name": "Evanescence Remixes",
+            "file_url": "https://files.dannystewart.com/music/ev/The-Game-Is-Over.flac",
+            "year": 2023,
+            "genre": "Electronic",
+            "cover_art_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Evanescence-Remixes-1024x1024.png"
+        },
+        {
+            "track_name": "Use My Voice",
+            "track_number": 5,
+            "artist_name": "Danny Stewart",
+            "album_artist": "Danny Stewart",
+            "album_name": "Evanescence Remixes",
+            "file_url": "https://files.dannystewart.com/music/ev/Use-My-Voice.flac",
+            "year": 2023,
+            "genre": "Electronic",
+            "cover_art_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Evanescence-Remixes-1024x1024.png"
+        },
+        {
+            "track_name": "What You Want",
+            "track_number": 1,
+            "artist_name": "Danny Stewart",
+            "album_artist": "Danny Stewart",
+            "album_name": "Evanescence Remixes",
+            "file_url": "https://files.dannystewart.com/music/ev/What-You-Want.flac",
+            "year": 2023,
+            "genre": "Electronic",
+            "cover_art_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Evanescence-Remixes-1024x1024.png"
+        }
+    ]
+}
