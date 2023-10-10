@@ -2,8 +2,6 @@
 
 Download script for my Evanescence remixes. Grabs a JSON file containing a list of remixes and metadata, then downloads, converts to ALAC, adds metadata and cover art, and renames files. Ready for import into Apple Music!
 
-JSON is `evtracks.json` and is hosted [on my music site](https://music.dannystewart.com/wp-content/uploads/sites/2/evtracks.json).
-
 ## Setup
 
 1. Install [Homebrew](https://brew.sh) if you don't already have it: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
