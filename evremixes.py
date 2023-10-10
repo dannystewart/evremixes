@@ -123,4 +123,4 @@ for track in track_data["tracks"]:
     # Remove the FLAC file
     os.remove(flac_file_path)
 
-print(colored("\nAll tracks downloaded and ready!", "green"))
+print(colored("\nAll tracks downloaded and ready! Enjoy!", "green"))
