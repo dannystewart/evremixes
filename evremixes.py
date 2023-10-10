@@ -1,12 +1,14 @@
 import json
-import requests
 import os
+import requests
 import shutil
-from pydub import AudioSegment
-from mutagen.mp4 import MP4, MP4Cover
-from termcolor import colored
-from halo import Halo
 from getch import getch
+from halo import Halo
+from io import BytesIO
+from mutagen.mp4 import MP4, MP4Cover
+from PIL import Image
+from pydub import AudioSegment
+from termcolor import colored
 
 spinner = Halo(text="Initializing", spinner="dots")
 
@@ -22,7 +24,17 @@ metadata = track_data.get("metadata", {})
 
 # Download cover art
 cover_response = requests.get(metadata.get("cover_art_url", ""))
-cover_data = cover_response.content
+cover_data_original = cover_response.content
+
+# Convert to JPEG and resize to 800x800 using PIL
+image = Image.open(BytesIO(cover_data_original))
+image = image.convert("RGB")  # Convert to RGB if image is not in this mode
+image = image.resize((800, 800))
+
+# Save the image data to a BytesIO object, then to a byte array
+buffered = BytesIO()
+image.save(buffered, format="JPEG")
+cover_data = buffered.getvalue()
 
 spinner.succeed(text=colored("Downloaded track details.", "green"))
 
