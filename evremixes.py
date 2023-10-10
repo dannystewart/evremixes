@@ -10,7 +10,7 @@ spinner = Halo(text="Initializing", spinner="dots")
 
 # Download and load the JSON file with track details
 spinner.start(text=colored("Downloading track details...", "cyan"))
-response = requests.get("https://music.dannystewart.com/wp-content/uploads/sites/2/evtracks.json")
+response = requests.get("https://git.dannystewart.com/danny/evremixes/raw/branch/main/evtracks.json")
 track_data = json.loads(response.text)
 spinner.succeed(text=colored("Downloaded track details.", "green"))
 
