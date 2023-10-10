@@ -52,7 +52,10 @@ if os.path.exists(output_folder) and os.listdir(output_folder):
         end="",
     )
     remove_files = getch().lower()  # Get a single character and convert to lowercase
-    print(remove_files)  # Echo the character
+
+    # Replace newline with space for display purposes
+    echo_char = remove_files if remove_files != "\n" else " "
+    print(echo_char)  # Echo the character
 
     # Default to 'y' if the user just hits Enter
     if remove_files == "\n" or remove_files == "y":
