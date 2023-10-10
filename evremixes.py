@@ -105,6 +105,7 @@ for track in track_data["tracks"]:
         audio = MP4(m4a_file_path)
         audio["trkn"] = [(track.get("track_number", 0), 0)]
         audio["\xa9nam"] = track.get("track_name", "")
+        audio["\xa9ART"] = metadata.get("artist_name", "")
         audio["\xa9alb"] = metadata.get("album_name", "")
         audio["\xa9day"] = str(metadata.get("year", ""))
         audio["\xa9gen"] = metadata.get("genre", "")
