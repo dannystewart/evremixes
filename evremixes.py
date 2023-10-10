@@ -1,16 +1,20 @@
 import json
 import requests
 import os
+import shutil
 from pydub import AudioSegment
 from mutagen.mp4 import MP4, MP4Cover
 from termcolor import colored
 from halo import Halo
+from getch import getch
 
 spinner = Halo(text="Initializing", spinner="dots")
 
 # Download and load the JSON file with track details
 spinner.start(text=colored("Downloading track details...", "cyan"))
-response = requests.get("https://git.dannystewart.com/danny/evremixes/raw/branch/main/evtracks.json")
+response = requests.get(
+    "https://git.dannystewart.com/danny/evremixes/raw/branch/main/evtracks.json"
+)
 track_data = json.loads(response.text)
 spinner.succeed(text=colored("Downloaded track details.", "green"))
 
@@ -20,11 +24,38 @@ output_base_folder = (
     input(
         colored(
             f"Enter output directory (hit Enter for {default_output_folder}): ",
-            "magenta",
+            "cyan",
         )
     )
     or default_output_folder
 )
+
+# Check if the folder exists and has files
+if os.path.exists(output_base_folder) and os.listdir(output_base_folder):
+    print(
+        colored(
+            "The folder already exists and contains files. Remove them? (Y/n): ",
+            "yellow",
+        ),
+        end="",
+    )
+    remove_files = getch().lower()  # Get a single character and convert to lowercase
+    print(remove_files)  # Echo the character
+
+    # Default to 'y' if the user just hits Enter
+    if remove_files == "\n" or remove_files == "y":
+        remove_files = "y"
+
+    if remove_files == "y":
+        for filename in os.listdir(output_base_folder):
+            file_path = os.path.join(output_base_folder, filename)
+            try:
+                if os.path.isfile(file_path) or os.path.islink(file_path):
+                    os.unlink(file_path)
+                elif os.path.isdir(file_path):
+                    shutil.rmtree(file_path)
+            except Exception as e:
+                print(f"Failed to delete {file_path}. Reason: {e}")
 
 if not os.path.exists(output_base_folder):
     os.makedirs(output_base_folder)
@@ -38,6 +69,7 @@ track_data["tracks"] = sorted(
 for track in track_data["tracks"]:
     track_name = track["track_name"]
     track_number = str(track.get("track_number", "")).zfill(2)
+    track_number_short = str(track.get("track_number", ""))
 
     # Determine the output folder based on the album name for the track
     album_folder = track.get("album_name", "Unknown Album")
@@ -46,7 +78,7 @@ for track in track_data["tracks"]:
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
-    print(f"Processing {track_name}...")
+    print(f"Processing track {track_number_short}, {track_name}...")
 
     # Download FLAC file
     with Halo(text=colored("Downloading FLAC file...", "cyan"), spinner="dots"):
@@ -89,4 +121,4 @@ for track in track_data["tracks"]:
     # Remove the FLAC file
     os.remove(flac_file_path)
 
-print(colored("All tracks processed!", "green"))
+print(colored("\nAll tracks downloaded and ready!", "green"))
