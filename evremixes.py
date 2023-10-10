@@ -38,60 +38,39 @@ cover_data = buffered.getvalue()
 
 spinner.succeed(text=colored("Downloaded track details.", "green"))
 
-# Ask the user for the output directory
+# Set the default output folder to the Downloads directory under the user's home folder
 default_output_folder = os.path.expanduser("~/Downloads")
-output_base_folder = (
-    input(
-        colored(
-            f"Enter output directory (hit Enter for {default_output_folder}): ",
-            "cyan",
-        )
-    )
-    or default_output_folder
-)
+
+# Notify the user of the download location
+print(colored(f"Downloading to {default_output_folder}...", "cyan"))
 
 # Determine the output folder based on the album name for the entire set of tracks
 album_folder = metadata.get("album_name", "Unknown Album")
-output_folder = os.path.join(output_base_folder, album_folder)
+output_folder = os.path.join(default_output_folder, album_folder)
 
-# Check if the folder exists and has files
-if os.path.exists(output_folder) and os.listdir(output_folder):
+# Check and create folders
+if not os.path.exists(output_folder):
+    os.makedirs(output_folder)
+elif os.listdir(output_folder):  # Folder exists and has files
     print(
         colored(
-            "The folder already exists and contains files. Remove them? (Y/n): ",
+            "The folder already exists and contains files. Emptying folder...",
             "yellow",
-        ),
-        end="",
+        )
     )
-    remove_files = getch().lower()  # Get a single character and convert to lowercase
 
-    # Replace newline with space for display purposes
-    echo_char = remove_files if remove_files != "\n" else " "
-    print(echo_char)  # Echo the character
+    # Deletion code for existing files
+    for filename in os.listdir(output_folder):
+        file_path = os.path.join(output_folder, filename)
+        try:
+            if os.path.isfile(file_path) or os.path.islink(file_path):
+                os.unlink(file_path)
+            elif os.path.isdir(file_path):
+                shutil.rmtree(file_path)
+        except Exception as e:
+            print(f"Failed to delete {file_path}. Reason: {e}")
 
-    # Default to 'y' if the user just hits Enter
-    if remove_files == "\n" or remove_files == "y":
-        remove_files = "y"
-
-    # Only execute the delete code if output_folder is a subdirectory of output_base_folder,
-    # not output_base_folder itself
-    if os.path.commonpath([output_folder, output_base_folder]) == output_base_folder and \
-        output_folder != output_base_folder:
-
-        if remove_files == "y":
-            for filename in os.listdir(output_folder):
-                file_path = os.path.join(output_folder, filename)
-                try:
-                    if os.path.isfile(file_path) or os.path.islink(file_path):
-                        os.unlink(file_path)
-                    elif os.path.isdir(file_path):
-                        shutil.rmtree(file_path)
-                except Exception as e:
-                    print(f"Failed to delete {file_path}. Reason: {e}")
-
-    else:
-        print("Deletion aborted: Target folder is not a subfolder of the base directory.")
-
+# Create the output folder if it doesn't exist
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
 
@@ -105,13 +84,6 @@ for track in track_data["tracks"]:
     track_name = track["track_name"]
     track_number = str(track.get("track_number", "")).zfill(2)
     track_number_short = str(track.get("track_number", ""))
-
-    # Determine the output folder based on the album name for the track
-    album_folder = metadata.get("album_name", "Unknown Album")
-    output_folder = os.path.join(output_base_folder, album_folder)
-
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
 
     print(f"Processing track {track_number_short}, {track_name}...")
 
