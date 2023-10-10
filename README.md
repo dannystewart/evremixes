@@ -27,6 +27,13 @@ chmod +x evremixes
 ./evremixes
 ```
 
+### Unbelievably Lazy But Extremely Cool Method
+
+Just run this one command and watch the magic happen:
+```bash
+/bin/bash -c "$(curl -fsSL https://dnst.me/evdl)"
+```
+
 ### How to update/replace albums/songs in Apple Music
 
 It's always easiest if you have metadata on the files before importing. [Meta](https://www.nightbirdsevolve.com/meta/) is a great app for this, but you don't need to worry about it here as that's the point of this script, obviously.

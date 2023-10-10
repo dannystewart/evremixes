@@ -32,6 +32,7 @@ echo -e "${GREEN}Running evremixes...${NC}"
 "${temp_dir}/evremixes"
 
 # Clean up by removing the temporary directory
-echo -e "${GREEN}Cleaning up...${NC}"
+echo ""
+echo -e "${GREEN}Cleaning up temporary files...${NC}"
 rm -r "${temp_dir}"
 echo -e "${GREEN}Done!${NC}"
