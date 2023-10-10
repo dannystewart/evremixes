@@ -31,7 +31,7 @@ chmod +x evremixes
 
 Just run this one command and watch the magic happen:
 ```bash
-/bin/bash -c "$(curl -fsSL https://dnst.me/evdl)"
+bash -c "$(curl -fsSL https://dnst.me/evdl)"
 ```
 
 ### How to update/replace albums/songs in Apple Music
