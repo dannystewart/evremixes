@@ -43,7 +43,7 @@ default_output_folder = os.path.expanduser("~/Downloads")
 
 # Notify the user of the download location
 album_name = metadata.get("album_name")
-print(colored(f"Downloading {album_name} to {default_output_folder}...", "green"))
+print(colored(f"Downloading {album_name} to {default_output_folder}...", "cyan"))
 
 # Determine the output folder based on the album name for the entire set of tracks
 album_folder = metadata.get("album_name", "Unknown Album")
