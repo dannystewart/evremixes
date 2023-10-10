@@ -15,7 +15,15 @@ spinner.start(text=colored("Downloading track details...", "cyan"))
 response = requests.get(
     "https://git.dannystewart.com/danny/evremixes/raw/branch/main/evtracks.json"
 )
+
+# Download track and album metadata
 track_data = json.loads(response.text)
+metadata = track_data.get("metadata", {})
+
+# Download cover art
+cover_response = requests.get(metadata.get("cover_art_url", ""))
+cover_data = cover_response.content
+
 spinner.succeed(text=colored("Downloaded track details.", "green"))
 
 # Ask the user for the output directory
@@ -30,8 +38,12 @@ output_base_folder = (
     or default_output_folder
 )
 
+# Determine the output folder based on the album name for the entire set of tracks
+album_folder = metadata.get("album_name", "Unknown Album")
+output_folder = os.path.join(output_base_folder, album_folder)
+
 # Check if the folder exists and has files
-if os.path.exists(output_base_folder) and os.listdir(output_base_folder):
+if os.path.exists(output_folder) and os.listdir(output_folder):
     print(
         colored(
             "The folder already exists and contains files. Remove them? (Y/n): ",
@@ -57,8 +69,8 @@ if os.path.exists(output_base_folder) and os.listdir(output_base_folder):
             except Exception as e:
                 print(f"Failed to delete {file_path}. Reason: {e}")
 
-if not os.path.exists(output_base_folder):
-    os.makedirs(output_base_folder)
+if not os.path.exists(output_folder):
+    os.makedirs(output_folder)
 
 # Sort tracks by track number
 track_data["tracks"] = sorted(
@@ -72,7 +84,7 @@ for track in track_data["tracks"]:
     track_number_short = str(track.get("track_number", ""))
 
     # Determine the output folder based on the album name for the track
-    album_folder = track.get("album_name", "Unknown Album")
+    album_folder = metadata.get("album_name", "Unknown Album")
     output_folder = os.path.join(output_base_folder, album_folder)
 
     if not os.path.exists(output_folder):
@@ -93,24 +105,18 @@ for track in track_data["tracks"]:
         audio = AudioSegment.from_file(flac_file_path, format="flac")
         audio.export(m4a_file_path, format="ipod", codec="alac")
 
-    # Download cover art
-    with Halo(text=colored("Downloading cover art...", "cyan"), spinner="dots"):
-        cover_response = requests.get(track.get("cover_art_url", ""))
-        cover_data = cover_response.content
-
     # Add metadata and cover art using mutagen
     with Halo(text=colored("Adding metadata and cover art...", "cyan"), spinner="dots"):
         audio = MP4(m4a_file_path)
-        audio["\xa9nam"] = track.get("track_name", "")
-        audio["\xa9ART"] = track.get("artist_name", "")
-        audio["\xa9alb"] = track.get("album_name", "")
         audio["trkn"] = [(track.get("track_number", 0), 0)]
-        audio["\xa9day"] = str(track.get("year", ""))
-        audio["\xa9gen"] = track.get("genre", "")
+        audio["\xa9nam"] = track.get("track_name", "")
+        audio["\xa9alb"] = metadata.get("album_name", "")
+        audio["\xa9day"] = str(metadata.get("year", ""))
+        audio["\xa9gen"] = metadata.get("genre", "")
         audio["covr"] = [MP4Cover(cover_data, imageformat=MP4Cover.FORMAT_JPEG)]
 
-        if "album_artist" in track:
-            audio["aART"] = track["album_artist"]
+        if "album_artist" in metadata:
+            audio["aART"] = metadata.get("album_artist", "")
         if "comments" in track:
             audio["\xa9cmt"] = track["comments"]
 
