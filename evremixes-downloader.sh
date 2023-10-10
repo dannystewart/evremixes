@@ -28,6 +28,7 @@ fi
 chmod +x "${temp_dir}/evremixes"
 
 # Run the program
+echo -e "${GREEN}Running evremixes...${NC}"
 "${temp_dir}/evremixes"
 
 # Clean up by removing the temporary directory
