@@ -13,11 +13,19 @@ Download script for my Evanescence remixes. Grabs a JSON file containing a list 
 
 Just run the script: `python evremixes.py`
 
-It'll ask for a directory to download to. It defaults to `~/Downloads`, so just hit Enter if that's what you want*.
-
-It'll proceed to download into a subfolder by album name, adding metadata and cover artwork. They'll be named by track number and name, and can be imported directly into Apple Music.
+It'll ask for a directory to download to. It defaults to `~/Downloads`, so just hit Enter if that's what you want*. It'll proceed to download into a subfolder by album name, adding metadata and cover artwork. They'll be named by track number and name, and can be imported directly into Apple Music.
 
 *\*(you know, like the song)*
+
+### Lazy Method
+
+If you're lazy and can't or don't want to install Python and its dependencies, you can just run the executable in the `dist` directory:
+
+```bash
+cd dist
+chmod +x evremixes
+./evremixes
+```
 
 ### How to update/replace albums/songs in Apple Music
 
