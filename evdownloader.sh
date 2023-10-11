@@ -124,7 +124,7 @@ for i in $(seq 0 $(($length - 1))); do
     final_filename="$output_folder/$formatted_track_number - $track_name.m4a"
 
     # Use curl to download the file
-    echo -n "Downloading ${track_name}..."
+    echo -n "[$((i + 1))/$length] Downloading ${track_name}..."
     curl --fail-early -s "$m4a_url" -o "$temp_filename" &
     CURL_PID=$!
     spin $CURL_PID
@@ -133,10 +133,10 @@ for i in $(seq 0 $(($length - 1))); do
 
     # Overwrite the line depending on success or failure
     if [ $CURL_EXIT_STATUS -ne 0 ]; then
-        echo -e "\r${RED}Download failed for ${track_name}${NC}       " # Extra spaces to clear the spinner
+        echo -e "\r${RED}Download failed for ${track_name}${NC}            " # Extra spaces to clear the spinner
     else
         mv "$temp_filename" "$final_filename"
-        echo -e "\r${GREEN}✔ ${track_name}${NC}                       " # Extra spaces to clear the spinner
+        echo -e "\r${GREEN}✔ ${track_name}${NC}                            " # Extra spaces to clear the spinner
     fi
 done
 
