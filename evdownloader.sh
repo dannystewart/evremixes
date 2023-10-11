@@ -58,9 +58,26 @@ if ! command -v jq >/dev/null 2>&1; then
 
     # Check if Homebrew is installed
     if command -v brew >/dev/null 2>&1; then
-        echo -e "${GREEN}Homebrew is installed. Attempting to install jq.${NC}"
-        brew install jq
-        clear
+        echo -n "Homebrew detected. Attempting to install jq..."
+
+        # Run brew install in the background and capture its PID
+        brew install jq >/dev/null 2>&1 &
+        BREW_PID=$!
+
+        # Show the spinner
+        spin $BREW_PID
+
+        # Check the exit status
+        wait $BREW_PID
+        BREW_EXIT_STATUS=$?
+
+        if [ $BREW_EXIT_STATUS -ne 0 ]; then
+            echo -e "\r${RED}Installation failed for jq${NC}       "  # Extra spaces to clear the spinner
+            exit 1
+        else
+            echo -e "\r${GREEN}✔ jq installed successfully${NC}      "  # Extra spaces to clear the spinner
+        fi
+
     else
         echo -e "${RED}Error: Homebrew is not installed, and jq could not be automatically installed. Please install jq manually before running this script.${NC}"
         exit 1
