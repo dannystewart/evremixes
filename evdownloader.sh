@@ -50,7 +50,7 @@ if ! command -v jq >/dev/null 2>&1; then
 fi
 
 # Welcome message
-echo -e "${BLUE}Welcome to Danny's automatic Evanescence remix downloader!${NC}"
+echo -e "${BLUE}Welcome to Danny's Evanescence remix downloader!${NC}"
 echo -e "${BLUE}Files will be saved under \"Evanescence Remixes\" in your Downloads folder.${NC}"
 
 echo ""
