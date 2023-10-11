@@ -10,6 +10,23 @@ NC='\033[0m' # No Color
 output_folder="$HOME/Downloads/Evanescence Remixes"
 kill_switch=0
 
+# Spinner function
+spin() {
+    local pid=$1
+    local delay=0.1
+    local spinstr='|/-\'
+    tput civis # Hide cursor
+    while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
+        local temp=${spinstr#?}
+        printf " [%c]  " "$spinstr"
+        local spinstr=$temp${spinstr%"$temp"}
+        sleep $delay
+        printf "\b\b\b\b\b\b"
+    done
+    tput cnorm # Restore cursor
+    printf "    \b\b\b\b"
+}
+
 # Cleanup function to remove temp files
 cleanup() {
     kill_switch=1
@@ -50,6 +67,7 @@ if ! command -v jq >/dev/null 2>&1; then
 fi
 
 # Welcome message
+echo ""
 echo -e "${GREEN}Downloading Evanescence Remixes to your Downloads folder...${NC}"
 
 # Fetch JSON and store it in a variable, sorting tracks by track_number
@@ -57,14 +75,14 @@ json_data=$(curl -s "https://git.dannystewart.com/danny/evremixes/raw/branch/mai
 
 # Create output folder if it doesn't exist, and handle old files if it does
 if [ -d "$output_folder" ]; then
-    echo -ne "${YELLOW}Folder exists; removing old files to avoid conflicts... ${NC}"
     find "$output_folder" \( -name "*.m4a" -o -name "*.m4a.temp" \) -type f -exec rm -f {} +
-    echo -e "${YELLOW}done!${NC}"
+    echo -e "${YELLOW}Folder already existed; removed previous files to avoid conflicts.${NC}"
 else
     mkdir -p "$output_folder"
 fi
 
 echo ""
+
 
 # Loop over each track in the JSON array
 length=$(echo "$json_data" | jq '.tracks | length')
@@ -87,19 +105,22 @@ for i in $(seq 0 $(($length - 1))); do
     temp_filename="$output_folder/$formatted_track_number - $track_name.m4a.temp"
     final_filename="$output_folder/$formatted_track_number - $track_name.m4a"
 
-    # Download .m4a file to temporary filename
-    echo -n "Downloading $track_name... "
-    if curl --fail-early -s "$m4a_url" -o "$temp_filename"; then
-        if [ -f "$temp_filename" ]; then
-            mv "$temp_filename" "$final_filename"
-            echo -e "${GREEN}done!${NC}"
-        else
-            echo -e "${YELLOW}File not found. Skipping.${NC}"
-        fi
+    # Use curl to download the file
+    echo -n "Downloading ${track_name}..."
+    curl --fail-early -s "$m4a_url" -o "$temp_filename" &
+    CURL_PID=$!
+    spin $CURL_PID
+    wait $CURL_PID
+    CURL_EXIT_STATUS=$?
+
+    # Overwrite the line depending on success or failure
+    if [ $CURL_EXIT_STATUS -ne 0 ]; then
+        echo -e "\r${RED}Download failed for ${track_name}${NC}       " # Extra spaces to clear the spinner
     else
-        echo -e "${RED}Download failed. Skipping.${NC}"
+        mv "$temp_filename" "$final_filename"
+        echo -e "\r${GREEN}✔ ${track_name}${NC}                       " # Extra spaces to clear the spinner
     fi
 done
 
 echo ""
-echo -e "${GREEN}All tracks downloaded!${NC}"
+echo -e "${GREEN}All tracks downloaded! Enjoy!${NC}"
