@@ -35,6 +35,20 @@ trap cleanup EXIT SIGTERM
 # Separate Trap to call ctrl_c function on SIGINT
 trap ctrl_c SIGINT
 
+# Check for jq dependency
+if ! command -v jq >/dev/null 2>&1; then
+    echo -e "${YELLOW}jq is not installed.${NC}"
+
+    # Check if Homebrew is installed
+    if command -v brew >/dev/null 2>&1; then
+        echo -e "${GREEN}Homebrew is installed. Attempting to install jq.${NC}"
+        brew install jq
+    else
+        echo -e "${RED}Error: Homebrew is not installed, and jq could not be automatically installed. Please install jq manually before running this script.${NC}"
+        exit 1
+    fi
+fi
+
 # Welcome message
 echo -e "${BLUE}Welcome to Danny's automatic Evanescence remix downloader!${NC}"
 echo -e "${BLUE}Files will be saved under \"Evanescence Remixes\" in your Downloads folder.${NC}"
