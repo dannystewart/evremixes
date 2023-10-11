@@ -86,7 +86,7 @@ fi
 
 # Welcome message
 echo ""
-echo -e "${GREEN}Downloading Evanescence Remixes to your Downloads folder...${NC}"
+echo -e "${GREEN}Saving Evanescence Remixes to ~/Downloads...${NC}"
 
 # Fetch JSON and store it in a variable, sorting tracks by track_number
 json_data=$(curl -s "https://git.dannystewart.com/danny/evremixes/raw/branch/main/evtracks.json" | jq '(.tracks |= sort_by(.track_number))')
@@ -94,7 +94,7 @@ json_data=$(curl -s "https://git.dannystewart.com/danny/evremixes/raw/branch/mai
 # Create output folder if it doesn't exist, and handle old files if it does
 if [ -d "$output_folder" ]; then
     find "$output_folder" \( -name "*.m4a" -o -name "*.m4a.temp" \) -type f -exec rm -f {} +
-    echo -e "${YELLOW}Folder already exists; removed old files to avoid conflicts.${NC}"
+    echo -e "${YELLOW}Folder already exists; older files removed.${NC}"
 else
     mkdir -p "$output_folder"
 fi
