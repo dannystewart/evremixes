@@ -3,32 +3,64 @@
 # Color codes
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
+BLUE='\033[0;34m'
+RED='\033[0;31m'
 NC='\033[0m' # No Color
+
+output_folder="$HOME/Downloads/Evanescence Remixes"
+kill_switch=0
 
 # Cleanup function to remove temp files
 cleanup() {
-    find "$output_folder" -name "*.m4a.temp" -type f -exec rm -f {} +
+    kill_switch=1
+    if [ -d "$output_folder" ]; then
+        find "$output_folder" -name "*.m4a.temp" -type f -exec rm -f {} +
+        if [ "$(find "$output_folder" -maxdepth 0 -empty 2>/dev/null)" ]; then
+            rmdir "$output_folder"
+        fi
+    fi
 }
 
-# Trap to call cleanup function on EXIT, SIGINT, SIGTERM
-trap cleanup EXIT SIGINT SIGTERM
+# New trap function to only set kill_switch for SIGINT
+ctrl_c() {
+    kill_switch=1
+    echo ""
+    echo -e "${RED}Script aborted. Exiting.${NC}"
+    exit 1
+}
+
+# Trap to call cleanup function on EXIT, SIGTERM
+trap cleanup EXIT SIGTERM
+
+# Separate Trap to call ctrl_c function on SIGINT
+trap ctrl_c SIGINT
+
+# Welcome message
+echo -e "${BLUE}Welcome to Danny's automatic Evanescence remix downloader!${NC}"
+echo -e "${BLUE}Files will be saved under \"Evanescence Remixes\" in your Downloads folder.${NC}"
+
+echo ""
 
 # Fetch JSON and store it in a variable, sorting tracks by track_number
 json_data=$(curl -s "https://git.dannystewart.com/danny/evremixes/raw/branch/main/evtracks.json" | jq '(.tracks |= sort_by(.track_number))')
 
-# Create output folder if it doesn't exist
-output_folder="$HOME/Downloads/Evanescence Remixes"
-mkdir -p "$output_folder"
-
-# If folder exists, remove any existing .m4a and .m4a.temp files
+# Create output folder if it doesn't exist, and handle old files if it does
 if [ -d "$output_folder" ]; then
-    echo -e "${YELLOW}Folder already exists; removing old files to avoid conflicts.${NC}"
+    echo -e "${YELLOW}Folder already exists; removing any old files to avoid potential conflicts.${NC}"
     find "$output_folder" \( -name "*.m4a" -o -name "*.m4a.temp" \) -type f -exec rm -f {} +
+else
+    mkdir -p "$output_folder"
 fi
 
 # Loop over each track in the JSON array
 length=$(echo "$json_data" | jq '.tracks | length')
 for i in $(seq 0 $(($length - 1))); do
+
+    if [ $kill_switch -eq 1 ]; then
+        echo -e "${RED}Script aborted. Exiting.${NC}"
+        exit 1
+    fi
+
     track_name=$(echo "$json_data" | jq -r ".tracks[$i].track_name")
     file_url=$(echo "$json_data" | jq -r ".tracks[$i].file_url")
     track_number=$(echo "$json_data" | jq -r ".tracks[$i].track_number")
@@ -43,11 +75,16 @@ for i in $(seq 0 $(($length - 1))); do
 
     # Download .m4a file to temporary filename
     echo -n "Downloading $track_name... "
-    curl -s "$m4a_url" -o "$temp_filename"
-
-    # Move temporary file to final filename
-    mv "$temp_filename" "$final_filename"
-    echo -e "${GREEN}done!${NC}"
+    if curl --fail-early -s "$m4a_url" -o "$temp_filename"; then
+        if [ -f "$temp_filename" ]; then
+            mv "$temp_filename" "$final_filename"
+            echo -e "${GREEN}done!${NC}"
+        else
+            echo -e "${YELLOW}File not found. Skipping.${NC}"
+        fi
+    else
+        echo -e "${RED}Download failed. Skipping.${NC}"
+    fi
 done
 
 echo ""
