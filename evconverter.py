@@ -2,6 +2,7 @@ import json
 import os
 import requests
 import shutil
+import tempfile
 from halo import Halo
 from io import BytesIO
 from mutagen.mp4 import MP4, MP4Cover
@@ -38,105 +39,73 @@ cover_data = buffered.getvalue()
 
 spinner.succeed(text=colored("Downloaded track details.", "green"))
 
-# Set the default output folder to the Downloads directory under the user's home folder
-default_output_folder = os.path.expanduser("~/Downloads")
-
-# Notify the user of the download location
-album_name = metadata.get("album_name")
-print(colored(f"Downloading {album_name} to {default_output_folder}...", "cyan"))
-
-# Determine the output folder based on the album name for the entire set of tracks
-album_folder = metadata.get("album_name", "Unknown Album")
-output_folder = os.path.join(default_output_folder, album_folder)
-
-# Check and create folders
-if not os.path.exists(output_folder):
-    os.makedirs(output_folder)
-elif os.listdir(output_folder):  # Folder exists and has files
-    print(
-        colored(
-            "The folder already exists and contains files. Emptying folder...",
-            "yellow",
-        )
-    )
-
-    # Deletion code for existing files
-    for filename in os.listdir(output_folder):
-        file_path = os.path.join(output_folder, filename)
-        try:
-            if os.path.isfile(file_path) or os.path.islink(file_path):
-                os.unlink(file_path)
-            elif os.path.isdir(file_path):
-                shutil.rmtree(file_path)
-        except Exception as e:
-            print(f"Failed to delete {file_path}. Reason: {e}")
-
-# Create the output folder if it doesn't exist
-if not os.path.exists(output_folder):
-    os.makedirs(output_folder)
-
 # Initialize the Blob Service Client
 connection_string = "DefaultEndpointsProtocol=https;AccountName=dsfilestorage01;AccountKey=dc72ueJf/VyNC5rNCrjb19vx3TmXDDim2/9gwl73rQOKh9WptyFqhtMy3IXCaiOHHOHzXfGOTWvFZMhtZIEWeg==;EndpointSuffix=core.windows.net"
 blob_service_client = BlobServiceClient.from_connection_string(connection_string)
-
 container_name = "music"
 container_client = blob_service_client.get_container_client(container_name)
 
-# Loop through each track
-for track in track_data["tracks"]:
-    track_name = track["track_name"]
-    file_url = track["file_url"]
-    original_filename = os.path.basename(file_url)
-    original_filename_without_extension = os.path.splitext(original_filename)[0]
+# Create temp directory for downloads and conversions
+with tempfile.TemporaryDirectory() as tmpdirname:
+    output_folder = tmpdirname
 
-    print(f"Processing {track_name}...")
+    # Loop through each track
+    for track in track_data["tracks"]:
+        track_name = track["track_name"]
+        file_url = track["file_url"]
+        original_filename = os.path.basename(file_url)
+        original_filename_without_extension = os.path.splitext(original_filename)[0]
 
-    # Download FLAC file
-    with Halo(text=colored("Downloading FLAC file...", "cyan"), spinner="dots"):
-        flac_file_path = f"{output_folder}/{original_filename}"
-        response = requests.get(file_url)
-        with open(flac_file_path, "wb") as f:
-            f.write(response.content)
+        print(f"Processing {track_name}...")
 
-    # Convert FLAC to ALAC (M4A)
-    with Halo(text=colored("Converting FLAC to ALAC...", "cyan"), spinner="dots"):
-        m4a_file_path = f"{output_folder}/{original_filename_without_extension}.m4a"
-        audio = AudioSegment.from_file(flac_file_path, format="flac")
-        audio.export(m4a_file_path, format="ipod", codec="alac")
+        # Download FLAC file
+        with Halo(text=colored("Downloading FLAC file...", "cyan"), spinner="dots"):
+            flac_file_path = f"{output_folder}/{original_filename}"
+            response = requests.get(file_url)
+            with open(flac_file_path, "wb") as f:
+                f.write(response.content)
 
-    # Add metadata and cover art using mutagen
-    with Halo(text=colored("Adding metadata and cover art...", "cyan"), spinner="dots"):
-        audio = MP4(m4a_file_path)
-        audio["trkn"] = [(track.get("track_number", 0), 0)]
-        audio["\xa9nam"] = track.get("track_name", "")
-        audio["\xa9ART"] = metadata.get("artist_name", "")
-        audio["\xa9alb"] = metadata.get("album_name", "")
-        audio["\xa9day"] = str(metadata.get("year", ""))
-        audio["\xa9gen"] = metadata.get("genre", "")
-        audio["covr"] = [MP4Cover(cover_data, imageformat=MP4Cover.FORMAT_JPEG)]
+        # Convert FLAC to ALAC (M4A)
+        with Halo(text=colored("Converting FLAC to ALAC...", "cyan"), spinner="dots"):
+            m4a_file_path = f"{output_folder}/{original_filename_without_extension}.m4a"
+            audio = AudioSegment.from_file(flac_file_path, format="flac")
+            audio.export(m4a_file_path, format="ipod", codec="alac")
 
-        if "album_artist" in metadata:
-            audio["aART"] = metadata.get("album_artist", "")
-        if "comments" in track:
-            audio["\xa9cmt"] = track["comments"]
+        # Add metadata and cover art using mutagen
+        with Halo(
+            text=colored("Adding metadata and cover art...", "cyan"), spinner="dots"
+        ):
+            audio = MP4(m4a_file_path)
+            audio["trkn"] = [(track.get("track_number", 0), 0)]
+            audio["\xa9nam"] = track.get("track_name", "")
+            audio["\xa9ART"] = metadata.get("artist_name", "")
+            audio["\xa9alb"] = metadata.get("album_name", "")
+            audio["\xa9day"] = str(metadata.get("year", ""))
+            audio["\xa9gen"] = metadata.get("genre", "")
+            audio["covr"] = [MP4Cover(cover_data, imageformat=MP4Cover.FORMAT_JPEG)]
 
-        audio.save()
+            if "album_artist" in metadata:
+                audio["aART"] = metadata.get("album_artist", "")
+            if "comments" in track:
+                audio["\xa9cmt"] = track["comments"]
 
-    print(colored(f"Processed {track_name}!", "green"))
+            audio.save()
 
-    # Remove the FLAC file
-    os.remove(flac_file_path)
+        print(colored(f"Processed {track_name}!", "green"))
 
-    # Upload M4A file to Azure
-    with Halo(text=colored("Uploading M4A to Azure...", "cyan"), spinner="dots"):
-        blob_name = f"ev/{os.path.basename(m4a_file_path)}"
-        blob_client = container_client.get_blob_client(blob_name)
+        # Remove the FLAC file
+        os.remove(flac_file_path)
 
-        with open(m4a_file_path, "rb") as data:
-            blob_client.upload_blob(data, overwrite=True)
+        # Upload M4A file to Azure
+        with Halo(text=colored("Uploading M4A to Azure...", "cyan"), spinner="dots"):
+            blob_name = f"ev/{os.path.basename(m4a_file_path)}"
+            blob_client = container_client.get_blob_client(blob_name)
 
-    # Overwrite the previous line with "Uploaded"
-    print("\033[F\033[K", end='')  # Move up one line and clear line
-    print(colored(f"Uploaded {track_name}!", "green"))
+            with open(m4a_file_path, "rb") as data:
+                blob_client.upload_blob(data, overwrite=True)
+
+        # Overwrite the previous line with "Uploaded"
+        print("\033[F\033[K", end="")  # Move up one line and clear line
+        print(colored(f"Uploaded {track_name}!", "green"))
 
 print(colored("\nAll tracks converted and re-uploaded to Azure!", "green"))
