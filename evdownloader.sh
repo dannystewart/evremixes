@@ -50,21 +50,21 @@ if ! command -v jq >/dev/null 2>&1; then
 fi
 
 # Welcome message
-echo -e "${BLUE}Welcome to Danny's Evanescence remix downloader!${NC}"
-echo -e "${BLUE}Files will be saved under \"Evanescence Remixes\" in your Downloads folder.${NC}"
-
-echo ""
+echo -e "${GREEN}Downloading Evanescence Remixes to your Downloads folder...${NC}"
 
 # Fetch JSON and store it in a variable, sorting tracks by track_number
 json_data=$(curl -s "https://git.dannystewart.com/danny/evremixes/raw/branch/main/evtracks.json" | jq '(.tracks |= sort_by(.track_number))')
 
 # Create output folder if it doesn't exist, and handle old files if it does
 if [ -d "$output_folder" ]; then
-    echo -e "${YELLOW}Folder already exists; removing any old files to avoid potential conflicts.${NC}"
+    echo -ne "${YELLOW}Folder exists; removing old files to avoid conflicts... ${NC}"
     find "$output_folder" \( -name "*.m4a" -o -name "*.m4a.temp" \) -type f -exec rm -f {} +
+    echo -e "${YELLOW}done!${NC}"
 else
     mkdir -p "$output_folder"
 fi
+
+echo ""
 
 # Loop over each track in the JSON array
 length=$(echo "$json_data" | jq '.tracks | length')
