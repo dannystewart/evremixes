@@ -129,7 +129,7 @@ for i in $(seq 0 $(($length - 1))); do
 
     # Initialize retry counter
     retry_count=0
-    max_retries=3
+    max_retries=5
 
     # Use curl to download the file
     echo -n "[$((i + 1))/$length] Downloading ${track_name}..."
@@ -155,7 +155,7 @@ for i in $(seq 0 $(($length - 1))); do
         ((retry_count++))
 
         # Introduce a slight delay between attempts
-        sleep 2
+        sleep 1
     done
 
     # Overwrite the line depending on success or failure
