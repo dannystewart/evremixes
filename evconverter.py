@@ -1,7 +1,7 @@
 import json
 import os
 import requests
-import shutil
+import inquirer
 import tempfile
 from halo import Halo
 from io import BytesIO
@@ -45,12 +45,28 @@ blob_service_client = BlobServiceClient.from_connection_string(connection_string
 container_name = "music"
 container_client = blob_service_client.get_container_client(container_name)
 
+# Menu
+sorted_tracks = sorted(track_data["tracks"], key=lambda x: x["track_number"])
+
+questions = [
+    inquirer.Checkbox(
+        "tracks",
+        message="Select tracks to upload (Ctrl-A for all)",
+        choices=[track["track_name"] for track in sorted_tracks],
+    ),
+]
+
+answers = inquirer.prompt(questions)
+selected_tracks = [
+    track for track in sorted_tracks if track["track_name"] in answers["tracks"]
+]
+
 # Create temp directory for downloads and conversions
 with tempfile.TemporaryDirectory() as tmpdirname:
     output_folder = tmpdirname
 
     # Loop through each track
-    for track in track_data["tracks"]:
+    for track in selected_tracks:
         track_name = track["track_name"]
         file_url = track["file_url"]
         original_filename = os.path.basename(file_url)
