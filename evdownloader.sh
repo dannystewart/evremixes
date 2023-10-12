@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck disable=SC2086
 
 # Color codes
 GREEN='\033[0;32m'
@@ -57,7 +58,9 @@ if ! command -v jq >/dev/null 2>&1; then
 
     # Check if Homebrew is installed
     if command -v brew >/dev/null 2>&1; then
-        echo -n "Homebrew detected. Attempting to install jq..."
+        # Move cursor up one line to overwrite the 'jq is not installed' line
+        echo -ne "\033[1A\033[K"
+        echo -n "Installing jq..."
 
         # Run brew install in the background and capture its PID
         brew install jq >/dev/null 2>&1 &
@@ -66,15 +69,18 @@ if ! command -v jq >/dev/null 2>&1; then
         # Show the spinner
         spin $BREW_PID
 
+        # Move cursor to new line before overwriting the installation message
+        echo -e "\n\033[1A\033[K"
+
         # Check the exit status
         wait $BREW_PID
         BREW_EXIT_STATUS=$?
 
         if [ $BREW_EXIT_STATUS -ne 0 ]; then
-            echo -e "\r${RED}Installation failed for jq${NC}       " # Extra spaces to clear the spinner
+            echo -e "${RED}Installation failed for jq${NC}       "  # Extra spaces to clear the spinner
             exit 1
         else
-            echo -e "\r${GREEN}✔ jq installed successfully${NC}      " # Extra spaces to clear the spinner
+            echo -e "${GREEN}✔ jq installed successfully${NC}      "  # Extra spaces to clear the spinner
         fi
 
     else
@@ -121,13 +127,36 @@ for i in $(seq 0 $(($length - 1))); do
     temp_filename="$output_folder/$formatted_track_number - $track_name.m4a.temp"
     final_filename="$output_folder/$formatted_track_number - $track_name.m4a"
 
+    # Initialize retry counter
+    retry_count=0
+    max_retries=3
+
     # Use curl to download the file
     echo -n "[$((i + 1))/$length] Downloading ${track_name}..."
-    curl --fail-early -s "$m4a_url" -o "$temp_filename" &
-    CURL_PID=$!
-    spin $CURL_PID
-    wait $CURL_PID
-    CURL_EXIT_STATUS=$?
+
+    # Download loop with retry logic
+    while [ $retry_count -lt $max_retries ]; do
+        if [ $kill_switch -eq 1 ]; then
+            echo -e "${RED}Script aborted. Exiting.${NC}"
+            exit 1
+        fi
+
+        curl --fail-early -s "$m4a_url" -o "$temp_filename" &
+        CURL_PID=$!
+        spin $CURL_PID
+        wait $CURL_PID
+        CURL_EXIT_STATUS=$?
+
+        if [ $CURL_EXIT_STATUS -eq 0 ]; then
+            break
+        fi
+
+        # Increment retry counter if the download failed
+        ((retry_count++))
+
+        # Introduce a slight delay between attempts
+        sleep 2
+    done
 
     # Overwrite the line depending on success or failure
     if [ $CURL_EXIT_STATUS -ne 0 ]; then
