@@ -169,3 +169,4 @@ done
 
 echo ""
 echo -e "${GREEN}All tracks downloaded! Enjoy!${NC}"
+open "$output_folder"
