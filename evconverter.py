@@ -124,4 +124,4 @@ with tempfile.TemporaryDirectory() as tmpdirname:
         print("\033[F\033[K", end="")  # Move up one line and clear line
         print(colored(f"Uploaded {track_name}!", "green"))
 
-print(colored("\nAll tracks converted and re-uploaded to Azure!", "green"))
+print(colored("\nAll tracks converted and reuploaded to Azure!", "green"))
