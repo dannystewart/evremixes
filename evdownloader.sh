@@ -71,10 +71,10 @@ if ! command -v jq >/dev/null 2>&1; then
         BREW_EXIT_STATUS=$?
 
         if [ $BREW_EXIT_STATUS -ne 0 ]; then
-            echo -e "\r${RED}Installation failed for jq${NC}       "  # Extra spaces to clear the spinner
+            echo -e "\r${RED}Installation failed for jq${NC}       " # Extra spaces to clear the spinner
             exit 1
         else
-            echo -e "\r${GREEN}✔ jq installed successfully${NC}      "  # Extra spaces to clear the spinner
+            echo -e "\r${GREEN}✔ jq installed successfully${NC}      " # Extra spaces to clear the spinner
         fi
 
     else
@@ -99,7 +99,6 @@ else
 fi
 
 echo ""
-
 
 # Loop over each track in the JSON array
 length=$(echo "$json_data" | jq '.tracks | length')
