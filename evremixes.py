@@ -2,7 +2,6 @@ import json
 import os
 import requests
 import shutil
-from getch import getch
 from halo import Halo
 from io import BytesIO
 from mutagen.mp4 import MP4, MP4Cover
