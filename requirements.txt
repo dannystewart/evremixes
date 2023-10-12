@@ -1,7 +1,10 @@
-requests
+azure.storage.blob
 getch
 Halo
+inquirer
 mutagen
 Pillow
 pydub
+requests
+telebot
 termcolor

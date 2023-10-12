@@ -2,6 +2,7 @@ import json
 import os
 import requests
 import inquirer
+import subprocess
 import tempfile
 from halo import Halo
 from io import BytesIO
@@ -44,6 +45,7 @@ connection_string = "DefaultEndpointsProtocol=https;AccountName=dsfilestorage01;
 blob_service_client = BlobServiceClient.from_connection_string(connection_string)
 container_name = "music"
 container_client = blob_service_client.get_container_client(container_name)
+uploaded_blob_names = []
 
 # Menu
 sorted_tracks = sorted(track_data["tracks"], key=lambda x: x["track_number"])
@@ -120,8 +122,49 @@ with tempfile.TemporaryDirectory() as tmpdirname:
             with open(m4a_file_path, "rb") as data:
                 blob_client.upload_blob(data, overwrite=True)
 
+            uploaded_blob_names.append(f"/{container_name}/{blob_name}")
+
         # Overwrite the previous line with "Uploaded"
         print("\033[F\033[K", end="")  # Move up one line and clear line
         print(colored(f"Uploaded {track_name}!", "green"))
 
-print(colored("\nAll tracks converted and reuploaded to Azure!", "green"))
+print(colored("\nSelected tracks converted and reuploaded to Azure!", "green"))
+
+if uploaded_blob_names:  # Only run if there are files to purge
+    # Convert list to string format suitable for command line argument
+    content_paths_str = " ".join([f"'{name}'" for name in uploaded_blob_names])
+
+    with Halo(
+        text=colored(
+            "Now purging Azure CDN cache (this may take a few minutes)...", "magenta"
+        ),
+        spinner="dots",
+    ):
+        process = subprocess.run(
+            [
+                "az",
+                "cdn",
+                "endpoint",
+                "purge",
+                "--resource-group",
+                "dsfiles",
+                "--name",
+                "dsfiles",
+                "--profile-name",
+                "dsfiles",
+                "--content-paths",
+            ]
+            + uploaded_blob_names,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+
+        if process.returncode == 0:
+            spinner.succeed(colored("Azure CDN cache has been purged!", "green"))
+        else:
+            spinner.fail(
+                colored(
+                    f"Failed to purge Azure CDN cache. Error: {process.stderr.decode('utf-8')}",
+                    "red",
+                )
+            )
