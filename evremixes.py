@@ -42,7 +42,7 @@ spinner.succeed(text=colored("Downloaded track details.", "green"))
 questions = [
     inquirer.List(
         "sort_order",
-        message="Choose track sort order",
+        message="Choose track order",
         choices=["playlist order", "chronological by start date"],
     ),
 ]
