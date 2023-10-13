@@ -1,6 +1,7 @@
 import json
 import os
 import requests
+import inquirer
 import shutil
 from halo import Halo
 from io import BytesIO
@@ -37,6 +38,27 @@ cover_data = buffered.getvalue()
 
 spinner.succeed(text=colored("Downloaded track details.", "green"))
 
+# Prompt user for sorting preference using inquirer
+questions = [
+    inquirer.List(
+        "sort_order",
+        message="Choose track sort order",
+        choices=["playlist order", "chronological by start date"],
+    ),
+]
+answers = inquirer.prompt(questions)
+sorting_choice = answers["sort_order"]
+
+# Sort tracks by track number or date based on user choice
+if sorting_choice == 'playlist order':
+    track_data["tracks"] = sorted(
+        track_data["tracks"], key=lambda k: k.get("track_number", 0)
+    )
+elif sorting_choice == 'chronological by start date':
+    track_data["tracks"] = sorted(
+        track_data["tracks"], key=lambda k: k.get("start_date", "")
+    )
+
 # Set the default output folder to the Downloads directory under the user's home folder
 default_output_folder = os.path.expanduser("~/Downloads")
 
@@ -54,7 +76,7 @@ if not os.path.exists(output_folder):
 elif os.listdir(output_folder):  # Folder exists and has files
     print(
         colored(
-            "The folder already exists and contains files. Emptying folder...",
+            "The folder already exists and contains files. Emptying folder...\n",
             "yellow",
         )
     )
@@ -74,18 +96,18 @@ elif os.listdir(output_folder):  # Folder exists and has files
 if not os.path.exists(output_folder):
     os.makedirs(output_folder)
 
-# Sort tracks by track number
-track_data["tracks"] = sorted(
-    track_data["tracks"], key=lambda k: k.get("track_number", 0)
-)
-
 # Loop through each track
-for track in track_data["tracks"]:
+for index, track in enumerate(track_data["tracks"]):
     track_name = track["track_name"]
-    track_number = str(track.get("track_number", "")).zfill(2)
-    track_number_short = str(track.get("track_number", ""))
 
-    print(f"Processing track {track_number_short}, {track_name}...")
+    # Different numbering based on sorting choice
+    if sorting_choice == 'track':
+        track_number = str(track.get("track_number", "")).zfill(2)
+    else:
+        track_number = str(index + 1).zfill(2)
+
+    track_number_short = str(track.get("track_number", ""))
+    print(f"Processing track {int(track_number_short) if sorting_choice == 'track' else int(track_number)}, {track_name}...")
 
     # Download FLAC file
     with Halo(text=colored("Downloading FLAC file...", "cyan"), spinner="dots"):
@@ -103,7 +125,7 @@ for track in track_data["tracks"]:
     # Add metadata and cover art using mutagen
     with Halo(text=colored("Adding metadata and cover art...", "cyan"), spinner="dots"):
         audio = MP4(m4a_file_path)
-        audio["trkn"] = [(track.get("track_number", 0), 0)]
+        audio["trkn"] = [(int(track_number), 0)]
         audio["\xa9nam"] = track.get("track_name", "")
         audio["\xa9ART"] = metadata.get("artist_name", "")
         audio["\xa9alb"] = metadata.get("album_name", "")
