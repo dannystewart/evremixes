@@ -42,11 +42,9 @@ response = requests.get(
 )
 spinner.stop()
 
-# Download track and album metadata
+# Download track and album metadata, plus cover art
 track_data = json.loads(response.text)
 metadata = track_data.get("metadata", {})
-
-# Download cover art
 cover_response = requests.get(metadata.get("cover_art_url", ""))
 cover_data_original = cover_response.content
 
@@ -60,9 +58,8 @@ buffered = BytesIO()
 image.save(buffered, format="JPEG")
 cover_data = buffered.getvalue()
 
-# Menu
+# Sort tracks and display menu
 sorted_tracks = sorted(track_data["tracks"], key=get_upload_order, reverse=True)
-
 questions = [
     inquirer.Checkbox(
         "tracks",
@@ -70,7 +67,6 @@ questions = [
         choices=[track["track_name"] for track in sorted_tracks],
     ),
 ]
-
 answers = inquirer.prompt(questions)
 selected_tracks = [
     track for track in sorted_tracks if track["track_name"] in answers["tracks"]
@@ -85,13 +81,11 @@ with tempfile.TemporaryDirectory() as tmpdirname:
 
     # Loop through each track
     for track in selected_tracks:
-        # Before starting a new spinner, make sure the previous one is not active
-        spinner.stop()
-        spinner.clear()
-
         track_name = track["track_name"]
         file_url = track["file_url"]
         original_filename = os.path.basename(file_url)
+        spinner.stop()
+        spinner.clear()
 
         # Download FLAC file
         with Halo(text=colored(f"Downloading {track_name}...", "cyan"), spinner="dots"):
@@ -155,10 +149,7 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                     performer=metadata.get("artist_name", ""),
                     disable_notification=True,
                 )
-
-        # Stop spinner here before printing anything else
         spinner.stop()
-        print("\r" + " " * 50 + "\r", end="", flush=True)
 
         # Confirm successful upload before proceeding
         if message:
@@ -170,7 +161,7 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                     bot.delete_message(channel_id, old_message_id)
                     print(
                         colored(
-                            f"✔ Deleted previous upload with ID {old_message_id}.",
+                            f"✔ Deleted previous {track_name} upload with ID {old_message_id}.",
                             "green",
                         ),
                         flush=True,
@@ -179,20 +170,16 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                 except Exception as e:
                     print(
                         colored(
-                            f"Could not delete previous upload with ID {old_message_id}: {e}",
+                            f"Could not delete previous {track_name} upload with ID {old_message_id}: {e}",
                             "red",
                         )
                     )
 
             print(colored(f"{success_msg} {track_name}!", "green"), flush=True)
-
-            # Restart spinner after the print
             spinner.start()
 
-            # Extract message_id from the returned message object
+            # Extract message_id from the returned message object and update cache
             message_id = message.message_id
-
-            # Update local cache
             upload_cache[track_key] = message_id
 
             # Save updated cache to file
@@ -205,9 +192,5 @@ with tempfile.TemporaryDirectory() as tmpdirname:
         # Clear misbehaving spinners
         spinner.stop()
         spinner.clear()
-
-    # Clear misbehaving spinners
-    spinner.stop()
-    spinner.clear()
 
 print(colored("\nSelected tracks uploaded to Telegram!", "green"))
