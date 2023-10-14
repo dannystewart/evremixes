@@ -12,9 +12,10 @@ from pydub import AudioSegment
 from termcolor import colored
 from telebot import TeleBot
 from dotenv import load_dotenv
-load_dotenv()
 
+# Initialize and load environment variables
 spinner = Halo(text="Initializing", spinner="dots")
+load_dotenv()
 
 # Initialize Telegram Bot API
 bot_token = os.environ.get('TELEGRAM_BOT_TOKEN')
