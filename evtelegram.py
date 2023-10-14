@@ -11,12 +11,14 @@ from PIL import Image
 from pydub import AudioSegment
 from termcolor import colored
 from telebot import TeleBot
+from dotenv import load_dotenv
+load_dotenv()
 
 spinner = Halo(text="Initializing", spinner="dots")
 
 # Initialize Telegram Bot API
-bot_token = "6656812775:AAFNU2RKWONkxQx3825EHqJqCyor8XxVAzY"
-channel_id = "-1001758097505"
+bot_token = os.environ.get('TELEGRAM_BOT_TOKEN')
+channel_id = os.environ.get('TELEGRAM_CHANNEL_ID')
 bot = TeleBot(bot_token)
 
 # Check for local upload cache

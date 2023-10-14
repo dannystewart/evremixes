@@ -1,10 +1,10 @@
 azure.storage.blob
-getch
-Halo
+requests
 inquirer
+halo
 mutagen
 Pillow
 pydub
-requests
-telebot
+python-dotenv
 termcolor
+telebot
