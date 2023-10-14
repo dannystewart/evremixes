@@ -18,8 +18,8 @@ spinner = Halo(text="Initializing", spinner="dots")
 load_dotenv()
 
 # Initialize Telegram Bot API
-bot_token = os.environ.get('TELEGRAM_BOT_TOKEN')
-channel_id = os.environ.get('TELEGRAM_CHANNEL_ID')
+bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
+channel_id = os.environ.get("TELEGRAM_CHANNEL_ID")
 bot = TeleBot(bot_token)
 
 # Check for local upload cache
@@ -29,9 +29,11 @@ try:
 except FileNotFoundError:
     upload_cache = {}
 
+
 # Sort tracks based on upload history
 def get_upload_order(track):
     return upload_cache.get(track["track_name"], 0)
+
 
 # Download and load the JSON file with track details
 spinner.start(text=colored("Downloading track details...", "cyan"))
@@ -75,7 +77,7 @@ selected_tracks = [
 ]
 
 # Sort selected tracks by start_date for the upload process
-selected_tracks = sorted(selected_tracks, key=lambda x: x['start_date'])
+selected_tracks = sorted(selected_tracks, key=lambda x: x["start_date"])
 
 # Create temp directory for downloads and conversions
 with tempfile.TemporaryDirectory() as tmpdirname:
@@ -103,14 +105,19 @@ with tempfile.TemporaryDirectory() as tmpdirname:
         os.rename(flac_file_path, renamed_flac_file_path)
 
         # Convert FLAC to ALAC (M4A)
-        with Halo(text=colored(f"Converting {track_name} to ALAC...", "cyan"), spinner="dots"):
+        with Halo(
+            text=colored(f"Converting {track_name} to ALAC...", "cyan"), spinner="dots"
+        ):
             m4a_file_path = f"{output_folder}/{track_name}.m4a"
             audio = AudioSegment.from_file(renamed_flac_file_path, format="flac")
             audio.export(m4a_file_path, format="ipod", codec="alac")
 
         # Add metadata and cover art using mutagen
         with Halo(
-            text=colored(f"Adding metadata and cover art to {track_name} ALAC...", "cyan"), spinner="dots"
+            text=colored(
+                f"Adding metadata and cover art to {track_name} ALAC...", "cyan"
+            ),
+            spinner="dots",
         ):
             audio = MP4(m4a_file_path)
             audio["trkn"] = [(track.get("track_number", 0), 0)]
@@ -134,7 +141,10 @@ with tempfile.TemporaryDirectory() as tmpdirname:
         old_message_id = upload_cache.get(track_key)
 
         # Upload the ALAC file to Telegram
-        with Halo(text=colored(f"Uploading {track_name} to Telegram...", "cyan"), spinner="dots"):
+        with Halo(
+            text=colored(f"Uploading {track_name} to Telegram...", "cyan"),
+            spinner="dots",
+        ):
             with open(m4a_file_path, "rb") as f:
                 message = bot.send_audio(
                     channel_id,
@@ -143,12 +153,12 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                     duration=duration,
                     title=track_name,
                     performer=metadata.get("artist_name", ""),
-                    disable_notification=True
+                    disable_notification=True,
                 )
 
         # Stop spinner here before printing anything else
         spinner.stop()
-        print("\r" + " " * 50 + "\r", end='', flush=True)
+        print("\r" + " " * 50 + "\r", end="", flush=True)
 
         # Confirm successful upload before proceeding
         if message:
@@ -158,10 +168,21 @@ with tempfile.TemporaryDirectory() as tmpdirname:
             if old_message_id:
                 try:
                     bot.delete_message(channel_id, old_message_id)
-                    print(colored(f"✔ Deleted previous upload with ID {old_message_id}.", "green"), flush=True)
+                    print(
+                        colored(
+                            f"✔ Deleted previous upload with ID {old_message_id}.",
+                            "green",
+                        ),
+                        flush=True,
+                    )
                     success_msg += " and replaced"
                 except Exception as e:
-                    print(colored(f"Could not delete previous upload with ID {old_message_id}: {e}", "red"))
+                    print(
+                        colored(
+                            f"Could not delete previous upload with ID {old_message_id}: {e}",
+                            "red",
+                        )
+                    )
 
             print(colored(f"{success_msg} {track_name}!", "green"), flush=True)
 
