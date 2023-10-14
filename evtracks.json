@@ -9,87 +9,87 @@
     },
     "tracks": [
         {
-            "track_number": 5,
             "track_name": "Better Without You",
             "start_date": "2023-08-31",
+            "track_number": 5,
             "file_url": "https://files.dannystewart.com/music/ev/Better-Without-You.flac"
         },
         {
-            "track_number": 2,
             "track_name": "Bring Me To Life",
             "start_date": "2023-09-28",
+            "track_number": 2,
             "file_url": "https://files.dannystewart.com/music/ev/Bring-Me-To-Life.flac"
         },
         {
-            "track_number": 7,
             "track_name": "Broken Pieces Shine",
             "start_date": "2023-09-16",
+            "track_number": 7,
             "file_url": "https://files.dannystewart.com/music/ev/Broken-Pieces-Shine.flac"
         },
         {
-            "track_number": 4,
             "track_name": "Call Me When You're Sober",
             "start_date": "2023-08-20",
+            "track_number": 4,
             "file_url": "https://files.dannystewart.com/music/ev/Call-Me-When-Youre-Sober.flac"
         },
         {
-            "track_number": 9,
             "track_name": "Everybody's Fool",
             "start_date": "2020-11-16",
+            "track_number": 9,
             "file_url": "https://files.dannystewart.com/music/ev/Everybodys-Fool.flac"
         },
         {
-            "track_number": 3,
             "track_name": "Going Under",
             "start_date": "2020-11-04",
+            "track_number": 3,
             "file_url": "https://files.dannystewart.com/music/ev/Going-Under.flac"
         },
         {
-            "track_number": 10,
             "track_name": "Imaginary",
             "start_date": "2023-07-16",
+            "track_number": 10,
             "file_url": "https://files.dannystewart.com/music/ev/Imaginary.flac"
         },
         {
-            "track_number": 13,
             "track_name": "Lithium",
             "start_date": "2021-09-26",
+            "track_number": 13,
             "file_url": "https://files.dannystewart.com/music/ev/Lithium.flac"
         },
         {
-            "track_number": 14,
             "track_name": "My Heart Is Broken",
             "start_date": "2023-08-11",
+            "track_number": 14,
             "file_url": "https://files.dannystewart.com/music/ev/My-Heart-Is-Broken.flac"
         },
         {
-            "track_number": 12,
             "track_name": "My Last Breath",
             "start_date": "2023-07-25",
+            "track_number": 12,
             "file_url": "https://files.dannystewart.com/music/ev/My-Last-Breath.flac"
         },
         {
-            "track_number": 11,
             "track_name": "Taking Over Me",
             "start_date": "2023-04-27",
+            "track_number": 11,
             "file_url": "https://files.dannystewart.com/music/ev/Taking-Over-Me.flac"
         },
         {
-            "track_number": 8,
             "track_name": "The Game Is Over",
             "start_date": "2023-09-22",
+            "track_number": 8,
             "file_url": "https://files.dannystewart.com/music/ev/The-Game-Is-Over.flac"
         },
         {
-            "track_number": 6,
             "track_name": "Use My Voice",
             "start_date": "2023-10-07",
+            "track_number": 6,
             "file_url": "https://files.dannystewart.com/music/ev/Use-My-Voice.flac"
         },
         {
-            "track_number": 1,
             "track_name": "What You Want",
             "start_date": "2021-09-26",
+            "track_number": 1,
             "file_url": "https://files.dannystewart.com/music/ev/What-You-Want.flac"
         }
     ]
