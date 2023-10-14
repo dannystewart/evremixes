@@ -32,7 +32,11 @@ except FileNotFoundError:
 
 # Sort tracks based on upload history
 def get_upload_order(track):
-    return upload_cache.get(track["track_name"], 0)
+    upload_info = upload_cache.get(track["track_name"], 0)
+    if isinstance(upload_info, list):
+        return max(upload_info)  # Return the maximum ID if it's a list
+    else:
+        return upload_info  # Return the ID directly if it's an int
 
 
 # Download and load the JSON file with track details
@@ -48,6 +52,9 @@ metadata = track_data.get("metadata", {})
 cover_response = requests.get(metadata.get("cover_art_url", ""))
 cover_data_original = cover_response.content
 
+# Initialize variables to store optional comments
+track_comments = {}
+
 # Convert to JPEG and resize to 800x800 using PIL
 image = Image.open(BytesIO(cover_data_original))
 image = image.convert("RGB")  # Convert to RGB if image is not in this mode
@@ -57,6 +64,28 @@ image = image.resize((800, 800))
 buffered = BytesIO()
 image.save(buffered, format="JPEG")
 cover_data = buffered.getvalue()
+
+# Prompt user if they want to delete previous versions
+delete_prev_versions_question = [
+    inquirer.Confirm(
+        "delete_prev_versions",
+        message="Delete previous versions of track uploads?",
+        default=True,
+    ),
+]
+delete_prev_versions_answer = inquirer.prompt(delete_prev_versions_question)[
+    "delete_prev_versions"
+]
+
+# Prompt user if they want to include comments
+comment_question = [
+    inquirer.Confirm(
+        "include_comments",
+        message="Include comments for track uploads?",
+        default=False,
+    ),
+]
+include_comments_answer = inquirer.prompt(comment_question)["include_comments"]
 
 # Sort tracks and display menu
 sorted_tracks = sorted(track_data["tracks"], key=get_upload_order, reverse=True)
@@ -71,6 +100,12 @@ answers = inquirer.prompt(questions)
 selected_tracks = [
     track for track in sorted_tracks if track["track_name"] in answers["tracks"]
 ]
+
+# If yes, get comments for selected tracks before uploading
+if include_comments_answer:
+    for track in selected_tracks:
+        comment = input(f"Enter comment for {track['track_name']}: ")
+        track_comments[track["track_name"]] = comment
 
 # Sort selected tracks by start_date for the upload process
 selected_tracks = sorted(selected_tracks, key=lambda x: x["start_date"])
@@ -132,7 +167,7 @@ with tempfile.TemporaryDirectory() as tmpdirname:
 
         # Before uploading a new track
         track_key = track_name
-        old_message_id = upload_cache.get(track_key)
+        old_message_ids = upload_cache.get(track_key, [])
 
         # Upload the ALAC file to Telegram
         with Halo(
@@ -140,6 +175,11 @@ with tempfile.TemporaryDirectory() as tmpdirname:
             spinner="dots",
         ):
             with open(m4a_file_path, "rb") as f:
+                caption_text = (
+                    track_comments.get(track_name, None)
+                    if include_comments_answer
+                    else None
+                )
                 message = bot.send_audio(
                     channel_id,
                     f,
@@ -148,39 +188,46 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                     title=track_name,
                     performer=metadata.get("artist_name", ""),
                     disable_notification=True,
+                    caption=caption_text,
                 )
+
         spinner.stop()
 
         # Confirm successful upload before proceeding
         if message:
-            success_msg = "✔ Successfully uploaded"
-
-            # Delete old message only after successfully uploading the new one
-            if old_message_id:
-                try:
-                    bot.delete_message(channel_id, old_message_id)
-                    print(
-                        colored(
-                            f"✔ Deleted previous {track_name} upload with ID {old_message_id}.",
-                            "green",
-                        ),
-                        flush=True,
-                    )
-                    success_msg += " and replaced"
-                except Exception as e:
-                    print(
-                        colored(
-                            f"Could not delete previous {track_name} upload with ID {old_message_id}: {e}",
-                            "red",
-                        )
-                    )
-
-            print(colored(f"{success_msg} {track_name}!", "green"), flush=True)
-            spinner.start()
-
-            # Extract message_id from the returned message object and update cache
             message_id = message.message_id
-            upload_cache[track_key] = message_id
+            if delete_prev_versions_answer:
+                # Delete old messages
+                for old_id in old_message_ids:
+                    try:
+                        bot.delete_message(channel_id, old_id)
+                        print(
+                            colored(
+                                f"✔ Deleted previous {track_name} upload with ID {old_id}.",
+                                "green",
+                            ),
+                            flush=True,
+                        )
+                    except Exception as e:
+                        print(
+                            colored(
+                                f"Could not delete previous {track_name} upload with ID {old_id}: {e}",
+                                "red",
+                            )
+                        )
+                # Record new message ID
+                upload_cache[track_key] = [message_id]
+            else:
+                # Append new message ID to the list
+                if isinstance(old_message_ids, list):
+                    old_message_ids.append(message_id)
+                else:
+                    old_message_ids = [message_id]
+                upload_cache[track_key] = old_message_ids
+
+            print(
+                colored(f"✔ Successfully uploaded {track_name}!", "green"), flush=True
+            )
 
             # Save updated cache to file
             with open("upload_cache.json", "w") as f:

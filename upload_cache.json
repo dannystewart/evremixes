@@ -1,16 +1,44 @@
 {
-    "Better Without You": 254,
-    "Bring Me To Life": 265,
-    "Broken Pieces Shine": 255,
-    "Call Me When You're Sober": 253,
-    "Everybody's Fool": 246,
-    "Going Under": 245,
-    "Imaginary": 250,
-    "Lithium": 248,
-    "My Heart Is Broken": 252,
-    "My Last Breath": 251,
-    "Taking Over Me": 249,
-    "The Game Is Over": 256,
-    "Use My Voice": 264,
-    "What You Want": 247
+    "Better Without You": [
+        254
+    ],
+    "Bring Me To Life": [
+        274
+    ],
+    "Broken Pieces Shine": [
+        255
+    ],
+    "Call Me When You're Sober": [
+        253
+    ],
+    "Everybody's Fool": [
+        246
+    ],
+    "Going Under": [
+        245
+    ],
+    "Imaginary": [
+        250
+    ],
+    "Lithium": [
+        248
+    ],
+    "My Heart Is Broken": [
+        252
+    ],
+    "My Last Breath": [
+        251
+    ],
+    "Taking Over Me": [
+        249
+    ],
+    "The Game Is Over": [
+        256
+    ],
+    "Use My Voice": [
+        264
+    ],
+    "What You Want": [
+        247
+    ]
 }
