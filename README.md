@@ -1,44 +1,58 @@
-# Evanescence Remix Downloader
+# Evanescence Remix Scripts
 
-Download script for my Evanescence remixes. Grabs a JSON file containing a list of remixes and metadata, then downloads, converts to ALAC, adds metadata and cover art, and renames files. Ready for import into Apple Music!
+Various download and conversion scripts for my Evanescence remixes.
 
-## Setup
+## Easy Downloader (Bash)
+
+This is the one meant to be used by anybody. Just run this:
+```bash
+bash -c "$(curl -fsSL https://dnst.me/evdl)"
+```
+
+This leads to `evdownloader.sh` here in the repo. It grabs a JSON of all my current remixes and metadata and uses that to download them to your `~/Downloads` folder. Files come pre-tagged and are ready to import into something like Apple Music.
+
+There is one dependency, which is `jq` to parse JSON. If you have [Homebrew](https://brew.sh) the script should install it automatically, but if not, you'll need to install it.
+
+## Other Scripts (Python)
+
+### Setup and dependencies
 
 1. Install [Homebrew](https://brew.sh) if you don't already have it: `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
 2. Install Python 3: `brew install python`
 3. Clone this repository somewhere: `git clone https://git.dannystewart.com/danny/evremixes.git`
 4. Install dependencies: `pip install -r requirements.txt`
 
-## Usage
+To run the script, just `cd` to the directory and run `python scriptname.py` (replacing the script name, obviously).
 
-Just run the script: `python evremixes.py`
+Note that there are better/cleaner ways to run Python using virtual environments, but that's beyond the scope of this readme.
 
-It'll ask for a directory to download to. It defaults to `~/Downloads`, so just hit Enter if that's what you want*. It'll proceed to download into a subfolder by album name, adding metadata and cover artwork. They'll be named by track number and name, and can be imported directly into Apple Music.
+### evremixes
 
-*\*(you know, like the song)*
+This is a fancier Python version of the main downloader script. This one handles the conversion from FLAC to ALAC (as well as all the metadata tagging) locally on your machine.
 
-### Lazy Method
+I wanted to use this by default because it's way cooler, but I abandoned it because it had too many Python dependencies, and precompiled binaries were architecture-specific. It converts to FLAC to ALAC on your local machine, which also means it requires `ffmpeg` and I couldn't guarantee that would be available.
 
-If you're lazy and can't or don't want to install Python and its dependencies, you can just run the executable in the `dist` directory:
+### evconverter
 
-```bash
-cd dist
-chmod +x evremixes
-./evremixes
-```
+This is what I use to convert the FLAC files to ALAC, tag them with the correct metadata and album art, and re-upload them to Azure so they can be downloaded by the main Bash script. (I do the heavy lifting so you don't have to!)
 
-### Unbelievably Lazy But Extremely Cool Method
+### evtelegram
 
-Just run this one command and watch the magic happen:
-```bash
-bash -c "$(curl -fsSL https://dnst.me/evdl)"
-```
+This is a cool script I wrote to convert, tag, and upload selected remixes to a Telegram channel where I'm keeping all of them.
 
-### How to update/replace albums/songs in Apple Music
+### Binary Versions
 
-It's always easiest if you have metadata on the files before importing. [Meta](https://www.nightbirdsevolve.com/meta/) is a great app for this, but you don't need to worry about it here as that's the point of this script, obviously.
+There are precompiled binaries that avoid the need to have Python or its depenedencies, but as noted above, they are dependent on platform architecture, so you'll need to run the x86 one on Intel and the ARM one on Apple Silicon.
 
-#### Remove the old albums/songs
+The scripts are in the `dist` directory. Just `cd` from there to either `x86` or `arm` depending on your platform, then run `chmod +x ./evremixes` to make the script executable and `./evremixes` to run it.
+
+### Other Notes
+
+#### How to update/replace albums/songs in Apple Music
+
+It's always easiest if you have metadata on the files before importing. [Meta](https://www.nightbirdsevolve.com/meta/) is a great app for this, but you don't need to worry about it here as that's the point of all this, obviously.
+
+##### Remove the old albums/songs
 
 1. Open Apple Music.
 2. Look in the bottom left corner for "Updating Cloud Music Library." Wait for this to finish and disappear.
@@ -47,7 +61,7 @@ It's always easiest if you have metadata on the files before importing. [Meta](h
 
 You need to wait for it to completely sync the removal of the album. If you re-import before it's fully flushed out, you can end up with duplicates or have your new copies overwritten by the old versions.
 
-#### Re-import the albums/songs
+##### Re-import the albums/songs
 
 6. Go to File > Import….
 7. Select the song file(s) or the entire folder containing the album and click Open.
