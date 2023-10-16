@@ -111,8 +111,6 @@ def main(upload_path, input_file):
     subfolder, blob_name = upload_path.split("/", 1)
     validate_folder(subfolder)
 
-    # print(f"\nUploading {os.path.basename(input_file)} as /{subfolder}/{blob_name}")
-
     # Determine input and output formats
     input_format = os.path.splitext(input_file)[1][1:]
     output_format = os.path.splitext(blob_name)[1][1:]
@@ -144,7 +142,7 @@ def main(upload_path, input_file):
         spinner="dots",
     ).start()
     try:
-        # purge_cdn_cache(subfolder, blob_name)
+        purge_cdn_cache(subfolder, blob_name)
         purge_spinner.succeed(colored("CDN cache purged!", "green"))
     except Exception as e:
         purge_spinner.fail(f"Failed to purge CDN: {e}")
