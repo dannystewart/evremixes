@@ -5,6 +5,7 @@ halo
 mutagen
 Pillow
 pydub
+pyperclip
 python-dotenv
 termcolor
 telebot
