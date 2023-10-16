@@ -4,6 +4,7 @@ import requests
 import inquirer
 import subprocess
 import tempfile
+import time
 from halo import Halo
 from io import BytesIO
 from mutagen.mp4 import MP4, MP4Cover
@@ -11,8 +12,11 @@ from PIL import Image
 from pydub import AudioSegment
 from termcolor import colored
 from azure.storage.blob import BlobServiceClient
+from dotenv import load_dotenv
 
+# Initialize and load environment variables
 spinner = Halo(text="Initializing", spinner="dots")
+load_dotenv()
 
 # Download and load the JSON file with track details
 spinner.start(text=colored("Downloading track details...", "cyan"))
@@ -41,7 +45,7 @@ cover_data = buffered.getvalue()
 spinner.succeed(text=colored("Downloaded track details.", "green"))
 
 # Initialize the Blob Service Client
-connection_string = "DefaultEndpointsProtocol=https;AccountName=dsfilestorage01;AccountKey=dc72ueJf/VyNC5rNCrjb19vx3TmXDDim2/9gwl73rQOKh9WptyFqhtMy3IXCaiOHHOHzXfGOTWvFZMhtZIEWeg==;EndpointSuffix=core.windows.net"
+connection_string = os.environ.get("AZURE_CONNECTION_STRING")
 blob_service_client = BlobServiceClient.from_connection_string(connection_string)
 container_name = "music"
 container_client = blob_service_client.get_container_client(container_name)
@@ -168,3 +172,47 @@ if uploaded_blob_names:  # Only run if there are files to purge
                     "red",
                 )
             )
+
+    # Initialize wait time (in seconds)
+    wait_time = 10
+
+    # Populate CDN edge servers
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        output_folder = tmpdirname
+
+        with Halo(
+            text=colored(f"Waiting {wait_time} seconds to populate CDN...", "cyan"),
+            spinner="dots",
+        ) as spinner:
+            for i in range(wait_time, 0, -1):
+                spinner.text = colored(f"Populating CDN in {i} seconds...", "cyan")
+                time.sleep(1)
+            spinner.text = colored("Populating CDN edge servers...", "cyan")
+
+            total_tracks = len(uploaded_blob_names)
+            for index, blob_name in enumerate(uploaded_blob_names, start=1):
+                try:
+                    blob_client = container_client.get_blob_client(
+                        blob_name.replace(f"/{container_name}/", "")
+                    )
+                    blob_data = blob_client.download_blob()
+                except Exception as e:
+                    spinner.fail(
+                        colored(
+                            f"Failed to download blob {blob_name}. Error: {str(e)}",
+                            "red",
+                        )
+                    )
+                    continue  # Skip to the next blob_name in the loop
+
+                # Update spinner text to include counter
+                spinner.text = colored(
+                    f"Populating CDN edge servers ({index}/{total_tracks})...", "cyan"
+                )
+
+                temp_file_path = f"{output_folder}/temp_{os.path.basename(blob_name)}"
+                with open(temp_file_path, "wb") as temp_file:
+                    temp_file.write(blob_data.readall())
+                os.remove(temp_file_path)  # Delete the temporary file
+
+            spinner.succeed(colored("CDN edge servers populated.", "green"))
