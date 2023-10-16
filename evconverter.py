@@ -136,7 +136,7 @@ if uploaded_blob_names:  # Only run if there are files to purge
 
     with Halo(
         text=colored(
-            "Now purging Azure CDN cache (this may take a few minutes)...", "magenta"
+            "Now purging Azure CDN cache (this may take a few minutes)...", "cyan"
         ),
         spinner="dots",
     ):
