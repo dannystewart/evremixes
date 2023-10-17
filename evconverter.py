@@ -19,6 +19,7 @@ from dotenv import load_dotenv
 # Initialize and load environment variables
 spinner = Halo(text="Initializing", spinner="dots")
 load_dotenv()
+load_dotenv(dotenv_path="/Users/danny/Developer/evremixes/.env")
 
 # Download and load the JSON file with track details
 spinner.start(text=colored("Downloading track details...", "cyan"))

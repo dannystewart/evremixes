@@ -12,6 +12,7 @@ from termcolor import colored
 from dotenv import load_dotenv
 
 # Load environment variables
+load_dotenv()
 load_dotenv(dotenv_path="/Users/danny/Developer/evremixes/.env")
 
 # Initialize the Blob Service Client

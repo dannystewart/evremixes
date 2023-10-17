@@ -18,6 +18,7 @@ from dotenv import load_dotenv
 # Initialize and load environment variables
 spinner = Halo(text="Initializing", spinner="dots")
 load_dotenv()
+load_dotenv(dotenv_path="/Users/danny/Developer/evremixes/.env")
 
 # Initialize Telegram Bot API
 bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
