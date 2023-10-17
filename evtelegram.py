@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import json
 import os
 import requests
@@ -73,9 +75,7 @@ delete_prev_versions_question = [
         default=True,
     ),
 ]
-delete_prev_versions_answer = inquirer.prompt(delete_prev_versions_question)[
-    "delete_prev_versions"
-]
+delete_prev_versions_answer = inquirer.prompt(delete_prev_versions_question)["delete_prev_versions"]
 
 # Prompt user if they want to include comments
 comment_question = [
@@ -97,9 +97,7 @@ questions = [
     ),
 ]
 answers = inquirer.prompt(questions)
-selected_tracks = [
-    track for track in sorted_tracks if track["track_name"] in answers["tracks"]
-]
+selected_tracks = [track for track in sorted_tracks if track["track_name"] in answers["tracks"]]
 
 # If yes, get comments for selected tracks before uploading
 if include_comments_answer:
@@ -134,18 +132,14 @@ with tempfile.TemporaryDirectory() as tmpdirname:
         os.rename(flac_file_path, renamed_flac_file_path)
 
         # Convert FLAC to ALAC (M4A)
-        with Halo(
-            text=colored(f"Converting {track_name} to ALAC...", "cyan"), spinner="dots"
-        ):
+        with Halo(text=colored(f"Converting {track_name} to ALAC...", "cyan"), spinner="dots"):
             m4a_file_path = f"{output_folder}/{track_name}.m4a"
             audio = AudioSegment.from_file(renamed_flac_file_path, format="flac")
             audio.export(m4a_file_path, format="ipod", codec="alac")
 
         # Add metadata and cover art using mutagen
         with Halo(
-            text=colored(
-                f"Adding metadata and cover art to {track_name} ALAC...", "cyan"
-            ),
+            text=colored(f"Adding metadata and cover art to {track_name} ALAC...", "cyan"),
             spinner="dots",
         ):
             audio = MP4(m4a_file_path)
@@ -176,9 +170,7 @@ with tempfile.TemporaryDirectory() as tmpdirname:
         ):
             with open(m4a_file_path, "rb") as f:
                 caption_text = (
-                    track_comments.get(track_name, None)
-                    if include_comments_answer
-                    else None
+                    track_comments.get(track_name, None) if include_comments_answer else None
                 )
                 message = bot.send_audio(
                     channel_id,
@@ -225,9 +217,7 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                     old_message_ids = [message_id]
                 upload_cache[track_key] = old_message_ids
 
-            print(
-                colored(f"✔ Successfully uploaded {track_name}!", "green"), flush=True
-            )
+            print(colored(f"✔ Successfully uploaded {track_name}!", "green"), flush=True)
 
             # Save updated cache to file
             with open("upload_cache.json", "w") as f:

@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 import json
 import os
 import requests
@@ -50,14 +52,10 @@ answers = inquirer.prompt(questions)
 sorting_choice = answers["sort_order"]
 
 # Sort tracks by track number or date based on user choice
-if sorting_choice == 'playlist order':
-    track_data["tracks"] = sorted(
-        track_data["tracks"], key=lambda k: k.get("track_number", 0)
-    )
-elif sorting_choice == 'chronological by start date':
-    track_data["tracks"] = sorted(
-        track_data["tracks"], key=lambda k: k.get("start_date", "")
-    )
+if sorting_choice == "playlist order":
+    track_data["tracks"] = sorted(track_data["tracks"], key=lambda k: k.get("track_number", 0))
+elif sorting_choice == "chronological by start date":
+    track_data["tracks"] = sorted(track_data["tracks"], key=lambda k: k.get("start_date", ""))
 
 # Set the default output folder to the Downloads directory under the user's home folder
 default_output_folder = os.path.expanduser("~/Downloads")
@@ -101,13 +99,15 @@ for index, track in enumerate(track_data["tracks"]):
     track_name = track["track_name"]
 
     # Different numbering based on sorting choice
-    if sorting_choice == 'track':
+    if sorting_choice == "track":
         track_number = str(track.get("track_number", "")).zfill(2)
     else:
         track_number = str(index + 1).zfill(2)
 
     track_number_short = str(track.get("track_number", ""))
-    print(f"Processing track {int(track_number_short) if sorting_choice == 'track' else int(track_number)}, {track_name}...")
+    print(
+        f"Processing track {int(track_number_short) if sorting_choice == 'track' else int(track_number)}, {track_name}..."
+    )
 
     # Download FLAC file
     with Halo(text=colored("Downloading FLAC file...", "cyan"), spinner="dots"):
