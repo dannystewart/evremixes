@@ -2,7 +2,7 @@
 $aria2c_path = "C:\Users\danny\Downloads\aria2-1.36.0-win-64bit-build1\aria2c.exe"
 
 # Define output folder and other parameters
-$output_folder = "$env:USERPROFILE\Downloads\Evanescence Remixes"
+$output_folder = "$env:USERPROFILE\Music\Evanescence Remixes"
 
 # Fetch JSON data and sort it by track_number
 $json_data = Invoke-RestMethod -Uri "https://git.dannystewart.com/danny/evremixes/raw/branch/main/evtracks.json"
