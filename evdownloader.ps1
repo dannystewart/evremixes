@@ -1,5 +1,19 @@
-# Define the full path to aria2c
-$aria2c_path = "C:\Users\danny\Downloads\aria2-1.36.0-win-64bit-build1\aria2c.exe"
+# Define potential folders where aria2c might be located
+$potential_folders = @("C:\Users\danny\Downloads")
+
+# Search for aria2c
+$aria2c_path = $null
+foreach ($folder in $potential_folders) {
+    $aria2c_candidate = Get-ChildItem -Path $folder -Recurse -File -Filter "aria2c.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($aria2c_candidate) {
+        $aria2c_path = $aria2c_candidate.FullName
+        break
+    }
+}
+
+if (-not $aria2c_path) {
+    Write-Host "aria2c.exe not found. Fallback methods will be used." -ForegroundColor Yellow
+}
 
 # Define output folder and other parameters
 $output_folder = "$env:USERPROFILE\Music\Evanescence Remixes"
@@ -31,8 +45,30 @@ for ($i = 0; $i -lt $length; $i++) {
 
     Write-Host "[$($i + 1)/$length] Downloading $track_name..."
 
-    # Download the file using aria2c
-    & $aria2c_path --dir="$output_folder" --out="$final_filename" $file_url --disable-ipv6=true --quiet=true --show-console-readout=true
+    # Try downloading the file using aria2c first
+    if (Test-Path $aria2c_path) {
+        & $aria2c_path --dir="$output_folder" --out="$final_filename" $file_url --disable-ipv6=true --quiet=true --show-console-readout=true
+        continue
+    }
+
+    # If aria2c isn't available, fall back to WebClient
+    try {
+        $webclient = New-Object System.Net.WebClient
+        $webclient.DownloadFile($file_url, "$output_folder\$final_filename")
+        continue
+    }
+    catch {
+        # Write-Host "WebClient failed; falling back to Invoke-WebRequest..." -ForegroundColor Yellow
+    }
+
+    # If WebClient fails, fall back to Invoke-WebRequest
+    try {
+        Invoke-WebRequest -Uri $file_url -OutFile "$output_folder\$final_filename"
+    }
+    catch {
+        # Write-Host "Invoke-WebRequest also failed. Skipping this file." -ForegroundColor Red
+        continue
+    }
 }
 
 Start-Process "explorer.exe" -ArgumentList $output_folder
