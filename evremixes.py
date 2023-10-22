@@ -4,6 +4,7 @@ import json
 import os
 import platform
 import requests
+import subprocess
 import inquirer
 import shutil
 from halo import Halo
@@ -152,3 +153,9 @@ for index, track in enumerate(track_data["tracks"]):
     os.remove(flac_file_path)
 
 print(colored("\nAll tracks downloaded and ready! Enjoy!", "green"))
+
+# Open the folder in the OS
+if os_type == "Windows":
+    subprocess.run(['explorer', os.path.abspath(output_folder)])
+elif os_type == "Darwin":  # macOS
+    subprocess.run(['open', os.path.abspath(output_folder)])
