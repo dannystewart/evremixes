@@ -26,8 +26,8 @@ parser = argparse.ArgumentParser(description="Download and convert audio tracks.
 parser.add_argument("--flac", action="store_true", help="Keep original FLAC format")
 args = parser.parse_args()
 
-# If Windows, we assume FLAC because Windows users are savages
-if os_type == "Windows":
+# Let's assume only Mac users want ALAC, because others are savages
+if os_type != "Darwin":
     args.flac = True
 
 # Download and load the JSON file with track details

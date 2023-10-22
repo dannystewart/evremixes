@@ -72,16 +72,19 @@ if [ "$dependency_met" = true ]; then
     # Create a temporary directory
     temp_dir=$(mktemp -d -t evremixes-XXXXXX)
 
-    # Determine architecture
+    # Identify architecture and OS
     ARCH=$(uname -m)
+    OS=$(uname)
     URL=""
 
-    if [ "$ARCH" == "x86_64" ]; then
+    if [ "$OS" == "Darwin" ] && [ "$ARCH" == "x86_64" ]; then
         URL="https://git.dannystewart.com/danny/evremixes/raw/branch/main/dist/x86/evremixes"
-    elif [ "$ARCH" == "arm64" ]; then
+    elif [ "$OS" == "Darwin" ] && [ "$ARCH" == "arm64" ]; then
         URL="https://git.dannystewart.com/danny/evremixes/raw/branch/main/dist/arm/evremixes"
+    elif [ "$OS" == "Linux" ]; then
+        URL="https://git.dannystewart.com/danny/evremixes/raw/branch/main/dist/linux/evremixes"
     else
-        echo -e "${RED}Error:${NC} Unsupported architecture."
+        echo -e "${RED}Error:${NC} Unsupported OS or architecture."
         rm -r "${temp_dir}"
         exit 1
     fi
