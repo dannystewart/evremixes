@@ -94,14 +94,13 @@ Having the metadata in place first makes things much easier, so I'll take this o
 1. Open Apple Music and look in the bottom left corner for "**Updating Cloud Music Library**."
 2. Wait for that to finish and disappear, then right-click the albums/songs and click **Delete from Library**.
 3. Go to **File > Library > Update Cloud Library**.
-4. Again look for "**Updating Cloud Music Library**" and wait for it to finish.
-
-**IMPORTANT:** Wait for it to completely sync the removal of the album. If you re-import before it's fully flushed out, you can end up with duplicates or have your new copies overwritten by old versions.
-
+4. Again look for "**Updating Cloud Music Library**" and wait for it to finish.[^3]
 5. Go to **File > Import….**
 6. Select the song file(s) or the entire folder containing the album and click **Open**.
 7. Wait for it to import everything.
 8. Verify that the album and metadata all look correct.
-9. One last time, go to **File > Library > Update Cloud Library** and wait for it to finish.[^3]
+9. One last time, go to **File > Library > Update Cloud Library** and wait for it to finish.[^4]
 
-[^3]: It never hurts to run a sync twice, and it helps to have another device nearby to watch and make sure the changes are syncing over.
+[^3]: It's important for it to completely sync the removal of the album. If you re-import before it's fully flushed out, you can end up with duplicates or have your new copies overwritten by old versions.
+
+[^4]: It never hurts to run a sync twice, and it helps to have another device nearby to watch and make sure the changes are syncing over.
