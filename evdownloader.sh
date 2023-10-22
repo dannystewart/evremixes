@@ -1,5 +1,5 @@
 #!/bin/bash
-# shellcheck disable=SC2086
+# shellcheck disable=SC1003,SC2086
 
 # Color codes
 GREEN='\033[0;32m'
