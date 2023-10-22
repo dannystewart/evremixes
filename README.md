@@ -77,7 +77,7 @@ brew install ffmpeg
 
 ### I want to be a super cool Python user like you! How can I get that set up?
 
-It's a little beyond the scope of this readme, but  If you want to run the original Python script itself, you'll need to install Python and all the script requirements, which is more involved and definitely beyond the scope of this readme, but you can find guides like [this](https://www.pythoncentral.io/installing-python-on-mac-using-homebrew/) or [this](https://www.freecodecamp.org/news/python-version-on-mac-update/).
+It's a little beyond the scope of this readme, but you'll need to install Python and its dependencies. You can find guides like [this](https://www.pythoncentral.io/installing-python-on-mac-using-homebrew/) or [this](https://www.freecodecamp.org/news/python-version-on-mac-update/).
 
 Once you have it all set up, clone this repository and install the necessary dependencies:
 ```bash
