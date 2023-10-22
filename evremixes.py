@@ -68,11 +68,17 @@ if os_type == "Windows":
 else:
     default_output_folder = os.path.expanduser("~/Downloads")
 
-# Notify the user of the download location
+# Figure out download location
 album_name = metadata.get("album_name")
 album_folder = metadata.get("album_name", "Unknown Album")
 output_folder = os.path.join(default_output_folder, album_folder)
 normalized_output_folder = os.path.normpath(output_folder)
+
+# Replace home directory with tilde (~) if not on Windows
+if os_type != "Windows":
+    home_dir = os.path.expanduser('~')
+    normalized_output_folder = normalized_output_folder.replace(home_dir, '~')
+
 print(colored(f"Downloading {album_name} to {normalized_output_folder}...", "cyan"))
 
 # Check and create folders
