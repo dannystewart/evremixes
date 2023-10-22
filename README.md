@@ -9,7 +9,7 @@ This runs [`evdownloader.sh`](evdownloader.sh) in case you want to check it befo
 
 ### Windows User?
 
-I'm sorry. But don't feel left out—I wrote [`evdownloader.ps1`](evdownloader.ps1) just for you. Run this and you'll feel like an adult with a Unix-based OS, for one brief but shining moment:
+I'm sorry. But fret not—I wrote [`evdownloader.ps1`](evdownloader.ps1) just for you. Run this and feel like an adult with a Unix-based OS for one brief but shining moment:
 
 ```ps1
 iex (iwr -useb https://dnst.me/evps).Content
