@@ -1,11 +1,11 @@
-azure.storage.blob
-requests
-inquirer
+azure-storage-blob
 halo
+inquirer
 mutagen
 Pillow
 pydub
 pyperclip
 python-dotenv
-termcolor
+requests
 telebot
+termcolor
