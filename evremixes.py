@@ -16,6 +16,18 @@ from PIL import Image
 from pydub import AudioSegment
 from termcolor import colored
 
+
+def ffmpeg_installed():
+    try:
+        subprocess.run(
+            ["ffmpeg", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True
+        )
+        return True
+    except subprocess.CalledProcessError:
+        return False
+
+
+# Initialize
 spinner = Halo(text="Initializing", spinner="dots")
 
 # Determine the operating system
@@ -28,6 +40,11 @@ args = parser.parse_args()
 
 # Let's assume only Mac users want ALAC, because others are savages
 if os_type != "Darwin":
+    args.flac = True
+
+# Check if ffmpeg is installed; if not, default to FLAC
+if not ffmpeg_installed():
+    print(colored("ffmpeg not found; downloads will be in FLAC", "yellow"))
     args.flac = True
 
 # Download and load the JSON file with track details
@@ -74,10 +91,10 @@ elif sorting_choice == "chronological by start date":
     track_data["tracks"] = sorted(track_data["tracks"], key=lambda k: k.get("start_date", ""))
 
 # Set the default output folder based on the operating system
-if os_type == "Windows":
-    default_output_folder = os.path.expanduser("~/Music")
-else:
+if os_type == "Darwin":
     default_output_folder = os.path.expanduser("~/Downloads")
+else:
+    default_output_folder = os.path.expanduser("~/Music")
 
 # Figure out download location
 album_name = metadata.get("album_name")
@@ -87,8 +104,8 @@ normalized_output_folder = os.path.normpath(output_folder)
 
 # Replace home directory with tilde (~) if not on Windows
 if os_type != "Windows":
-    home_dir = os.path.expanduser('~')
-    normalized_output_folder = normalized_output_folder.replace(home_dir, '~')
+    home_dir = os.path.expanduser("~")
+    normalized_output_folder = normalized_output_folder.replace(home_dir, "~")
 
 print(colored(f"Downloading to {normalized_output_folder}...", "cyan"))
 
@@ -208,6 +225,6 @@ print(colored("\nAll tracks downloaded and ready! Enjoy!", "green"))
 
 # Open the folder in the OS
 if os_type == "Windows":
-    subprocess.run(['explorer', os.path.abspath(output_folder)])
+    subprocess.run(["explorer", os.path.abspath(output_folder)])
 elif os_type == "Darwin":
-    subprocess.run(['open', os.path.abspath(output_folder)])
+    subprocess.run(["open", os.path.abspath(output_folder)])
