@@ -79,7 +79,7 @@ if os_type != "Windows":
     home_dir = os.path.expanduser('~')
     normalized_output_folder = normalized_output_folder.replace(home_dir, '~')
 
-print(colored(f"Downloading {album_name} to {normalized_output_folder}...", "cyan"))
+print(colored(f"Downloading to {normalized_output_folder}...", "cyan"))
 
 # Check and create folders
 if not os.path.exists(output_folder):
