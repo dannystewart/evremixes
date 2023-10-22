@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 
+import argparse
+import inquirer
 import json
 import os
 import platform
 import requests
-import subprocess
-import inquirer
 import shutil
+import subprocess
 from halo import Halo
 from io import BytesIO
+from mutagen.flac import FLAC, Picture
 from mutagen.mp4 import MP4, MP4Cover
 from PIL import Image
 from pydub import AudioSegment
@@ -18,6 +20,11 @@ spinner = Halo(text="Initializing", spinner="dots")
 
 # Determine the operating system
 os_type = platform.system()
+
+# Parse arguments
+parser = argparse.ArgumentParser(description="Download and convert audio tracks.")
+parser.add_argument("--flac", action="store_true", help="Keep original FLAC format")
+args = parser.parse_args()
 
 # Download and load the JSON file with track details
 spinner.start(text=colored("Downloading track details...", "cyan"))
@@ -124,44 +131,79 @@ for index, track in enumerate(track_data["tracks"]):
 
     # Download FLAC file
     with Halo(text=colored("Downloading FLAC file...", "cyan"), spinner="dots"):
-        flac_file_path = f"{output_folder}/{track_name}.flac"
+        flac_file_path = f"{output_folder}/{track_number} - {track_name}.flac"
         response = requests.get(track["file_url"])
         with open(flac_file_path, "wb") as f:
             f.write(response.content)
 
-    # Convert FLAC to ALAC (M4A)
-    with Halo(text=colored("Converting FLAC to ALAC...", "cyan"), spinner="dots"):
-        m4a_file_path = f"{output_folder}/{track_number} - {track_name}.m4a"
-        audio = AudioSegment.from_file(flac_file_path, format="flac")
-        audio.export(m4a_file_path, format="ipod", codec="alac")
+    output_file_path = os.path.join(output_folder, f"{track_number} - {track_name}")
 
-    # Add metadata and cover art using mutagen
+    if not args.flac:
+        # Convert FLAC to ALAC (M4A)
+        with Halo(text=colored("Converting FLAC to ALAC...", "cyan"), spinner="dots"):
+            m4a_file_path = f"{output_file_path}.m4a"
+            audio = AudioSegment.from_file(flac_file_path, format="flac")
+            audio.export(m4a_file_path, format="ipod", codec="alac")
+            audio_format = "mp4"
+            output_file_path = m4a_file_path
+    else:
+        audio_format = "flac"
+        output_file_path = f"{output_file_path}.flac"
+
+    # Add metadata and cover art
     with Halo(text=colored("Adding metadata and cover art...", "cyan"), spinner="dots"):
-        audio = MP4(m4a_file_path)
-        audio["trkn"] = [(int(track_number), 0)]
-        audio["\xa9nam"] = track.get("track_name", "")
-        audio["\xa9ART"] = metadata.get("artist_name", "")
-        audio["\xa9alb"] = metadata.get("album_name", "")
-        audio["\xa9day"] = str(metadata.get("year", ""))
-        audio["\xa9gen"] = metadata.get("genre", "")
-        audio["covr"] = [MP4Cover(cover_data, imageformat=MP4Cover.FORMAT_JPEG)]
+        if audio_format == "mp4":
+            audio = MP4(m4a_file_path)
+            audio["trkn"] = [(int(track_number), 0)]
+            audio["\xa9nam"] = track.get("track_name", "")
+            audio["\xa9ART"] = metadata.get("artist_name", "")
+            audio["\xa9alb"] = metadata.get("album_name", "")
+            audio["\xa9day"] = str(metadata.get("year", ""))
+            audio["\xa9gen"] = metadata.get("genre", "")
+            audio["covr"] = [MP4Cover(cover_data, imageformat=MP4Cover.FORMAT_JPEG)]
 
-        if "album_artist" in metadata:
-            audio["aART"] = metadata.get("album_artist", "")
-        if "comments" in track:
-            audio["\xa9cmt"] = track["comments"]
+            if "album_artist" in metadata:
+                audio["aART"] = metadata.get("album_artist", "")
+            if "comments" in track:
+                audio["\xa9cmt"] = track["comments"]
 
-        audio.save()
+            audio.save()
+
+        elif audio_format == "flac":
+            audio = FLAC(output_file_path)
+            audio["tracknumber"] = str(int(track_number))
+            audio["title"] = track.get("track_name", "")
+            audio["artist"] = metadata.get("artist_name", "")
+            audio["album"] = metadata.get("album_name", "")
+            audio["date"] = str(metadata.get("year", ""))
+            audio["genre"] = metadata.get("genre", "")
+
+            if "album_artist" in metadata:
+                audio["albumartist"] = metadata.get("album_artist", "")
+            if "comments" in track:
+                audio["description"] = track["comments"]
+
+            # Embed cover art
+            pic = Picture()
+            pic.data = cover_data
+            pic.type = 3  # Album cover
+            pic.mime = "image/jpeg"
+            pic.width = 800
+            pic.height = 800
+            audio.add_picture(pic)
+
+            audio.save()
 
     print(colored(f"Completed {track_name}!", "green"))
 
     # Remove the FLAC file
-    os.remove(flac_file_path)
+    if not args.flac:
+        os.remove(flac_file_path)
 
 print(colored("\nAll tracks downloaded and ready! Enjoy!", "green"))
 
 # Open the folder in the OS
 if os_type == "Windows":
     subprocess.run(['explorer', os.path.abspath(output_folder)])
-elif os_type == "Darwin":  # macOS
+elif os_type == "Darwin":
     subprocess.run(['open', os.path.abspath(output_folder)])
