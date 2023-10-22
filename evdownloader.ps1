@@ -1,12 +1,14 @@
-Function Test-Dependencies {
-    # Check if aria2c is installed
-    $script:aria2c_path = (Get-Command 'aria2c' -ErrorAction SilentlyContinue).Source
-    # Check if ffmpeg is installed
-    if (-Not (Get-Command 'ffmpeg' -ErrorAction SilentlyContinue)) {
-        Write-Host "Warning: ffmpeg is not installed."
-        return $false
+# Define potential folders where aria2c might be located
+$potential_folders = @("C:\Users\danny\Downloads")
+
+# Search for aria2c
+$aria2c_path = $null
+foreach ($folder in $potential_folders) {
+    $aria2c_candidate = Get-ChildItem -Path $folder -Recurse -File -Filter "aria2c.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
+    if ($aria2c_candidate) {
+        $aria2c_path = $aria2c_candidate.FullName
+        break
     }
-    return $true
 }
 
 Function Get-RemoteFile {
@@ -36,28 +38,27 @@ trap {
     exit 1
 }
 
-if (Test-Dependencies) {
-    # Create a temporary directory
-    $tempDir = [System.IO.Path]::GetTempFileName()
-    Remove-Item $tempDir -ErrorAction SilentlyContinue
-    New-Item -ItemType Directory -Path $tempDir | Out-Null
+# Create a temporary directory
+$tempDir = [System.IO.Path]::GetTempFileName()
+Remove-Item $tempDir -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Path $tempDir | Out-Null
 
-    # The URL of the file to download
-    $url = "https://git.dannystewart.com/danny/evremixes/raw/branch/main/dist/win/evremixes.exe"
+# The URL of the file to download
+$url = "https://git.dannystewart.com/danny/evremixes/raw/branch/main/dist/win/evremixes.exe"
 
-    # Download the file
-    Write-Host "Downloading evremixes..."
-    Get-RemoteFile -url "https://git.dannystewart.com/danny/evremixes/raw/branch/main/dist/win/evremixes.exe" -outputPath "evremixes.exe" -outputFolder $tempDir
+# Download the file
+Write-Host "Downloading evremixes..."
+Get-RemoteFile -url "https://git.dannystewart.com/danny/evremixes/raw/branch/main/dist/win/evremixes.exe" -outputPath "evremixes.exe" -outputFolder $tempDir
 
-    # Run the program in the current context
-    Write-Host "Running evremixes..."
-    $proc = Start-Process "$tempDir\evremixes.exe" -NoNewWindow -PassThru
-    $proc | Wait-Process
+# Run the program in the current context
+Write-Host "Running evremixes..."
+$proc = Start-Process "$tempDir\evremixes.exe" -NoNewWindow -PassThru
+$proc | Wait-Process
 
-    # Clean up by removing the temporary directory
-    Remove-Item -Recurse -Force $tempDir -ErrorAction SilentlyContinue
-}
-else {
+# Check if the process ran successfully
+if ($exitCode -ne 0) {
+    Write-Host "evremixes execution failed. Falling back to basic PowerShell downloader..." -ForegroundColor Yellow
+
     # Define output folder and other parameters
     $output_folder = "$env:USERPROFILE\Music\Evanescence Remixes"
 
@@ -93,3 +94,6 @@ else {
     Start-Process "explorer.exe" -ArgumentList $output_folder
     Write-Host "All tracks downloaded! Enjoy!" -ForegroundColor Green
 }
+
+# Clean up by removing the temporary directory
+Remove-Item -Recurse -Force $tempDir -ErrorAction SilentlyContinue
