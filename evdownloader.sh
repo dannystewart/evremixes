@@ -50,7 +50,8 @@ spin() {
 if command -v ffmpeg &>/dev/null; then
     FFMPEG_INSTALLED=true
 else
-    echo -e "${YELLOW}Warning:${NC} ffmpeg is not installed. Using basic downloader."
+    echo -e "${YELLOW}Warning: ffmpeg is not installed. Using basic downloader.${NC}"
+    echo -e "${YELLOW}See https://dnst.me/evhelp for more information.${NC}"
     FFMPEG_INSTALLED=false
 fi
 
