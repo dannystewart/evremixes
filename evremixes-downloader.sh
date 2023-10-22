@@ -13,13 +13,7 @@ check_dependencies() {
 
     # Check if ffmpeg is installed
     if ! command -v ffmpeg &>/dev/null; then
-        echo -e "${RED}Warning:${NC} ffmpeg is not installed."
-        dependency_met=false
-    fi
-
-    # Check if curl is installed
-    if ! command -v curl &>/dev/null; then
-        echo -e "${RED}Error:${NC} curl is not installed."
+        echo -e "${YELLOW}Warning:${NC} ffmpeg is not installed. Using basic downloader only."
         dependency_met=false
     fi
 }
