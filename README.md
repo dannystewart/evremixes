@@ -11,8 +11,6 @@ bash -c "$(curl -fsSL https://dnst.me/evdl)"
 
 This leads to `evdownloader.sh` which grabs a JSON of all my current remixes and uses that to download them to your `~/Downloads` folder. Files come pre-tagged and are ready to import into something like Apple Music.
 
-There is one dependency, which is `jq` to parse JSON. If you have [Homebrew](https://brew.sh) the script should install it automatically, but if not, you'll need to install it.
-
 ## Python Scripts
 
 ### evremixes.py

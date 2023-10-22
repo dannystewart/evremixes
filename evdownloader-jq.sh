@@ -52,12 +52,49 @@ trap cleanup EXIT SIGTERM
 # Separate Trap to call ctrl_c function on SIGINT
 trap ctrl_c SIGINT
 
+# Check for jq dependency
+if ! command -v jq >/dev/null 2>&1; then
+    echo -e "${YELLOW}jq is not installed.${NC}"
+
+    # Check if Homebrew is installed
+    if command -v brew >/dev/null 2>&1; then
+        # Move cursor up one line to overwrite the 'jq is not installed' line
+        echo -ne "\033[1A\033[K"
+        echo -n "Installing jq..."
+
+        # Run brew install in the background and capture its PID
+        brew install jq >/dev/null 2>&1 &
+        BREW_PID=$!
+
+        # Show the spinner
+        spin $BREW_PID
+
+        # Move cursor to new line before overwriting the installation message
+        echo -e "\n\033[1A\033[K"
+
+        # Check the exit status
+        wait $BREW_PID
+        BREW_EXIT_STATUS=$?
+
+        if [ $BREW_EXIT_STATUS -ne 0 ]; then
+            echo -e "${RED}Installation failed for jq${NC}       "  # Extra spaces to clear the spinner
+            exit 1
+        else
+            echo -e "${GREEN}✔ jq installed successfully${NC}      "  # Extra spaces to clear the spinner
+        fi
+
+    else
+        echo -e "${RED}Error: Homebrew is not installed, and jq could not be automatically installed. Please install jq manually before running this script.${NC}"
+        exit 1
+    fi
+fi
+
 # Welcome message
 echo ""
 echo -e "${GREEN}Saving Evanescence Remixes to ~/Downloads...${NC}"
 
 # Fetch JSON and store it in a variable, sorting tracks by track_number
-json_data=$(curl -s "https://git.dannystewart.com/danny/evremixes/raw/branch/main/evtracks.json" | python3 -c "import sys, json; data=json.load(sys.stdin); data['tracks'] = sorted(data['tracks'], key=lambda x: x['track_number']); print(json.dumps(data))")
+json_data=$(curl -s "https://git.dannystewart.com/danny/evremixes/raw/branch/main/evtracks.json" | jq '(.tracks |= sort_by(.track_number))')
 
 # Create output folder if it doesn't exist, and handle old files if it does
 if [ -d "$output_folder" ]; then
@@ -70,7 +107,7 @@ fi
 echo ""
 
 # Loop over each track in the JSON array
-length=$(echo "$json_data" | python3 -c "import sys, json; print(len(json.load(sys.stdin)['tracks']))")
+length=$(echo "$json_data" | jq '.tracks | length')
 for i in $(seq 0 $(($length - 1))); do
 
     if [ $kill_switch -eq 1 ]; then
@@ -78,10 +115,9 @@ for i in $(seq 0 $(($length - 1))); do
         exit 1
     fi
 
-    export INDEX=$i
-    track_name=$(echo "$json_data" | python3 -c "import sys, json, os; data=json.load(sys.stdin); i=int(os.environ['INDEX']); print(data['tracks'][i]['track_name'])")
-    file_url=$(echo "$json_data" | python3 -c "import sys, json, os; data=json.load(sys.stdin); i=int(os.environ['INDEX']); print(data['tracks'][i]['file_url'])")
-    track_number=$(echo "$json_data" | python3 -c "import sys, json, os; data=json.load(sys.stdin); i=int(os.environ['INDEX']); print(data['tracks'][i]['track_number'])")
+    track_name=$(echo "$json_data" | jq -r ".tracks[$i].track_name")
+    file_url=$(echo "$json_data" | jq -r ".tracks[$i].file_url")
+    track_number=$(echo "$json_data" | jq -r ".tracks[$i].track_number")
 
     # Create new .m4a URL
     m4a_url=${file_url/%.flac/.m4a}
