@@ -9,7 +9,7 @@ This runs [`evdownloader.sh`](evdownloader.sh) in case you want to check it befo
 
 ### Windows User?
 
-I'm sorry. But don't feel left out—I wrote [`evdownloader.ps1`](evdownloader.ps1) just for you. Run this and you'll feel like an adult with a Unix-based OS, for one brief but beautiful moment:
+I'm sorry. But don't feel left out—I wrote [`evdownloader.ps1`](evdownloader.ps1) just for you. Run this and you'll feel like an adult with a Unix-based OS, for one brief but shining moment:
 
 ```ps1
 iex (iwr -useb https://dnst.me/evps).Content
@@ -19,7 +19,7 @@ All you probably care about is downloading the remixes, but if you're interested
 
 ## More Info
 
-The full version of this script is written in Python and it's very cool (if I do say so myself). The "canonical" versions of my remixes are the ones officially published on my website, so the script grabs them from there. But how does it know what's currently available?
+The full version of this script is written in Python and it's very cool (if I do say so myself). The "canonical" versions of my remixes are the ones officially published [on my website](https://music.dannystewart.com/evanescence/), so the script grabs them from there. But how does it know what's currently available?
 
 Glad you asked! That's where [`evtracks.json`](evtracks.json) comes in. It holds the current list of all the remixes I have available, their URLs, and any necessary metadata, including the URL to the album art. It even accounts for two different ways to do track numbers, which it will ask you to choose when it runs:
 
@@ -46,9 +46,7 @@ The Python script will detect whether `ffmpeg` is installed or not, and if not, 
 
 ### Binaries for the Python Version
 
-By default, the main script relies on precompiled binaries for the Python script, as this avoids the need for Python and most dependencies (with the unavoidable exception of `ffmpeg`).
-
-These binaries are contained within the `dist` folder. They are unavoidable architecture-dependent, so you'll need to run the one in `arm` for Apple Silicon Macs, `x86` for Intel Macs, `win` for Windows, and `linux` for Linux (I know you wouldn't have figured those last two out).
+By default, the main script relies on precompiled binaries for the Python part, as this avoids the need for Python and most dependencies (with the unavoidable exception of `ffmpeg`). These are contained within the `dist` folder. They are unavoidably architecture-dependent, so you'll need to run the one in `arm` for Apple Silicon Macs, `x86` for Intel Macs, `win` for Windows, and `linux` for Linux (I know you wouldn't have figured those last two out on your own).
 
 If you're having trouble running them, try `chmod +x ./evremixes` to make sure they're executable.
 
