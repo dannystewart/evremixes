@@ -1,4 +1,6 @@
 Function Test-Dependencies {
+    # Check if aria2c is installed
+    $script:aria2c_path = (Get-Command 'aria2c' -ErrorAction SilentlyContinue).Source
     # Check if ffmpeg is installed
     if (-Not (Get-Command 'ffmpeg' -ErrorAction SilentlyContinue)) {
         Write-Host "Warning: ffmpeg is not installed."
@@ -7,51 +9,55 @@ Function Test-Dependencies {
     return $true
 }
 
+Function Get-RemoteFile {
+    param(
+        [string]$url,
+        [string]$outputPath,
+        [string]$outputFolder = ''
+    )
+    if ($aria2c_path) {
+        & $aria2c_path --dir="$outputFolder" --out="$outputPath" $url --disable-ipv6=true --quiet=true --show-console-readout=true
+    }
+    else {
+        try {
+            $webclient = New-Object System.Net.WebClient
+            $webclient.DownloadFile($url, "$outputFolder\$outputPath")
+        }
+        catch {
+            Write-Host "WebClient failed; falling back to Invoke-WebRequest..." -ForegroundColor Yellow
+            Invoke-WebRequest -Uri $url -OutFile "$outputFolder\$outputPath"
+        }
+    }
+}
+
+trap {
+    Write-Host "Interrupt detected. Cleaning up..."
+    Remove-Item -Recurse -Force $tempDir -ErrorAction SilentlyContinue
+    exit 1
+}
+
 if (Test-Dependencies) {
     # Create a temporary directory
     $tempDir = [System.IO.Path]::GetTempFileName()
-    Remove-Item $tempDir
-    New-Item -ItemType Directory -Path $tempDir
+    Remove-Item $tempDir -ErrorAction SilentlyContinue
+    New-Item -ItemType Directory -Path $tempDir | Out-Null
 
     # The URL of the file to download
     $url = "https://git.dannystewart.com/danny/evremixes/raw/branch/main/dist/win/evremixes.exe"
 
     # Download the file
     Write-Host "Downloading evremixes..."
-    try {
-        Invoke-WebRequest -Uri $url -OutFile "$tempDir\evremixes.exe"
-    }
-    catch {
-        Write-Host "Download failed."
-        Remove-Item -Recurse -Force $tempDir
-        exit 1
-    }
+    Get-RemoteFile -url "https://git.dannystewart.com/danny/evremixes/raw/branch/main/dist/win/evremixes.exe" -outputPath "evremixes.exe" -outputFolder $tempDir
 
-    # Run the program
+    # Run the program in the current context
     Write-Host "Running evremixes..."
-    Start-Process -FilePath "$tempDir\evremixes.exe"
+    $proc = Start-Process "$tempDir\evremixes.exe" -NoNewWindow -PassThru
+    $proc | Wait-Process
 
     # Clean up by removing the temporary directory
-    Remove-Item -Recurse -Force $tempDir
+    Remove-Item -Recurse -Force $tempDir -ErrorAction SilentlyContinue
 }
 else {
-    # Define potential folders where aria2c might be located
-    $potential_folders = @("C:\Users\danny\Downloads")
-
-    # Search for aria2c
-    $aria2c_path = $null
-    foreach ($folder in $potential_folders) {
-        $aria2c_candidate = Get-ChildItem -Path $folder -Recurse -File -Filter "aria2c.exe" -ErrorAction SilentlyContinue | Select-Object -First 1
-        if ($aria2c_candidate) {
-            $aria2c_path = $aria2c_candidate.FullName
-            break
-        }
-    }
-
-    if (-not $aria2c_path) {
-        Write-Host "aria2c.exe not found. Fallback methods will be used." -ForegroundColor Yellow
-    }
-
     # Define output folder and other parameters
     $output_folder = "$env:USERPROFILE\Music\Evanescence Remixes"
 
@@ -71,7 +77,6 @@ else {
     # Loop over each track in the JSON array
     $length = $json_data.tracks.Count
     for ($i = 0; $i -lt $length; $i++) {
-
         $track = $json_data.tracks[$i]
         $track_name = $track.track_name
         $file_url = $track.file_url
@@ -82,31 +87,7 @@ else {
         $final_filename = "$formatted_track_number - $track_name.flac"
 
         Write-Host "[$($i + 1)/$length] Downloading $track_name..."
-
-        # Try downloading the file using aria2c first
-        if (Test-Path $aria2c_path) {
-            & $aria2c_path --dir="$output_folder" --out="$final_filename" $file_url --disable-ipv6=true --quiet=true --show-console-readout=true
-            continue
-        }
-
-        # If aria2c isn't available, fall back to WebClient
-        try {
-            $webclient = New-Object System.Net.WebClient
-            $webclient.DownloadFile($file_url, "$output_folder\$final_filename")
-            continue
-        }
-        catch {
-            # Write-Host "WebClient failed; falling back to Invoke-WebRequest..." -ForegroundColor Yellow
-        }
-
-        # If WebClient fails, fall back to Invoke-WebRequest
-        try {
-            Invoke-WebRequest -Uri $file_url -OutFile "$output_folder\$final_filename"
-        }
-        catch {
-            # Write-Host "Invoke-WebRequest also failed. Skipping this file." -ForegroundColor Red
-            continue
-        }
+        Get-RemoteFile -url $file_url -outputPath $final_filename -outputFolder $output_folder
     }
 
     Start-Process "explorer.exe" -ArgumentList $output_folder
