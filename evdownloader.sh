@@ -1,5 +1,6 @@
 #!/bin/bash
 # shellcheck disable=SC1003,SC2086
+# Evanescence remix downloader
 
 # Color codes
 GREEN='\033[0;32m'
@@ -7,66 +8,58 @@ YELLOW='\033[0;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-# Dependency check
-check_dependencies() {
-    dependency_met=true
-
-    # Check if ffmpeg is installed
-    if ! command -v ffmpeg &>/dev/null; then
-        echo -e "${YELLOW}Warning:${NC} ffmpeg is not installed. Using basic downloader only."
-        dependency_met=false
+# Trap functions for cleanup
+cleanup() {
+    KILL_SWITCH=1
+    if [ -d "$OUTPUT_FOLDER" ]; then
+        find "$OUTPUT_FOLDER" -name "*.m4a.temp" -type f -exec rm -f {} +
+        if [ "$(find "$OUTPUT_FOLDER" -maxdepth 0 -empty 2>/dev/null)" ]; then
+            rmdir "$OUTPUT_FOLDER"
+        fi
     fi
 }
 
-# Spinner function
+ctrl_c() {
+    KILL_SWITCH=1
+    echo ""
+    echo -e "${RED}Script aborted. Exiting.${NC}"
+    exit 1
+}
+
+trap cleanup EXIT SIGTERM
+trap ctrl_c SIGINT
+
+# Spinner
 spin() {
-    local pid=$1
-    local delay=0.1
-    local spinstr='|/-\'
+    local PID=$1
+    local DELAY=0.1
+    local SPINSTR='|/-\'
     tput civis # Hide cursor
-    while [ "$(ps a | awk '{print $1}' | grep $pid)" ]; do
-        local temp=${spinstr#?}
-        printf " [%c]  " "$spinstr"
-        local spinstr=$temp${spinstr%"$temp"}
-        sleep $delay
+    while [ "$(ps a | awk '{print $1}' | grep $PID)" ]; do
+        local temp=${SPINSTR#?}
+        printf " [%c]  " "$SPINSTR"
+        local SPINSTR=$temp${SPINSTR%"$temp"}
+        sleep $DELAY
         printf "\b\b\b\b\b\b"
     done
     tput cnorm # Restore cursor
     printf "    \b\b\b\b"
 }
 
-# Cleanup function to remove temp files
-cleanup() {
-    kill_switch=1
-    if [ -d "$output_folder" ]; then
-        find "$output_folder" -name "*.m4a.temp" -type f -exec rm -f {} +
-        if [ "$(find "$output_folder" -maxdepth 0 -empty 2>/dev/null)" ]; then
-            rmdir "$output_folder"
-        fi
-    fi
-}
+# Check if ffmpeg is installed
+if command -v ffmpeg &>/dev/null; then
+    FFMPEG_INSTALLED=true
+else
+    echo -e "${YELLOW}Warning:${NC} ffmpeg is not installed. Using basic downloader."
+    FFMPEG_INSTALLED=false
+fi
 
-# New trap function to only set kill_switch for SIGINT
-ctrl_c() {
-    kill_switch=1
-    echo ""
-    echo -e "${RED}Script aborted. Exiting.${NC}"
-    exit 1
-}
-
-# Trap to call cleanup function on EXIT, SIGTERM
-trap cleanup EXIT SIGTERM
-
-# Separate Trap to call ctrl_c function on SIGINT
-trap ctrl_c SIGINT
-
-check_dependencies
-
-if [ "$dependency_met" = true ]; then
+# Use the cool Python version if we have ffmpeg
+if [ "$FFMPEG_INSTALLED" = true ]; then
     # Create a temporary directory
-    temp_dir=$(mktemp -d -t evremixes-XXXXXX)
+    TEMP_DIR=$(mktemp -d -t evremixes-XXXXXX)
 
-    # Identify architecture and OS
+    # Identify architecture and OS so we know what binary to use
     ARCH=$(uname -m)
     OS=$(uname)
     URL=""
@@ -79,87 +72,85 @@ if [ "$dependency_met" = true ]; then
         URL="https://git.dannystewart.com/danny/evremixes/raw/branch/main/dist/linux/evremixes"
     else
         echo -e "${RED}Error:${NC} Unsupported OS or architecture."
-        rm -r "${temp_dir}"
+        rm -r "${TEMP_DIR}"
         exit 1
     fi
 
-    # Fancy download with user feedback
+    # Download the binary for the Python script
     echo -e "${GREEN}Downloading evremixes...${NC}"
-    if curl -o "${temp_dir}/evremixes" -L "$URL" --progress-bar; then
+    if curl -o "${TEMP_DIR}/evremixes" -L "$URL" --progress-bar; then
         echo -n ""
     else
         echo -e "${RED}Download failed.${NC}"
-        rm -r "${temp_dir}"
+        rm -r "${TEMP_DIR}"
         exit 1
     fi
 
-    # Make the file executable
-    chmod +x "${temp_dir}/evremixes"
-
-    # Run the program
+    # Make the file executable and run it
+    chmod +x "${TEMP_DIR}/evremixes"
     echo -e "${GREEN}Running evremixes...${NC}"
-    "${temp_dir}/evremixes"
+    "${TEMP_DIR}/evremixes"
 
     # Clean up by removing the temporary directory
-    rm -r "${temp_dir}"
-else
-    output_folder="$HOME/Downloads/Evanescence Remixes"
-    kill_switch=0
+    rm -r "${TEMP_DIR}"
+else # Fall back to the less cool Bash version if we don't have ffmpeg
+    OUTPUT_FOLDER="$HOME/Downloads/Evanescence Remixes"
+    KILL_SWITCH=0
 
     # Welcome message
     echo ""
     echo -e "${GREEN}Saving Evanescence Remixes to ~/Downloads...${NC}"
 
-    # Fetch JSON and store it in a variable, sorting tracks by track_number
-    json_data=$(curl -s "https://git.dannystewart.com/danny/evremixes/raw/branch/main/evtracks.json" | python3 -c "import sys, json; data=json.load(sys.stdin); data['tracks'] = sorted(data['tracks'], key=lambda x: x['track_number']); print(json.dumps(data))")
+    # Fetch JSON and store it in a variable, sorting tracks by TRACK_NUMBER
+    JSON_DATA=$(curl -s "https://git.dannystewart.com/danny/evremixes/raw/branch/main/evtracks.json" | python3 -c "import sys, json; data=json.load(sys.stdin); data['tracks'] = sorted(data['tracks'], key=lambda x: x['TRACK_NUMBER']); print(json.dumps(data))")
 
     # Create output folder if it doesn't exist, and handle old files if it does
-    if [ -d "$output_folder" ]; then
-        find "$output_folder" \( -name "*.m4a" -o -name "*.m4a.temp" \) -type f -exec rm -f {} +
+    if [ -d "$OUTPUT_FOLDER" ]; then
+        find "$OUTPUT_FOLDER" \( -name "*.m4a" -o -name "*.m4a.temp" \) -type f -exec rm -f {} +
         echo -e "${YELLOW}Folder already exists; older files removed.${NC}"
     else
-        mkdir -p "$output_folder"
+        mkdir -p "$OUTPUT_FOLDER"
     fi
 
     echo ""
 
     # Loop over each track in the JSON array
-    length=$(echo "$json_data" | python3 -c "import sys, json; print(len(json.load(sys.stdin)['tracks']))")
-    for i in $(seq 0 $(($length - 1))); do
+    LENGTH=$(echo "$JSON_DATA" | python3 -c "import sys, json; print(len(json.load(sys.stdin)['tracks']))")
+    for i in $(seq 0 $(($LENGTH - 1))); do
 
-        if [ $kill_switch -eq 1 ]; then
+        if [ $KILL_SWITCH -eq 1 ]; then
             echo -e "${RED}Script aborted. Exiting.${NC}"
             exit 1
         fi
 
         export INDEX=$i
-        track_name=$(echo "$json_data" | python3 -c "import sys, json, os; data=json.load(sys.stdin); i=int(os.environ['INDEX']); print(data['tracks'][i]['track_name'])")
-        file_url=$(echo "$json_data" | python3 -c "import sys, json, os; data=json.load(sys.stdin); i=int(os.environ['INDEX']); print(data['tracks'][i]['file_url'])")
-        track_number=$(echo "$json_data" | python3 -c "import sys, json, os; data=json.load(sys.stdin); i=int(os.environ['INDEX']); print(data['tracks'][i]['track_number'])")
+        TRACK_NAME=$(echo "$JSON_DATA" | python3 -c "import sys, json, os; data=json.load(sys.stdin); i=int(os.environ['INDEX']); print(data['tracks'][i]['TRACK_NAME'])")
+        FILE_URL=$(echo "$JSON_DATA" | python3 -c "import sys, json, os; data=json.load(sys.stdin); i=int(os.environ['INDEX']); print(data['tracks'][i]['FILE_URL'])")
+        TRACK_NUMBER=$(echo "$JSON_DATA" | python3 -c "import sys, json, os; data=json.load(sys.stdin); i=int(os.environ['INDEX']); print(data['tracks'][i]['TRACK_NUMBER'])")
 
         # Create new .m4a URL
-        m4a_url=${file_url/%.flac/.m4a}
+        M4A_URL=${FILE_URL/%.flac/.m4a}
 
         # Generate final and temporary file names
-        formatted_track_number=$(printf "%02d" "$track_number")
-        temp_filename="$output_folder/$formatted_track_number - $track_name.m4a.temp"
-        final_filename="$output_folder/$formatted_track_number - $track_name.m4a"
+        FORMATTED_TRACK_NUMBER=$(printf "%02d" "$TRACK_NUMBER")
+        TEMP_FILENAME="$OUTPUT_FOLDER/$FORMATTED_TRACK_NUMBER - $TRACK_NAME.m4a.temp"
+        FINAL_FILENAME="$OUTPUT_FOLDER/$FORMATTED_TRACK_NUMBER - $TRACK_NAME.m4a"
 
         # Initialize retry counter
-        retry_count=0
-        max_retries=5
+        RETRY_COUNT=0
+        MAX_RETRIES=5
 
         # Use curl to download the file
-        echo -n "[$((i + 1))/$length] Downloading ${track_name}..."
+        echo -n "[$((i + 1))/$LENGTH] Downloading ${TRACK_NAME}..."
 
         # Download loop with retry logic
-        while [ $retry_count -lt $max_retries ]; do
-            if [ $kill_switch -eq 1 ]; then
+        while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+            if [ $KILL_SWITCH -eq 1 ]; then
                 echo -e "${RED}Script aborted. Exiting.${NC}"
                 exit 1
             fi
 
-            curl --fail-early -s "$m4a_url" -o "$temp_filename" &
+            curl --fail-early -s "$M4A_URL" -o "$TEMP_FILENAME" &
             CURL_PID=$!
             spin $CURL_PID
             wait $CURL_PID
@@ -170,18 +161,18 @@ else
             fi
 
             # Increment retry counter if the download failed
-            ((retry_count++))
+            ((RETRY_COUNT++))
 
-            # Introduce a slight delay between attempts
+            # Introduce a slight DELAY between attempts
             sleep 1
         done
 
         # Overwrite the line depending on success or failure
         if [ $CURL_EXIT_STATUS -ne 0 ]; then
-            echo -e "\r${RED}Download failed for ${track_name}${NC}            " # Extra spaces to clear the spinner
+            echo -e "\r${RED}Download failed for ${TRACK_NAME}${NC}            " # Extra spaces to clear the spinner
         else
-            mv "$temp_filename" "$final_filename"
-            echo -e "\r${GREEN}✔ ${track_name}${NC}                            " # Extra spaces to clear the spinner
+            mv "$TEMP_FILENAME" "$FINAL_FILENAME"
+            echo -e "\r${GREEN}✔ ${TRACK_NAME}${NC}                            " # Extra spaces to clear the spinner
         fi
     done
 
@@ -190,6 +181,7 @@ else
 
     # Open in Finder if we can
     if [ "$(command -v open)" ]; then
-        open "$output_folder"
+        sleep 1
+        open "$OUTPUT_FOLDER"
     fi
 fi
