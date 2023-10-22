@@ -55,6 +55,9 @@ Write-Host "Running evremixes..."
 $proc = Start-Process "$tempDir\evremixes.exe" -NoNewWindow -PassThru
 $proc | Wait-Process
 
+# Get the exit code
+$exitCode = $proc.ExitCode
+
 # Check if the process ran successfully
 if ($exitCode -ne 0) {
     Write-Host "evremixes execution failed. Falling back to basic PowerShell downloader..." -ForegroundColor Yellow
