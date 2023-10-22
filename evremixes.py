@@ -2,6 +2,7 @@
 
 import json
 import os
+import platform
 import requests
 import inquirer
 import shutil
@@ -13,6 +14,9 @@ from pydub import AudioSegment
 from termcolor import colored
 
 spinner = Halo(text="Initializing", spinner="dots")
+
+# Determine the operating system
+os_type = platform.system()
 
 # Download and load the JSON file with track details
 spinner.start(text=colored("Downloading track details...", "cyan"))
@@ -57,16 +61,18 @@ if sorting_choice == "playlist order":
 elif sorting_choice == "chronological by start date":
     track_data["tracks"] = sorted(track_data["tracks"], key=lambda k: k.get("start_date", ""))
 
-# Set the default output folder to the Downloads directory under the user's home folder
-default_output_folder = os.path.expanduser("~/Downloads")
+# Set the default output folder based on the operating system
+if os_type == "Windows":
+    default_output_folder = os.path.expanduser("~/Music")
+else:
+    default_output_folder = os.path.expanduser("~/Downloads")
 
 # Notify the user of the download location
 album_name = metadata.get("album_name")
-print(colored(f"Downloading {album_name} to {default_output_folder}...", "cyan"))
-
-# Determine the output folder based on the album name for the entire set of tracks
 album_folder = metadata.get("album_name", "Unknown Album")
 output_folder = os.path.join(default_output_folder, album_folder)
+normalized_output_folder = os.path.normpath(output_folder)
+print(colored(f"Downloading {album_name} to {normalized_output_folder}...", "cyan"))
 
 # Check and create folders
 if not os.path.exists(output_folder):
