@@ -1,5 +1,10 @@
+# Evanescence remix downloader, now in PowerShell for you Windows users
+
+# The URL of the file to download
+$url = "https://git.dannystewart.com/danny/evremixes/raw/branch/main/dist/win/evremixes.exe"
+
 # Define potential folders where aria2c might be located
-$potential_folders = @("C:\Users\danny\Downloads")
+$potential_folders = @("$env:USERPROFILE\Downloads")
 
 # Search for aria2c
 $aria2c_path = $null
@@ -11,6 +16,7 @@ foreach ($folder in $potential_folders) {
     }
 }
 
+# Function to gracefully fall back to less preferred downloaders
 Function Get-RemoteFile {
     param(
         [string]$url,
@@ -32,6 +38,7 @@ Function Get-RemoteFile {
     }
 }
 
+# Trap function to clean up on interrupt
 trap {
     Write-Host "Interrupt detected. Cleaning up..."
     Remove-Item -Recurse -Force $tempDir -ErrorAction SilentlyContinue
@@ -43,9 +50,6 @@ $tempDir = [System.IO.Path]::GetTempFileName()
 Remove-Item $tempDir -ErrorAction SilentlyContinue
 New-Item -ItemType Directory -Path $tempDir | Out-Null
 
-# The URL of the file to download
-$url = "https://git.dannystewart.com/danny/evremixes/raw/branch/main/dist/win/evremixes.exe"
-
 # Download the file
 Write-Host "Downloading evremixes..."
 Get-RemoteFile -url "https://git.dannystewart.com/danny/evremixes/raw/branch/main/dist/win/evremixes.exe" -outputPath "evremixes.exe" -outputFolder $tempDir
@@ -54,8 +58,6 @@ Get-RemoteFile -url "https://git.dannystewart.com/danny/evremixes/raw/branch/mai
 Write-Host "Running evremixes..."
 $proc = Start-Process "$tempDir\evremixes.exe" -NoNewWindow -PassThru
 $proc | Wait-Process
-
-# Get the exit code
 $exitCode = $proc.ExitCode
 
 # Check if the process ran successfully
