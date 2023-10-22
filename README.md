@@ -1,33 +1,47 @@
 # Evanescence Remix Scripts
 
-Various download and conversion scripts for my Evanescence remixes.
-
-## evdownloader.sh (the main script)
-
-This is the one meant to be easily used by anybody. Just run this:
+Simply run the following to download all my latest Evanescence remixes:
 ```bash
 bash -c "$(curl -fsSL https://dnst.me/evdl)"
 ```
 
-This leads to `evdownloader.sh` which grabs a JSON of all my current remixes and uses that to download them to your `~/Downloads` folder. Files come pre-tagged and are ready to import into something like Apple Music.
+## More Info
 
-## Python Scripts
+All you probably care about is the main script linked above (`evdownloader.sh`), but if you're interested in what else is in here, by all means feel free to read on.
 
-### evremixes.py
+### Python Version
 
-This is a fancier Python version of the main download script. This one handles the conversion from FLAC to ALAC (as well as metadata tagging) locally on your machine. I wanted to use this by default because it's way cooler, but I switched because there were too many dependencies I couldn't rely on others having.
+`evremixes.py` is a fancier Python version. You'll need Python and some extra things installed. I wanted to use this by default because it's way cooler, but there are too many dependencies I can't rely on others having. There's also a binary version which doesn't require quite as much (see below).
 
-It supports Windows, and you can also now use `--flac` if you want to keep the original FLAC files instead of converting them to ALAC. It will still tag them with the correct metadata and album art.
+This one handles the conversion from FLAC to ALAC (as well as metadata tagging) locally on your machine. It supports Windows and Linux, and you can also use `--flac` if you want to keep the original FLAC files instead of converting them to ALAC. It will still tag them with the correct metadata and album art.
 
-### evconverter.py
+### Binaries
+
+There are precompiled binaries that avoid the need to have Python or its depenedencies, but as noted above, they are dependent on platform architecture, so you'll need to run the x86 one on Intel and the ARM one on Apple Silicon.
+
+The other issue is that even with dependencies included it still needs `ffmpeg` to do the actual conversions, so even binaries don't fully solve the dependency issue.
+
+The scripts are in the `dist` directory. Just `cd` from there to either `x86` or `arm` depending on your platform, then make it executable with `chmod +x ./evremixes` and `./evremixes` to run it.
+
+### Tools
+
+#### evazure.py
+
+This is an Evanescence-specific uploader for Azure blob storage, where I keep my remixes.
+
+#### evconverter.py
 
 This is what I use to convert the FLAC files to ALAC, tag them, and re-upload them to Azure so they can be downloaded by the main Bash script. (I do the heavy lifting so you don't have to!)
 
-### evtelegram.py
+#### evtelegram.py
 
 This is a cool script I wrote to convert, tag, and upload selected remixes to a Telegram channel. It tracks uploads so it can later delete them when replacing a song, but unfortunately due to Telegram limitations, bots can only delete messages for 48 hours, so anything older still needs to be deleted manually.
 
-## Python Setup and Usage
+#### pycompiler.sh / pycompiler.bat
+
+These are just one-liners to run the PyInstaller compilation for the binaries. I need to run them in four different places (ARM Mac, x86 Mac, Windows, and Linux) and it's easier this way.
+
+### Python Setup and Usage
 
 You should probably follow a real guide to install Python using `pyenv`, like [this one](https://www.pythoncentral.io/installing-python-on-mac-using-homebrew/) or [this one](https://www.freecodecamp.org/news/python-version-on-mac-update/), but here are the absolute basics. It does require some level of familiarity with installing packages via Homebrew.
 
@@ -50,15 +64,7 @@ pip install -r requirements.txt
 
 To run a script, just run `python scriptname.py` (replacing the script name, obviously).
 
-### Binaries
-
-There are precompiled binaries that avoid the need to have Python or its depenedencies, but as noted above, they are dependent on platform architecture, so you'll need to run the x86 one on Intel and the ARM one on Apple Silicon.
-
-The other issue is that even with dependencies included it still needs `ffmpeg` to do the actual conversions, so even binaries don't fully solve the dependency issue.
-
-The scripts are in the `dist` directory. Just `cd` from there to either `x86` or `arm` depending on your platform, then make it executable with `chmod +x ./evremixes` and `./evremixes` to run it.
-
-## Other Notes
+---
 
 ### How to update/replace albums/songs in Apple Music
 
