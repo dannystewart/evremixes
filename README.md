@@ -5,85 +5,103 @@ Simply run the following to download all my latest Evanescence remixes:
 bash -c "$(curl -fsSL https://dnst.me/evdl)"
 ```
 
+All you probably care about is downloading the remixes via the main script above ([`evdownloader.sh`](evdownloader.sh)), but if you're interested in understanding what it does or what else is in here, by all means read on.
+
 ## More Info
 
-All you probably care about is the main script linked above (`evdownloader.sh`), but if you're interested in what else is in here, by all means feel free to read on.
+The full version of this script is written in Python and it's very cool (if I do say so myself). The "canonical" versions of my remixes are the ones officially published on my website, so the script grabs them from there. But how does it know what's currently available?
 
-### Python Version
+Glad you asked! That's where [`evtracks.json`](evtracks.json) comes in. It holds the current list of all the remixes I have available, their URLs, any necessary metadata, and the URL to my current album art. It even accounts for two different ways to do track numbers by containing the following information:
 
-`evremixes.py` is a fancier Python version. You'll need Python and some extra things installed. I wanted to use this by default because it's way cooler, but there are too many dependencies I can't rely on others having. There's also a binary version which doesn't require quite as much (see below).
+- The "intended" track numbers according to my playlist
+- The start date for each, so they can be sorted chronologically in the order I did them
 
-This one handles the conversion from FLAC to ALAC (as well as metadata tagging) locally on your machine. It supports Windows and Linux, and you can also use `--flac` if you want to keep the original FLAC files instead of converting them to ALAC. It will still tag them with the correct metadata and album art.
+Once it has the list of files, URLs, and metadata, the script will ask you which track order you prefer.
 
-### Binaries
+The ones hosted on my site are in FLAC for compatibility reasons[^1], but if you're running this script on a Mac, it assumes you want them in Apple Lossless (ALAC) so you can more easily play them or import them into Apple Music, and it will convert them accordingly. If you're some kind of savage who is using Windows or Linux, it will skip the conversion by default and leave them in FLAC.[^2]
 
-There are precompiled binaries that avoid the need to have Python or its depenedencies, but as noted above, they are dependent on platform architecture, so you'll need to run the x86 one on Intel and the ARM one on Apple Silicon.
+After the files are saved in the intended format, it will go through and apply the metadata. It will also download the cover art from the URL specified in the JSON and apply that too. This is very cool because it doesn't matter what's on the files themselves, it only matters what's in the JSON, and the files don't need to be updated server-side to account for changing metadata or track numbering.
 
-The other issue is that even with dependencies included it still needs `ffmpeg` to do the actual conversions, so even binaries don't fully solve the dependency issue.
+The script will download the remixes to `~/Downloads` on macOS (so you can move them to wherever you want, or simply import and then delete), and to `~/Music` on Windows and Linux.
 
-The scripts are in the `dist` directory. Just `cd` from there to either `x86` or `arm` depending on your platform, then make it executable with `chmod +x ./evremixes` and `./evremixes` to run it.
+As the files are downloaded and the metadata is applied, they will also be renamed automatically to match your selected track numbering scheme. When finished, they'll be ready for listening and/or import.
 
-### Tools
+[^1]: Most web browsers won't play ALAC-encoded M4A files; they will only download them. Even Apple doesn't support native playback in Safari. It's bizarre.
 
-#### evazure.py
+[^2]: While not supported by direct URL, you can also run the script with `--flac` to keep them in FLAC if you're running it locally on your machine.
 
-This is an Evanescence-specific uploader for Azure blob storage, where I keep my remixes.
+### Basic Bash Version
 
-#### evconverter.py
+Unfortunately the full Python version requires a few dependencies, most notably `ffmpeg` to handle the conversion from FLAC to ALAC. There is, however, a basic version of the script, written in Bash, that is nowhere near as cool, but it will download pre-converted ALAC files from my site. This relies on me remembering to manually re-encode and re-upload new files when mixes change, so I can't guarantee with 100% certainty that they will always be current.
 
-This is what I use to convert the FLAC files to ALAC, tag them, and re-upload them to Azure so they can be downloaded by the main Bash script. (I do the heavy lifting so you don't have to!)
+The Python script will detect whether `ffmpeg` is installed or not, and if not, it will download the FLAC files, tag, and rename them without attempting to convert to ALAC; **however**, for Mac users, it is always assumed that ALAC is preferable to FLAC, so if `ffmpeg` is not detected on your system, it will not even attempt to run the Python script and will fall back to the basic downloader.
 
-#### evtelegram.py
+### Binaries for the Python Version
 
-This is a cool script I wrote to convert, tag, and upload selected remixes to a Telegram channel. It tracks uploads so it can later delete them when replacing a song, but unfortunately due to Telegram limitations, bots can only delete messages for 48 hours, so anything older still needs to be deleted manually.
+By default, the main script relies on precompiled binaries for the Python script, as this avoids the need for Python and most dependencies (with the unavoidable exception of `ffmpeg`).
 
-#### pycompiler.sh / pycompiler.bat
+These binaries are contained within the `dist` folder. They are unavoidable architecture-dependent, so you'll need to run the one in `arm` for Apple Silicon Macs, `x86` for Intel Macs, `win` for Windows, and `linux` for Linux (I know you wouldn't have figured those last two out).
 
-These are just one-liners to run the PyInstaller compilation for the binaries. I need to run them in four different places (ARM Mac, x86 Mac, Windows, and Linux) and it's easier this way.
+If you're having trouble running them, try `chmod +x ./evremixes` to make sure they're executable.
 
-### Python Setup and Usage
+### Windows Users
 
-You should probably follow a real guide to install Python using `pyenv`, like [this one](https://www.pythoncentral.io/installing-python-on-mac-using-homebrew/) or [this one](https://www.freecodecamp.org/news/python-version-on-mac-update/), but here are the absolute basics. It does require some level of familiarity with installing packages via Homebrew.
+Are you a Windows user? I'm so sorry. But I don't want you to feel left out and unable to enjoy my remixes, so I've written a PowerShell version of this script ([`evdownloader.ps1`](evdownloader.ps1)) as well, just for you.
 
-1. Install [Homebrew](https://brew.sh) first if you don't already have it:
-```bash
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+Run the following and you'll feel like an adult with a Unix-based OS, but only for a moment:
+
+```ps1
+iex (iwr -useb https://dnst.me/evps).Content
 ```
-Pay attention to the output, because you will need to add `brew` to your path to use it. (It says how.)
 
-2. Install Python:
+This follows the same logic as the Bash script: check for any needed dependencies for the Python version and try that first, otherwise use a more basic PowerShell downloader.
+
+### Other Stuff
+
+The `old` folder contains earlier versions for historical reference that you can (and should) ignore, and the `tools` folder contains stuff just for me. You can look but there's no reason for you to touch.
+
+- [`evazure.py`](tools/evazure.py): This is an Evanescence-specific Python script to upload to Azure blob storage, where I keep my remixes.
+- [`evconverter.py`](tools/evconverter.py): This is what I use to convert the FLAC files to ALAC, tag them, and re-upload them to Azure so they can be downloaded by the Bash script.
+- [`evtelegram.py`](tools/evtelegram.py): This is a nifty script I wrote that converts, tags, and uploads selected remixes to a Telegram channel. It tracks uploads via the [`upload_cache.json`](tools/upload_cache.json) file so it can delete them when replacing a song, but unfortunately, due to Telegram limitations, bots can't delete anything older than 48 hours so most will still need to be deleted manually. (And I thought I was so cool!)
+- [`pycompiler.sh`](tools/pycompiler.sh) / [`pycompiler.bat`](tools/pycompiler.bat): These are just one-liners to make it easier to compile the binaries since I need to run it in four different places (for each OS and architecture).
+
+## FAQ
+
+### I want to run the cool Python version! What do I need for that?
+
+Good for you for asking, because it's exactly how you should feel. You're missing out without it, and you don't need much so it's not that bad! All you need to do is install [Homebrew](https://brew.sh) (follow their instructions; trust me, it's better for everyone) and then use it to install `ffmpeg`:
+
 ```bash
-brew install python
+brew install ffmpeg
 ```
-3. Clone this repository and then install the necessary Python dependencies:
+
+### I want to be a super cool Python user like you! How can I get that set up?
+
+It's a little beyond the scope of this readme, but  If you want to run the original Python script itself, you'll need to install Python and all the script requirements, which is more involved and definitely beyond the scope of this readme, but you can find guides like [this](https://www.pythoncentral.io/installing-python-on-mac-using-homebrew/) or [this](https://www.freecodecamp.org/news/python-version-on-mac-update/).
+
+Once you have it all set up, clone this repository and install the necessary dependencies:
 ```bash
 git clone https://git.dannystewart.com/danny/evremixes.git
 cd evremixes
 pip install -r requirements.txt
+python evremixes.py
 ```
 
-To run a script, just run `python scriptname.py` (replacing the script name, obviously).
+### What's the best way to update/replace albums/songs in Apple Music?
 
----
+Having the metadata in place first makes things much easier, so I'll take this opportunity to plug [Meta](https://www.nightbirdsevolve.com/meta/), which is a great app for managing metadata that you don't need to worry about here because that's the entire point of this script. Once you have everything downloaded and tagged:
 
-### How to update/replace albums/songs in Apple Music
+1. Open Apple Music and look in the bottom left corner for "**Updating Cloud Music Library**."
+2. Wait for that to finish and disappear, then right-click the albums/songs and click **Delete from Library**.
+3. Go to **File > Library > Update Cloud Library**.
+4. Again look for "**Updating Cloud Music Library**" and wait for it to finish.
 
-It's always easiest if you have metadata on the files before importing. [Meta](https://www.nightbirdsevolve.com/meta/) is a great app for this, but you don't need to worry about it here as that's the point of all this, obviously.
+**IMPORTANT:** Wait for it to completely sync the removal of the album. If you re-import before it's fully flushed out, you can end up with duplicates or have your new copies overwritten by old versions.
 
-#### Remove the old albums/songs
+5. Go to **File > Import….**
+6. Select the song file(s) or the entire folder containing the album and click **Open**.
+7. Wait for it to import everything.
+8. Verify that the album and metadata all look correct.
+9. One last time, go to **File > Library > Update Cloud Library** and wait for it to finish.[^3]
 
-1. Open Apple Music.
-2. Look in the bottom left corner for "Updating Cloud Music Library." Wait for this to finish and disappear.
-3. Right-click the albums/songs and click Delete from Library.
-4. Go to File > Library > Update Cloud Library, and again look in the bottom left for "Updating Cloud Music Library" and wait for it to finish.
-
-You need to wait for it to completely sync the removal of the album. If you re-import before it's fully flushed out, you can end up with duplicates or have your new copies overwritten by the old versions.
-
-#### Re-import the albums/songs
-
-6. Go to File > Import….
-7. Select the song file(s) or the entire folder containing the album and click Open.
-8. Wait for it to import everything and verify that the album and metadata all look correct.
-9. One more time, go to File > Library > Update Cloud Library and wait for it to finish.
-
-If in doubt, it never hurts to run a sync twice. It can also help to have another device nearby to watch and make sure the changes are syncing correctly.
+[^3]: It never hurts to run a sync twice, and it helps to have another device nearby to watch and make sure the changes are syncing over.
