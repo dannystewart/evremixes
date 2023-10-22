@@ -24,7 +24,7 @@ $json_data.tracks = $json_data.tracks | Sort-Object track_number
 
 # Create output folder if it doesn't exist; remove older files if it does
 if (Test-Path $output_folder) {
-    Remove-Item "$output_folder\*" -Force
+    Remove-Item "$output_folder\*.flac" -Force
     Write-Host "Folder already exists; older files removed." -ForegroundColor Yellow
 } else {
     New-Item -Path $output_folder -ItemType Directory -Force > $null
