@@ -1,22 +1,30 @@
-# Evanescence Remix Scripts
+# Evanescence Remix Downloader
 
 Simply run the following to download all my latest Evanescence remixes:
 ```bash
 bash -c "$(curl -fsSL https://dnst.me/evdl)"
 ```
 
-All you probably care about is downloading the remixes via the main script above ([`evdownloader.sh`](evdownloader.sh)), but if you're interested in understanding what it does or what else is in here, by all means read on.
+This runs [`evdownloader.sh`](evdownloader.sh) in case you want to check it before you run random code off the internet.
+
+### Windows User?
+
+I'm sorry. But don't feel left out—I wrote [`evdownloader.ps1`](evdownloader.ps1) just for you. Run this and you'll feel like an adult with a Unix-based OS, for one brief but beautiful moment:
+
+```ps1
+iex (iwr -useb https://dnst.me/evps).Content
+```
+
+All you probably care about is downloading the remixes, but if you're interested in understanding how these work, by all means read on.
 
 ## More Info
 
 The full version of this script is written in Python and it's very cool (if I do say so myself). The "canonical" versions of my remixes are the ones officially published on my website, so the script grabs them from there. But how does it know what's currently available?
 
-Glad you asked! That's where [`evtracks.json`](evtracks.json) comes in. It holds the current list of all the remixes I have available, their URLs, any necessary metadata, and the URL to my current album art. It even accounts for two different ways to do track numbers by containing the following information:
+Glad you asked! That's where [`evtracks.json`](evtracks.json) comes in. It holds the current list of all the remixes I have available, their URLs, and any necessary metadata, including the URL to the album art. It even accounts for two different ways to do track numbers, which it will ask you to choose when it runs:
 
-- The "intended" track numbers according to my playlist
-- The start date for each, so they can be sorted chronologically in the order I did them
-
-Once it has the list of files, URLs, and metadata, the script will ask you which track order you prefer.
+- The "intended" track numbers, according to my playlist order
+- Their start dates, so they can be sorted chronologically in the order I did them
 
 The ones hosted on my site are in FLAC for compatibility reasons[^1], but if you're running this script on a Mac, it assumes you want them in Apple Lossless (ALAC) so you can more easily play them or import them into Apple Music, and it will convert them accordingly. If you're some kind of savage who is using Windows or Linux, it will skip the conversion by default and leave them in FLAC.[^2]
 
@@ -44,26 +52,14 @@ These binaries are contained within the `dist` folder. They are unavoidable arch
 
 If you're having trouble running them, try `chmod +x ./evremixes` to make sure they're executable.
 
-### Windows Users
-
-Are you a Windows user? I'm so sorry. But I don't want you to feel left out and unable to enjoy my remixes, so I've written a PowerShell version of this script ([`evdownloader.ps1`](evdownloader.ps1)) as well, just for you.
-
-Run the following and you'll feel like an adult with a Unix-based OS, but only for a moment:
-
-```ps1
-iex (iwr -useb https://dnst.me/evps).Content
-```
-
-This follows the same logic as the Bash script: check for any needed dependencies for the Python version and try that first, otherwise use a more basic PowerShell downloader.
-
 ### Other Stuff
 
 The `old` folder contains earlier versions for historical reference that you can (and should) ignore, and the `tools` folder contains stuff just for me. You can look but there's no reason for you to touch.
 
 - [`evazure.py`](tools/evazure.py): This is an Evanescence-specific Python script to upload to Azure blob storage, where I keep my remixes.
 - [`evconverter.py`](tools/evconverter.py): This is what I use to convert the FLAC files to ALAC, tag them, and re-upload them to Azure so they can be downloaded by the Bash script.
-- [`evtelegram.py`](tools/evtelegram.py): This is a nifty script I wrote that converts, tags, and uploads selected remixes to a Telegram channel. It tracks uploads via the [`upload_cache.json`](tools/upload_cache.json) file so it can delete them when replacing a song, but unfortunately, due to Telegram limitations, bots can't delete anything older than 48 hours so most will still need to be deleted manually. (And I thought I was so cool!)
-- [`pycompiler.sh`](tools/pycompiler.sh) / [`pycompiler.bat`](tools/pycompiler.bat): These are just one-liners to make it easier to compile the binaries since I need to run it in four different places (for each OS and architecture).
+- [`evtelegram.py`](tools/evtelegram.py): This is a nifty script that uploads remixes to a Telegram channel. It tracks upload IDs in [`upload_cache.json`](tools/upload_cache.json) and tries to delete them when replacing a song, but unfortunately due to Telegram limitations it can't delete things older than 48 hours, so most will need to be deleted manually. (I thought I was so cool.)
+- [`pycompiler.sh`](tools/pycompiler.sh) / [`pycompiler.bat`](tools/pycompiler.bat): These are just one-liners to make it easier to compile the binaries in four different places (for each OS and architecture).
 
 ## FAQ
 
