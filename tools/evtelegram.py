@@ -1,28 +1,41 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
+import inquirer
 import json
 import os
 import requests
-import inquirer
+import sys
 import tempfile
+from dotenv import load_dotenv
 from halo import Halo
 from io import BytesIO
-from mutagen.flac import FLAC
 from mutagen.mp4 import MP4, MP4Cover
 from PIL import Image
 from pydub import AudioSegment
-from termcolor import colored
 from telebot import TeleBot
-from dotenv import load_dotenv
+from termcolor import colored
 
-# Initialize and load environment variables
+# Initialize the spinner
 spinner = Halo(text="Initializing", spinner="dots")
+
+# Get the script directory and assemble the .env path
+script_directory = os.path.dirname(os.path.abspath(__file__))
+env_path = os.path.join(script_directory, ".env")
+
+# Load environment variables
 load_dotenv()
-load_dotenv(dotenv_path="/Users/danny/Developer/evremixes/.env")
+load_dotenv(dotenv_path=env_path)
 
 # Initialize Telegram Bot API
-bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
-channel_id = os.environ.get("TELEGRAM_CHANNEL_ID")
+bot_token = os.environ.get("EV_TELEGRAM_BOT_TOKEN")
+channel_id = os.environ.get("EV_TELEGRAM_CHANNEL_ID")
+
+# We can't proceed if we don't have the Telegram info
+if bot_token is None or channel_id is None:
+    print("Error: Telegram info not found. Check environment variables.")
+    sys.exit(1)
+
+# Initialize the Telegram bot
 bot = TeleBot(bot_token)
 
 # Check for local upload cache

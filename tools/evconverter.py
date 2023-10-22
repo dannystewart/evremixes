@@ -1,25 +1,44 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
+import inquirer
 import json
 import os
 import requests
-import inquirer
 import subprocess
+import sys
 import tempfile
 import time
+from azure.storage.blob import BlobServiceClient
+from dotenv import load_dotenv
 from halo import Halo
 from io import BytesIO
 from mutagen.mp4 import MP4, MP4Cover
 from PIL import Image
 from pydub import AudioSegment
 from termcolor import colored
-from azure.storage.blob import BlobServiceClient
-from dotenv import load_dotenv
 
-# Initialize and load environment variables
+# Initialize the spinner
 spinner = Halo(text="Initializing", spinner="dots")
+
+# Get the script directory and assemble the .env path
+script_directory = os.path.dirname(os.path.abspath(__file__))
+env_path = os.path.join(script_directory, ".env")
+
+# Load environment variables
 load_dotenv()
-load_dotenv(dotenv_path="/Users/danny/Developer/evremixes/.env")
+load_dotenv(dotenv_path=env_path)
+
+# Make sure we have the Azure connection string
+connection_string = os.environ.get("AZURE_CONNECTION_STRING")
+if connection_string is None:
+    print("Error: AZURE_CONNECTION_STRING not found. Check environment variables.")
+    sys.exit(1)
+
+# Initialize the Blob Service Client
+blob_service_client = BlobServiceClient.from_connection_string(connection_string)
+container_name = "music"
+container_client = blob_service_client.get_container_client(container_name)
+uploaded_blob_names = []
 
 # Download and load the JSON file with track details
 spinner.start(text=colored("Downloading track details...", "cyan"))
@@ -47,13 +66,6 @@ cover_data = buffered.getvalue()
 
 spinner.succeed(text=colored("Downloaded track details.", "green"))
 
-# Initialize the Blob Service Client
-connection_string = os.environ.get("AZURE_CONNECTION_STRING")
-blob_service_client = BlobServiceClient.from_connection_string(connection_string)
-container_name = "music"
-container_client = blob_service_client.get_container_client(container_name)
-uploaded_blob_names = []
-
 # Menu
 sorted_tracks = sorted(track_data["tracks"], key=lambda x: x["track_number"])
 
@@ -66,9 +78,7 @@ questions = [
 ]
 
 answers = inquirer.prompt(questions)
-selected_tracks = [
-    track for track in sorted_tracks if track["track_name"] in answers["tracks"]
-]
+selected_tracks = [track for track in sorted_tracks if track["track_name"] in answers["tracks"]]
 
 # Create temp directory for downloads and conversions
 with tempfile.TemporaryDirectory() as tmpdirname:
@@ -97,9 +107,7 @@ with tempfile.TemporaryDirectory() as tmpdirname:
             audio.export(m4a_file_path, format="ipod", codec="alac")
 
         # Add metadata and cover art using mutagen
-        with Halo(
-            text=colored("Adding metadata and cover art...", "cyan"), spinner="dots"
-        ):
+        with Halo(text=colored("Adding metadata and cover art...", "cyan"), spinner="dots"):
             audio = MP4(m4a_file_path)
             audio["trkn"] = [(track.get("track_number", 0), 0)]
             audio["\xa9nam"] = track.get("track_name", "")
@@ -142,9 +150,7 @@ if uploaded_blob_names:  # Only run if there are files to purge
     content_paths_str = " ".join([f"'{name}'" for name in uploaded_blob_names])
 
     with Halo(
-        text=colored(
-            "Now purging Azure CDN cache (this may take a few minutes)...", "cyan"
-        ),
+        text=colored("Now purging Azure CDN cache (this may take a few minutes)...", "cyan"),
         spinner="dots",
     ):
         process = subprocess.run(

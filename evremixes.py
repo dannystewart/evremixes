@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import argparse
 import inquirer
@@ -17,6 +17,7 @@ from pydub import AudioSegment
 from termcolor import colored
 
 
+# Check if ffmpeg is installed
 def ffmpeg_installed():
     try:
         subprocess.run(
@@ -27,7 +28,7 @@ def ffmpeg_installed():
         return False
 
 
-# Initialize
+# Initialize the spinner
 spinner = Halo(text="Initializing", spinner="dots")
 
 # Determine the operating system

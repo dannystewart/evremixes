@@ -1,22 +1,32 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
-import os
 import argparse
-import tempfile
-import subprocess
+import os
 import pyperclip
+import subprocess
+import sys
+import tempfile
 from azure.storage.blob import BlobServiceClient
-from pydub import AudioSegment
-from halo import Halo
-from termcolor import colored
 from dotenv import load_dotenv
+from halo import Halo
+from pydub import AudioSegment
+from termcolor import colored
+
+# Get the script directory and assemble the .env path
+script_directory = os.path.dirname(os.path.abspath(__file__))
+env_path = os.path.join(script_directory, ".env")
 
 # Load environment variables
 load_dotenv()
-load_dotenv(dotenv_path="/Users/danny/Developer/evremixes/.env")
+load_dotenv(dotenv_path=env_path)
+
+# Make sure we have the Azure connection string
+connection_string = os.environ.get("AZURE_CONNECTION_STRING")
+if connection_string is None:
+    print("Error: AZURE_CONNECTION_STRING not found. Check environment variables.")
+    sys.exit(1)
 
 # Initialize the Blob Service Client
-connection_string = os.environ.get("AZURE_CONNECTION_STRING")
 blob_service_client = BlobServiceClient.from_connection_string(connection_string)
 container_client = blob_service_client.get_container_client("music")
 
