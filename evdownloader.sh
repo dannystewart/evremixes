@@ -133,4 +133,8 @@ done
 
 echo ""
 echo -e "${GREEN}All tracks downloaded! Enjoy!${NC}"
-open "$output_folder"
+
+# Open in Finder if we can
+if [ "$(command -v open)" ]; then
+    open "$output_folder"
+fi
