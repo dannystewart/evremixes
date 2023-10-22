@@ -2,7 +2,7 @@
 
 Various download and conversion scripts for my Evanescence remixes.
 
-## Main Script (evdownloader.sh)
+## evdownloader.sh (the main script)
 
 This is the one meant to be easily used by anybody. Just run this:
 ```bash
@@ -19,38 +19,38 @@ There is one dependency, which is `jq` to parse JSON. If you have [Homebrew](htt
 
 This is a fancier Python version of the main download script. This one handles the conversion from FLAC to ALAC (as well as metadata tagging) locally on your machine. I wanted to use this by default because it's way cooler, but I switched because there were too many dependencies I couldn't rely on others having.
 
+It supports Windows, and you can also now use `--flac` if you want to keep the original FLAC files instead of converting them to ALAC. It will still tag them with the correct metadata and album art.
+
 ### evconverter.py
 
-This is what I use to convert the FLAC files to ALAC, tag them with the correct metadata and album art, and re-upload them to Azure so they can be downloaded by the main Bash script. (I do the heavy lifting so you don't have to!)
+This is what I use to convert the FLAC files to ALAC, tag them, and re-upload them to Azure so they can be downloaded by the main Bash script. (I do the heavy lifting so you don't have to!)
 
 ### evtelegram.py
 
-This is a cool script I wrote to convert, tag, and upload selected remixes to a Telegram channel where I keep them all.
+This is a cool script I wrote to convert, tag, and upload selected remixes to a Telegram channel. It tracks uploads so it can later delete them when replacing a song, but unfortunately due to Telegram limitations, bots can only delete messages for 48 hours, so anything older still needs to be deleted manually.
 
-## Python Setup
+## Python Setup and Usage
+
+You should probably follow a real guide to install Python using `pyenv`, like [this one](https://www.pythoncentral.io/installing-python-on-mac-using-homebrew/) or [this one](https://www.freecodecamp.org/news/python-version-on-mac-update/), but here are the absolute basics. It does require some level of familiarity with installing packages via Homebrew.
 
 1. Install [Homebrew](https://brew.sh) first if you don't already have it:
 ```bash
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 ```
+Pay attention to the output, because you will need to add `brew` to your path to use it. (It says how.)
+
 2. Install Python:
 ```bash
 brew install python
 ```
-3. Clone this repository somewhere:
+3. Clone this repository and then install the necessary Python dependencies:
 ```bash
 git clone https://git.dannystewart.com/danny/evremixes.git
-```
-4. Install dependencies:
-```bash
+cd evremixes
 pip install -r requirements.txt
 ```
 
-### Running the Scripts
-
-To run the script, just `cd` to the directory and run `python scriptname.py` (replacing the script name, obviously).
-
-Note that there are better/cleaner ways to run Python using virtual environments, but that's beyond the scope of this readme.
+To run a script, just run `python scriptname.py` (replacing the script name, obviously).
 
 ### Binaries
 
