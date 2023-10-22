@@ -135,7 +135,7 @@ with tempfile.TemporaryDirectory() as tmpdirname:
         print("\033[F\033[K", end="")  # Move up one line and clear line
         print(colored(f"Uploaded {track_name}!", "green"))
 
-print(colored("\nSelected tracks converted and reuploaded to Azure!", "green"))
+print(colored("\n✔ Selected tracks converted and reuploaded to Azure!", "green"))
 
 if uploaded_blob_names:  # Only run if there are files to purge
     # Convert list to string format suitable for command line argument
