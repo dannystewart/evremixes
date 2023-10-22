@@ -46,7 +46,7 @@ The Python script will detect whether `ffmpeg` is installed or not, and if not, 
 
 ### Binaries for the Python Version
 
-By default, the main script relies on precompiled binaries for the Python part, as this avoids the need for Python and most dependencies (with the unavoidable exception of `ffmpeg`). These are contained within the `dist` folder. They are unavoidably architecture-dependent, so you'll need to run the one in `arm` for Apple Silicon Macs, `x86` for Intel Macs, `win` for Windows, and `linux` for Linux (I know you wouldn't have figured those last two out on your own).
+By default, the main script relies on precompiled binaries for the Python part, as this avoids the need for Python and most dependencies (with the exception of `ffmpeg`). These are contained within the `dist` folder. They are unavoidably architecture-dependent, so you'll need to run the one in `arm` for Apple Silicon Macs, `x86` for Intel Macs, `win` for Windows, and `linux` for Linux (I know you wouldn't have figured those last two out on your own).
 
 If you're having trouble running them, try `chmod +x ./evremixes` to make sure they're executable.
 
