@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
+import argparse
 import inquirer
 import json
 import os
 import requests
 import sys
 import tempfile
+import time
 from dotenv import load_dotenv
 from halo import Halo
 from io import BytesIO
@@ -17,6 +19,11 @@ from termcolor import colored
 
 # Initialize the spinner
 spinner = Halo(text="Initializing", spinner="dots")
+
+# Parse arguments
+parser = argparse.ArgumentParser(description="Upload audio tracks to Telegram channel.")
+parser.add_argument("--comment", action="store_true", help="Include comments on uploads")
+args = parser.parse_args()
 
 # Get the script directory and assemble the .env path
 script_directory = os.path.dirname(os.path.abspath(__file__))
@@ -45,6 +52,35 @@ try:
 except FileNotFoundError:
     upload_cache = {}
 
+# Include comments if argument is supplied
+if args.comment:
+    include_comments = True
+
+
+# Function to check the age of uploads
+def check_upload_age(bot, chat_id, bot_token):
+    # Get the number of members in the chat
+    member_count = bot.get_chat_member_count(chat_id)
+
+    # If the chat is empty, we can't have recent uploads
+    if member_count == 0:
+        return False
+
+    # Fetch the last 20 messages from the chat
+    url = f"https://api.telegram.org/bot{bot_token}/getUpdates?offset=-1&limit=20"
+    response = requests.get(url)
+    messages = response.json().get("result", [])
+
+    current_time = int(time.time())
+    two_days_in_seconds = 48 * 60 * 60
+
+    for message in messages:
+        message_time = message.get("message", {}).get("date", 0)
+        if current_time - message_time < two_days_in_seconds:
+            return True  # Found a message less than 48 hours old
+
+    return False  # All messages are older than 48 hours
+
 
 # Sort tracks based on upload history
 def get_upload_order(track):
@@ -61,6 +97,9 @@ response = requests.get(
     "https://git.dannystewart.com/danny/evremixes/raw/branch/main/evtracks.json"
 )
 spinner.stop()
+
+# Show spinner as we prep
+spinner.start(text=colored("Preparing track details...", "cyan"))
 
 # Download track and album metadata, plus cover art
 track_data = json.loads(response.text)
@@ -81,25 +120,24 @@ buffered = BytesIO()
 image.save(buffered, format="JPEG")
 cover_data = buffered.getvalue()
 
-# Prompt user if they want to delete previous versions
-delete_prev_versions_question = [
-    inquirer.Confirm(
-        "delete_prev_versions",
-        message="Delete previous versions of track uploads?",
-        default=True,
-    ),
-]
-delete_prev_versions_answer = inquirer.prompt(delete_prev_versions_question)["delete_prev_versions"]
+spinner.stop()
 
-# Prompt user if they want to include comments
-comment_question = [
-    inquirer.Confirm(
-        "include_comments",
-        message="Include comments for track uploads?",
-        default=False,
-    ),
-]
-include_comments_answer = inquirer.prompt(comment_question)["include_comments"]
+# Check age of uploads in the cache
+with Halo(text=colored("Checking age of current uploads...", "cyan"), spinner="dots"):
+    recent_uploads_exist = check_upload_age(bot, channel_id, bot_token)
+
+# Only prompt for deletion if there are recent uploads
+if recent_uploads_exist:
+    delete_prev_versions_question = [
+        inquirer.Confirm(
+            "delete_prev_versions",
+            message="Delete previous versions of track uploads?",
+            default=True,
+        ),
+    ]
+    delete_prev_versions_answer = inquirer.prompt(delete_prev_versions_question)[
+        "delete_prev_versions"
+    ]
 
 # Sort tracks and display menu
 sorted_tracks = sorted(track_data["tracks"], key=get_upload_order, reverse=True)
@@ -114,7 +152,7 @@ answers = inquirer.prompt(questions)
 selected_tracks = [track for track in sorted_tracks if track["track_name"] in answers["tracks"]]
 
 # If yes, get comments for selected tracks before uploading
-if include_comments_answer:
+if include_comments:
     for track in selected_tracks:
         comment = input(f"Enter comment for {track['track_name']}: ")
         track_comments[track["track_name"]] = comment
@@ -183,9 +221,7 @@ with tempfile.TemporaryDirectory() as tmpdirname:
             spinner="dots",
         ):
             with open(m4a_file_path, "rb") as f:
-                caption_text = (
-                    track_comments.get(track_name, None) if include_comments_answer else None
-                )
+                caption_text = track_comments.get(track_name, None) if include_comments else None
                 message = bot.send_audio(
                     channel_id,
                     f,
