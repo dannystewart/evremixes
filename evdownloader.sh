@@ -74,6 +74,13 @@ fi
 if command -v ffmpeg &>/dev/null; then
     FFMPEG_INSTALLED=true
 else
+    # Graceful Python test before invoking Python-dependent parts
+    if ! python3 -c "print('Python works!')" &>/dev/null; then
+        echo -e "${YELLOW}Python did not run correctly, likely due to incomplete Developer Tools setup.${NC}"
+        echo -e "${YELLOW}Please rerun the script after ensuring Developer Tools are properly installed.${NC}"
+        exit 1
+    fi
+
     echo -e "${YELLOW}Warning: ffmpeg is not installed. Using basic downloader.${NC}"
     echo -e "${YELLOW}See https://dnst.me/evhelp for more information.${NC}"
     FFMPEG_INSTALLED=false
@@ -121,13 +128,6 @@ if [ "$FFMPEG_INSTALLED" = true ]; then
 else # Fall back to the less cool Bash version if we don't have ffmpeg
     OUTPUT_FOLDER="$HOME/Downloads/Evanescence Remixes"
     KILL_SWITCH=0
-
-    # Graceful Python test before invoking Python-dependent parts
-    if ! python3 -c "print('Python works!')" &>/dev/null; then
-        echo -e "${YELLOW}Python did not run correctly, likely due to incomplete Developer Tools setup.${NC}"
-        echo -e "${YELLOW}Please rerun the script after ensuring Developer Tools are properly installed.${NC}"
-        exit 1
-    fi
 
     # Welcome message
     echo ""
