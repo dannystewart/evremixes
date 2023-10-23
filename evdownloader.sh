@@ -53,8 +53,15 @@ if [ "$OS" == "Darwin" ]; then
         echo -e "${YELLOW}Would you like to install Developer Tools now? (y/n)${NC}"
         read -r answer
         if [ "$answer" == "y" ]; then
-            xcode-select --install
-            echo -e "${YELLOW}Please rerun the script after Developer Tools installation completes.${NC}"
+            xcode-select --install &>/dev/null
+
+            # Wait until Developer Tools are installed
+            echo -e "${YELLOW}Waiting for Developer Tools to install...${NC}"
+            until xcode-select -p &>/dev/null; do
+                sleep 5
+            done
+
+            echo -e "${GREEN}Developer Tools installed. Please rerun the script.${NC}"
             exit 1
         else
             echo -e "${YELLOW}Exiting as Developer Tools are required for this script.${NC}"
@@ -117,7 +124,7 @@ else # Fall back to the less cool Bash version if we don't have ffmpeg
 
     # Graceful Python test before invoking Python-dependent parts
     if ! python3 -c "print('Python works!')" &>/dev/null; then
-        echo -e "${YELLOW}Python did not execute correctly, likely due to incomplete Developer Tools setup.${NC}"
+        echo -e "${YELLOW}Python did not run correctly, likely due to incomplete Developer Tools setup.${NC}"
         echo -e "${YELLOW}Please rerun the script after ensuring Developer Tools are properly installed.${NC}"
         exit 1
     fi
