@@ -46,6 +46,23 @@ spin() {
     printf "    \b\b\b\b"
 }
 
+# Check OS and then perform Developer Tools check
+if [ "$OS" == "Darwin" ]; then
+    if ! xcode-select -p &>/dev/null; then
+        echo -e "${YELLOW}Developer Tools are not installed. These are required for the script.${NC}"
+        echo -e "${YELLOW}Would you like to install Developer Tools now? (y/n)${NC}"
+        read -r answer
+        if [ "$answer" == "y" ]; then
+            xcode-select --install
+            echo -e "${YELLOW}Please rerun the script after Developer Tools installation completes.${NC}"
+            exit 1
+        else
+            echo -e "${YELLOW}Exiting as Developer Tools are required for this script.${NC}"
+            exit 1
+        fi
+    fi
+fi
+
 # Check if ffmpeg is installed
 if command -v ffmpeg &>/dev/null; then
     FFMPEG_INSTALLED=true
@@ -97,6 +114,13 @@ if [ "$FFMPEG_INSTALLED" = true ]; then
 else # Fall back to the less cool Bash version if we don't have ffmpeg
     OUTPUT_FOLDER="$HOME/Downloads/Evanescence Remixes"
     KILL_SWITCH=0
+
+    # Graceful Python test before invoking Python-dependent parts
+    if ! python3 -c "print('Python works!')" &>/dev/null; then
+        echo -e "${YELLOW}Python did not execute correctly, likely due to incomplete Developer Tools setup.${NC}"
+        echo -e "${YELLOW}Please rerun the script after ensuring Developer Tools are properly installed.${NC}"
+        exit 1
+    fi
 
     # Welcome message
     echo ""
