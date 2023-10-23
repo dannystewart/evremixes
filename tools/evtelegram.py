@@ -25,9 +25,10 @@ parser = argparse.ArgumentParser(description="Upload audio tracks to Telegram ch
 parser.add_argument("--comment", action="store_true", help="Include comments on uploads")
 args = parser.parse_args()
 
-# Get the script directory and assemble the .env path
+# Get the script directory and assemble paths
 script_directory = os.path.dirname(os.path.abspath(__file__))
 env_path = os.path.join(script_directory, ".env")
+upload_cache_path = os.path.join(script_directory, "upload_cache.json")
 
 # Load environment variables
 load_dotenv()
@@ -45,41 +46,53 @@ if bot_token is None or channel_id is None:
 # Initialize the Telegram bot
 bot = TeleBot(bot_token)
 
-# Check for local upload cache
+
+# Check to see whether anything is deletable
+def has_deletable_tracks(upload_cache):
+    current_time = int(time.time())
+    forty_eight_hours_ago = current_time - (48 * 60 * 60)
+
+    for key in upload_cache:
+        for msg_id, timestamp in upload_cache[key]:
+            if timestamp >= forty_eight_hours_ago:
+                return True
+    return False
+
+
+# Function to remove entries older than 48 hours from the upload cache
+def remove_old_entries(upload_cache):
+    forty_eight_hours_ago = int(time.time()) - (48 * 60 * 60)
+
+    for key in list(upload_cache.keys()):
+        new_entries = []
+
+        for msg_id, timestamp in upload_cache[key]:
+            if timestamp >= forty_eight_hours_ago:
+                new_entries.append([msg_id, timestamp])
+            else:
+                print(f"Removing entry with timestamp {timestamp}")
+
+        upload_cache[key] = new_entries
+
+        if not upload_cache[key]:
+            del upload_cache[key]
+
+
+# Check for local upload cache and prune old entries
 try:
-    with open("upload_cache.json", "r") as f:
+    with open(upload_cache_path, "r") as f:
         upload_cache = json.load(f)
 except FileNotFoundError:
     upload_cache = {}
 
+remove_old_entries(upload_cache)
+
+with open(upload_cache_path, "w") as f:
+    json.dump(upload_cache, f, indent=4)
+
+
 # Include comments if argument is supplied
-if args.comment:
-    include_comments = True
-
-
-# Function to check the age of uploads
-def check_upload_age(bot, chat_id, bot_token):
-    # Get the number of members in the chat
-    member_count = bot.get_chat_member_count(chat_id)
-
-    # If the chat is empty, we can't have recent uploads
-    if member_count == 0:
-        return False
-
-    # Fetch the last 20 messages from the chat
-    url = f"https://api.telegram.org/bot{bot_token}/getUpdates?offset=-1&limit=20"
-    response = requests.get(url)
-    messages = response.json().get("result", [])
-
-    current_time = int(time.time())
-    two_days_in_seconds = 48 * 60 * 60
-
-    for message in messages:
-        message_time = message.get("message", {}).get("date", 0)
-        if current_time - message_time < two_days_in_seconds:
-            return True  # Found a message less than 48 hours old
-
-    return False  # All messages are older than 48 hours
+include_comments = True if args.comment else False
 
 
 # Sort tracks based on upload history
@@ -122,12 +135,8 @@ cover_data = buffered.getvalue()
 
 spinner.stop()
 
-# Check age of uploads in the cache
-with Halo(text=colored("Checking age of current uploads...", "cyan"), spinner="dots"):
-    recent_uploads_exist = check_upload_age(bot, channel_id, bot_token)
-
 # Only prompt for deletion if there are recent uploads
-if recent_uploads_exist:
+if has_deletable_tracks(upload_cache):
     delete_prev_versions_question = [
         inquirer.Confirm(
             "delete_prev_versions",
@@ -135,9 +144,9 @@ if recent_uploads_exist:
             default=True,
         ),
     ]
-    delete_prev_versions_answer = inquirer.prompt(delete_prev_versions_question)[
-        "delete_prev_versions"
-    ]
+    delete_prev_versions_answer = inquirer.prompt(delete_prev_versions_question)["delete_prev_versions"]
+else:
+    delete_prev_versions_answer = False
 
 # Sort tracks and display menu
 sorted_tracks = sorted(track_data["tracks"], key=get_upload_order, reverse=True)
@@ -245,7 +254,7 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                         bot.delete_message(channel_id, old_id)
                         print(
                             colored(
-                                f"✔ Deleted previous {track_name} upload with ID {old_id}.",
+                                f"✔ Deleted previous {track_name} upload with ID {old_id[0]}.",
                                 "green",
                             ),
                             flush=True,
@@ -253,16 +262,18 @@ with tempfile.TemporaryDirectory() as tmpdirname:
                     except Exception as e:
                         print(
                             colored(
-                                f"Could not delete previous {track_name} upload with ID {old_id}: {e}",
+                                f"Could not delete previous {track_name} upload with ID {old_id[0]}: {e}",
                                 "red",
                             )
                         )
                 # Record new message ID
-                upload_cache[track_key] = [message_id]
+                current_time = int(time.time())
+                upload_cache[track_key] = [(message_id, current_time)]
             else:
                 # Append new message ID to the list
                 if isinstance(old_message_ids, list):
-                    old_message_ids.append(message_id)
+                    current_time = int(time.time())
+                    old_message_ids.append((message_id, current_time))
                 else:
                     old_message_ids = [message_id]
                 upload_cache[track_key] = old_message_ids
