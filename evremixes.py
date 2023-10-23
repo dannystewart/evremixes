@@ -45,7 +45,7 @@ if os_type != "Darwin":
 
 # Check if ffmpeg is installed; if not, default to FLAC
 if not ffmpeg_installed():
-    print(colored("ffmpeg not found; downloads will be in FLAC", "yellow"))
+    print(colored("Warning: ffmpeg not found. Downloads will be in FLAC.", "yellow"))
     args.flac = True
 
 # Download and load the JSON file with track details
@@ -108,7 +108,8 @@ if os_type != "Windows":
     home_dir = os.path.expanduser("~")
     normalized_output_folder = normalized_output_folder.replace(home_dir, "~")
 
-print(colored(f"Downloading to {normalized_output_folder}...", "cyan"))
+format_type = "FLAC" if args.flac else "ALAC"
+print(colored(f"Downloading in {format_type} to {normalized_output_folder}...", "cyan"))
 
 # Check and create folders
 if not os.path.exists(output_folder):
