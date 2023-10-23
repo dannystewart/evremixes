@@ -6,6 +6,13 @@ $url = "https://git.dannystewart.com/danny/evremixes/raw/branch/main/dist/win/ev
 # Define potential folders where aria2c might be located
 $potential_folders = @("$env:USERPROFILE\Downloads")
 
+# Parse command-line arguments
+$basicMode = $false
+if ($args -contains "-Basic") {
+    $basicMode = $true
+    Write-Host "Running in basic mode, skipping Python downloader..." -ForegroundColor Yellow
+}
+
 # Search for aria2c
 $aria2c_path = $null
 foreach ($folder in $potential_folders) {
@@ -45,25 +52,31 @@ trap {
     exit 1
 }
 
-# Create a temporary directory
-$tempDir = [System.IO.Path]::GetTempFileName()
-Remove-Item $tempDir -ErrorAction SilentlyContinue
-New-Item -ItemType Directory -Path $tempDir | Out-Null
+if (-not $basicMode) {
+    # Create a temporary directory
+    $tempDir = [System.IO.Path]::GetTempFileName()
+    Remove-Item $tempDir -ErrorAction SilentlyContinue
+    New-Item -ItemType Directory -Path $tempDir | Out-Null
 
-# Download the file
-Write-Host "Downloading evremixes..."
-Get-RemoteFile -url "https://git.dannystewart.com/danny/evremixes/raw/branch/main/dist/win/evremixes.exe" -outputPath "evremixes.exe" -outputFolder $tempDir
+    # Download the file
+    Write-Host "Downloading evremixes..."
+    Get-RemoteFile -url "https://git.dannystewart.com/danny/evremixes/raw/branch/main/dist/win/evremixes.exe" -outputPath "evremixes.exe" -outputFolder $tempDir
 
-# Run the program in the current context
-Write-Host "Running evremixes..."
-$proc = Start-Process "$tempDir\evremixes.exe" -NoNewWindow -PassThru
-$proc | Wait-Process
-$exitCode = $proc.ExitCode
+    # Run the program in the current context
+    Write-Host "Running evremixes..."
+    $proc = Start-Process "$tempDir\evremixes.exe" -NoNewWindow -PassThru
+    $proc | Wait-Process
+    $exitCode = $proc.ExitCode
+}
 
 # Check if the process ran successfully
 if ($exitCode -ne 0) {
-    Write-Host "evremixes execution failed. Falling back to basic PowerShell downloader..." -ForegroundColor Yellow
+    Write-Host "Python execution failed. Falling back to basic PowerShell downloader..." -ForegroundColor Yellow
+    $basicMode = $true  # Switch to basic mode
+}
 
+# Basic PowerShell downloader
+if ($basicMode) {
     # Define output folder and other parameters
     $output_folder = "$env:USERPROFILE\Music\Evanescence Remixes"
 
