@@ -133,8 +133,8 @@ else # Fall back to the less cool Bash version if we don't have ffmpeg
     echo ""
     echo -e "${GREEN}Saving Evanescence Remixes to ~/Downloads...${NC}"
 
-    # Fetch JSON and store it in a variable, sorting tracks by TRACK_NUMBER
-    JSON_DATA=$(curl -s "https://git.dannystewart.com/danny/evremixes/raw/branch/main/evtracks.json" | python3 -c "import sys, json; data=json.load(sys.stdin); data['tracks'] = sorted(data['tracks'], key=lambda x: x['TRACK_NUMBER']); print(json.dumps(data))")
+    # Fetch JSON and store it in a variable, sorting tracks by track_number
+    JSON_DATA=$(curl -s "https://git.dannystewart.com/danny/evremixes/raw/branch/main/evtracks.json" | python3 -c "import sys, json; data=json.load(sys.stdin); data['tracks'] = sorted(data['tracks'], key=lambda x: x['track_number']); print(json.dumps(data))")
 
     # Create output folder if it doesn't exist, and handle old files if it does
     if [ -d "$OUTPUT_FOLDER" ]; then
@@ -156,9 +156,9 @@ else # Fall back to the less cool Bash version if we don't have ffmpeg
         fi
 
         export INDEX=$i
-        TRACK_NAME=$(echo "$JSON_DATA" | python3 -c "import sys, json, os; data=json.load(sys.stdin); i=int(os.environ['INDEX']); print(data['tracks'][i]['TRACK_NAME'])")
-        FILE_URL=$(echo "$JSON_DATA" | python3 -c "import sys, json, os; data=json.load(sys.stdin); i=int(os.environ['INDEX']); print(data['tracks'][i]['FILE_URL'])")
-        TRACK_NUMBER=$(echo "$JSON_DATA" | python3 -c "import sys, json, os; data=json.load(sys.stdin); i=int(os.environ['INDEX']); print(data['tracks'][i]['TRACK_NUMBER'])")
+        TRACK_NAME=$(echo "$JSON_DATA" | python3 -c "import sys, json, os; data=json.load(sys.stdin); i=int(os.environ['INDEX']); print(data['tracks'][i]['track_name'])")
+        FILE_URL=$(echo "$JSON_DATA" | python3 -c "import sys, json, os; data=json.load(sys.stdin); i=int(os.environ['INDEX']); print(data['tracks'][i]['file_url'])")
+        TRACK_NUMBER=$(echo "$JSON_DATA" | python3 -c "import sys, json, os; data=json.load(sys.stdin); i=int(os.environ['INDEX']); print(data['tracks'][i]['track_number'])")
 
         # Create new .m4a URL
         M4A_URL=${FILE_URL/%.flac/.m4a}
