@@ -76,8 +76,8 @@ if command -v ffmpeg &>/dev/null; then
 else
     # Graceful Python test before invoking Python-dependent parts
     if ! python3 -c "print('Python works!')" &>/dev/null; then
-        echo -e "${YELLOW}Python did not run correctly, likely due to incomplete Developer Tools setup.${NC}"
-        echo -e "${YELLOW}Please rerun the script after ensuring Developer Tools are properly installed.${NC}"
+        echo -e "${YELLOW}Python did not run correctly, likely due to missing Developer Tools.${NC}"
+        echo -e "${YELLOW}The installer should have popped up; please rerun the script after installing.${NC}"
         exit 1
     fi
 
