@@ -7,7 +7,6 @@ import os
 import requests
 import sys
 import tempfile
-import time
 from dotenv import load_dotenv
 from halo import Halo
 from io import BytesIO
@@ -28,7 +27,6 @@ args = parser.parse_args()
 # Get the script directory and assemble paths
 script_directory = os.path.dirname(os.path.abspath(__file__))
 env_path = os.path.join(script_directory, ".env")
-upload_cache_path = os.path.join(script_directory, "upload_cache.json")
 
 # Load environment variables
 load_dotenv()
@@ -46,63 +44,8 @@ if bot_token is None or channel_id is None:
 # Initialize the Telegram bot
 bot = TeleBot(bot_token)
 
-
-# Check to see whether anything is deletable
-def has_deletable_tracks(upload_cache):
-    current_time = int(time.time())
-    forty_eight_hours_ago = current_time - (48 * 60 * 60)
-
-    for key in upload_cache:
-        for msg_id, timestamp in upload_cache[key]:
-            if timestamp >= forty_eight_hours_ago:
-                return True
-    return False
-
-
-# Function to remove entries older than 48 hours from the upload cache
-def remove_old_entries(upload_cache):
-    forty_eight_hours_ago = int(time.time()) - (48 * 60 * 60)
-
-    for key in list(upload_cache.keys()):
-        new_entries = []
-
-        for msg_id, timestamp in upload_cache[key]:
-            if timestamp >= forty_eight_hours_ago:
-                new_entries.append([msg_id, timestamp])
-            else:
-                print(f"Removing entry with timestamp {timestamp}")
-
-        upload_cache[key] = new_entries
-
-        if not upload_cache[key]:
-            del upload_cache[key]
-
-
-# Check for local upload cache and prune old entries
-try:
-    with open(upload_cache_path, "r") as f:
-        upload_cache = json.load(f)
-except FileNotFoundError:
-    upload_cache = {}
-
-remove_old_entries(upload_cache)
-
-with open(upload_cache_path, "w") as f:
-    json.dump(upload_cache, f, indent=4)
-
-
 # Include comments if argument is supplied
 include_comments = True if args.comment else False
-
-
-# Sort tracks based on upload history
-def get_upload_order(track):
-    upload_info = upload_cache.get(track["track_name"], 0)
-    if isinstance(upload_info, list):
-        return max(upload_info)  # Return the maximum ID if it's a list
-    else:
-        return upload_info  # Return the ID directly if it's an int
-
 
 # Download and load the JSON file with track details
 spinner.start(text=colored("Downloading track details...", "cyan"))
@@ -135,21 +78,8 @@ cover_data = buffered.getvalue()
 
 spinner.stop()
 
-# Only prompt for deletion if there are recent uploads
-if has_deletable_tracks(upload_cache):
-    delete_prev_versions_question = [
-        inquirer.Confirm(
-            "delete_prev_versions",
-            message="Delete previous versions of track uploads?",
-            default=True,
-        ),
-    ]
-    delete_prev_versions_answer = inquirer.prompt(delete_prev_versions_question)["delete_prev_versions"]
-else:
-    delete_prev_versions_answer = False
-
 # Sort tracks and display menu
-sorted_tracks = sorted(track_data["tracks"], key=get_upload_order, reverse=True)
+sorted_tracks = sorted(track_data["tracks"], key=track_data["start_date"], reverse=True)
 questions = [
     inquirer.Checkbox(
         "tracks",
@@ -220,10 +150,6 @@ with tempfile.TemporaryDirectory() as tmpdirname:
 
             audio.save()
 
-        # Before uploading a new track
-        track_key = track_name
-        old_message_ids = upload_cache.get(track_key, [])
-
         # Upload the ALAC file to Telegram
         with Halo(
             text=colored(f"Uploading {track_name} to Telegram...", "cyan"),
@@ -244,46 +170,8 @@ with tempfile.TemporaryDirectory() as tmpdirname:
 
         spinner.stop()
 
-        # Confirm successful upload before proceeding
         if message:
-            message_id = message.message_id
-            if delete_prev_versions_answer:
-                # Delete old messages
-                for old_id in old_message_ids:
-                    try:
-                        bot.delete_message(channel_id, old_id)
-                        print(
-                            colored(
-                                f"✔ Deleted previous {track_name} upload with ID {old_id[0]}.",
-                                "green",
-                            ),
-                            flush=True,
-                        )
-                    except Exception as e:
-                        print(
-                            colored(
-                                f"Could not delete previous {track_name} upload with ID {old_id[0]}: {e}",
-                                "red",
-                            )
-                        )
-                # Record new message ID
-                current_time = int(time.time())
-                upload_cache[track_key] = [(message_id, current_time)]
-            else:
-                # Append new message ID to the list
-                if isinstance(old_message_ids, list):
-                    current_time = int(time.time())
-                    old_message_ids.append((message_id, current_time))
-                else:
-                    old_message_ids = [message_id]
-                upload_cache[track_key] = old_message_ids
-
             print(colored(f"✔ Successfully uploaded {track_name}!", "green"), flush=True)
-
-            # Save updated cache to file
-            with open("upload_cache.json", "w") as f:
-                json.dump(upload_cache, f, indent=4)
-
         else:
             spinner.fail(text=colored(f"Failed to upload {track_name}.", "red"))
 

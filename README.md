@@ -82,7 +82,7 @@ The `tools` folder contains stuff that's only useful for me:
 
 - [`evazure`](tools/evazure.py): Uploads files to Azure blob storage where I keep my remixes.
 - [`evconverter`](tools/evconverter.py): Converts FLAC versions to ALAC and uploads them for the basic downloader.
-- [`evtelegram`](tools/evtelegram.py): Posts remixes to a Telegram channel. It tracks upload IDs in `upload_cache.json` and tries to delete them when replacing a song, but unfortunately due to Telegram limitations it can't delete things older than 48 hours, so most need to be deleted manually. (I thought I was so cool.)
+- [`evtelegram`](tools/evtelegram.py): Converts, tags, and uploads remixes to a [Telegram channel](https://t.me/+ihiJnfkMIVYzN2Ex).
 - [`pycompiler.sh`](tools/pycompiler.sh) / [`.bat`](tools/pycompiler.bat): One-liners to make it easier to compile the binaries.
 
 Feel free to look, but there's no reason for you to touch, and most of it won't work without environment variables that aren't included here (for obvious reasons).
