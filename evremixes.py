@@ -20,9 +20,7 @@ from termcolor import colored
 # Check if ffmpeg is installed
 def ffmpeg_installed():
     try:
-        subprocess.run(
-            ["ffmpeg", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True
-        )
+        subprocess.run(["ffmpeg", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
         return True
     except subprocess.CalledProcessError:
         return False
@@ -50,9 +48,7 @@ if not ffmpeg_installed():
 
 # Download and load the JSON file with track details
 spinner.start(text=colored("Downloading track details...", "cyan"))
-response = requests.get(
-    "https://git.dannystewart.com/danny/evremixes/raw/branch/main/evtracks.json"
-)
+response = requests.get("https://git.dannystewart.com/danny/evremixes/raw/branch/main/evtracks.json")
 
 # Download track and album metadata
 track_data = json.loads(response.text)
@@ -147,10 +143,8 @@ for index, track in enumerate(track_data["tracks"]):
     else:
         track_number = str(index + 1).zfill(2)
 
-    track_number_short = str(track.get("track_number", ""))
-    print(
-        f"Processing track {int(track_number_short) if sorting_choice == 'track' else int(track_number)}, {track_name}..."
-    )
+    track_num = str(track.get("track_number", ""))
+    print(f"Processing track {int(track_num) if sorting_choice == 'track' else int(track_number)}, {track_name}...")
 
     # Download FLAC file
     with Halo(text=colored("Downloading FLAC file...", "cyan"), spinner="dots"):

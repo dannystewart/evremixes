@@ -42,9 +42,7 @@ uploaded_blob_names = []
 
 # Download and load the JSON file with track details
 spinner.start(text=colored("Downloading track details...", "cyan"))
-response = requests.get(
-    "https://git.dannystewart.com/danny/evremixes/raw/branch/main/evtracks.json"
-)
+response = requests.get("https://git.dannystewart.com/danny/evremixes/raw/branch/main/evtracks.json")
 
 # Download track and album metadata
 track_data = json.loads(response.text)
@@ -201,9 +199,7 @@ if uploaded_blob_names:  # Only run if there are files to purge
             total_tracks = len(uploaded_blob_names)
             for index, blob_name in enumerate(uploaded_blob_names, start=1):
                 try:
-                    blob_client = container_client.get_blob_client(
-                        blob_name.replace(f"/{container_name}/", "")
-                    )
+                    blob_client = container_client.get_blob_client(blob_name.replace(f"/{container_name}/", ""))
                     blob_data = blob_client.download_blob()
                 except Exception as e:
                     spinner.fail(
@@ -215,9 +211,7 @@ if uploaded_blob_names:  # Only run if there are files to purge
                     continue  # Skip to the next blob_name in the loop
 
                 # Update spinner text to include counter
-                spinner.text = colored(
-                    f"Populating CDN edge servers ({index}/{total_tracks})...", "cyan"
-                )
+                spinner.text = colored(f"Populating CDN edge servers ({index}/{total_tracks})...", "cyan")
 
                 temp_file_path = f"{output_folder}/temp_{os.path.basename(blob_name)}"
                 with open(temp_file_path, "wb") as temp_file:

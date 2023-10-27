@@ -49,9 +49,7 @@ include_comments = True if args.comment else False
 
 # Download and load the JSON file with track details
 spinner.start(text=colored("Downloading track details...", "cyan"))
-response = requests.get(
-    "https://git.dannystewart.com/danny/evremixes/raw/branch/main/evtracks.json"
-)
+response = requests.get("https://git.dannystewart.com/danny/evremixes/raw/branch/main/evtracks.json")
 spinner.stop()
 
 # Show spinner as we prep

@@ -143,9 +143,7 @@ def main(filename, input_file):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Upload and convert audio file to Azure Blob Storage."
-    )
+    parser = argparse.ArgumentParser(description="Upload and convert audio file to Azure Blob Storage.")
     parser.add_argument(
         "filename",
         type=str,
