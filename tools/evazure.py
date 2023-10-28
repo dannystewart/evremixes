@@ -2,10 +2,11 @@
 
 import argparse
 import os
-import pyperclip
 import subprocess
 import sys
 import tempfile
+
+import pyperclip
 from azure.storage.blob import BlobServiceClient
 from dotenv import load_dotenv
 from halo import Halo

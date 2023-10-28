@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 
 import argparse
-import inquirer
 import json
 import os
-import requests
 import sys
 import tempfile
+from io import BytesIO
+
+import inquirer
+import requests
 from dotenv import load_dotenv
 from halo import Halo
-from io import BytesIO
 from mutagen.mp4 import MP4, MP4Cover
 from PIL import Image
 from pydub import AudioSegment

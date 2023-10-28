@@ -1,17 +1,18 @@
 #!/usr/bin/env python3
 
-import inquirer
 import json
 import os
-import requests
 import subprocess
 import sys
 import tempfile
 import time
+from io import BytesIO
+
+import inquirer
+import requests
 from azure.storage.blob import BlobServiceClient
 from dotenv import load_dotenv
 from halo import Halo
-from io import BytesIO
 from mutagen.mp4 import MP4, MP4Cover
 from PIL import Image
 from pydub import AudioSegment
@@ -199,7 +200,9 @@ if uploaded_blob_names:  # Only run if there are files to purge
             total_tracks = len(uploaded_blob_names)
             for index, blob_name in enumerate(uploaded_blob_names, start=1):
                 try:
-                    blob_client = container_client.get_blob_client(blob_name.replace(f"/{container_name}/", ""))
+                    blob_client = container_client.get_blob_client(
+                        blob_name.replace(f"/{container_name}/", "")
+                    )
                     blob_data = blob_client.download_blob()
                 except Exception as e:
                     spinner.fail(
