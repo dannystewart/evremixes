@@ -77,7 +77,7 @@ cover_data = buffered.getvalue()
 spinner.stop()
 
 # Sort tracks and display menu
-sorted_tracks = sorted(track_data["tracks"], key=track_data["start_date"], reverse=True)
+sorted_tracks = sorted(track_data["tracks"], key=lambda x: x["start_date"], reverse=True)
 questions = [
     inquirer.Checkbox(
         "tracks",
