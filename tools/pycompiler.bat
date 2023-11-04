@@ -1,1 +1,1 @@
-python -m PyInstaller --onefile ..\evremixes.py --clean --distpath=..\dist\win
+python -m PyInstaller evremixes.win.spec --clean --distpath=..\dist\win
