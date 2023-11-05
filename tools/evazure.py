@@ -12,8 +12,7 @@ import inquirer
 
 import pyperclip
 import requests
-from azure.storage.blob import BlobServiceClient
-from azure.storage.blob import ContentSettings
+from azure.storage.blob import BlobServiceClient, ContentSettings, StandardBlobTier
 from dotenv import load_dotenv
 from halo import Halo
 from mutagen.flac import FLAC, Picture
@@ -154,7 +153,9 @@ def process_and_upload_file(input_file, album_metadata, track_metadata, blob_nam
     # Upload file to Azure
     blob_client = container_client.get_blob_client(f"ev/{blob_name}.{file_format}")
     with open(converted_file_with_metadata, "rb") as data:
-        blob_client.upload_blob(data, content_settings=content_settings, overwrite=True)
+        blob_client.upload_blob(
+            data, content_settings=content_settings, overwrite=True, standard_blob_tier=StandardBlobTier.Hot
+        )
 
     spinner.succeed(colored(f"{file_format.upper()} tagged and uploaded!", "green"))
 
