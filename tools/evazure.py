@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tempfile
 from io import BytesIO
+import inquirer
 
 import pyperclip
 import requests
@@ -57,6 +58,26 @@ def get_track_metadata(filename, track_data):
     for track in track_data.get("tracks", []):
         json_filename, _ = os.path.splitext(os.path.basename(track["file_url"]))
         if filename == json_filename:
+            return track
+    return None
+
+
+# Menu interface for selecting track metadata
+def get_track_metadata_menu(track_data):
+    tracks = track_data.get("tracks", [])
+    questions = [
+        inquirer.List(
+            "track",
+            message="Couldn't find a match. Please select the correct track",
+            choices=sorted([f"{track['track_name']}" for track in tracks]),
+            carousel=True,
+        )
+    ]
+    answers = inquirer.prompt(questions)
+    selected_track_name = answers["track"]
+
+    for track in tracks:
+        if track["track_name"] == selected_track_name:
             return track
     return None
 
@@ -169,8 +190,10 @@ def main(filename, input_file, desired_formats):
         spinner.start(colored("Matching track metadata...", "cyan"))
         track_metadata = get_track_metadata(filename, track_data)
         if not track_metadata:
-            spinner.fail(colored("Error: No matching track found in the JSON metadata.", "red"))
-            return
+            track_metadata = get_track_metadata_menu(track_data)
+            if not track_metadata:
+                spinner.fail(colored("Error: No track was selected.", "red"))
+                return
         track_matched = track_metadata.get("track_name", "")
         album_metadata = track_data.get("metadata", {})
         spinner.succeed(colored(f"Track matched: {track_matched}", "green"))
@@ -200,6 +223,7 @@ def main(filename, input_file, desired_formats):
         uploaded_urls["m4a"] = m4a_url
         if not clipboard_url:
             clipboard_url = m4a_url
+    pyperclip.copy(clipboard_url)
 
     # Print all uploaded URLs
     print("\nURLs of uploaded files:")
@@ -212,60 +236,64 @@ def main(filename, input_file, desired_formats):
 
 
 if __name__ == "__main__":
-    # Parse command line arguments
+    # Initialize parser and use nargs='*' to collect arguments
     parser = argparse.ArgumentParser(description="Upload and convert audio file to Azure Blob Storage.")
-    parser.add_argument(
-        "input_file",
-        type=str,
-        help="Local input audio file",
-    )
-    parser.add_argument(
-        "filename",
-        type=str,
-        nargs="?",
-        default=None,
-        help="Filename for upload",
-    )
-    parser.add_argument(
-        "--flac-only",
-        action="store_true",
-        help="Only convert and upload FLAC file",
-    )
-    parser.add_argument(
-        "--m4a-only",
-        action="store_true",
-        help="Only convert and upload M4A file",
-    )
-    parser.add_argument(
-        "--skip-purge",
-        action="store_true",
-        help="Skip Azure CDN purge",
-    )
+    parser.add_argument("args", nargs="*", help="Optional input and output file names")
+    parser.add_argument("--flac-only", action="store_true", help="Only convert and upload FLAC file")
+    parser.add_argument("--m4a-only", action="store_true", help="Only convert and upload M4A file")
+    parser.add_argument("--skip-purge", action="store_true", help="Skip Azure CDN purge")
+    parser.add_argument("--purge-only", action="store_true", help="Run CDN purge without uploading")
+
     args = parser.parse_args()
-    _, ext = os.path.splitext(args.input_file)
+
+    # Handle the purge-only case
+    if args.purge_only:
+        if args.args:
+            print(colored("No additional arguments are needed when using --purge-only.", "red"))
+            sys.exit(1)
+        purge_azure_cdn_cache()
+        print(colored("CDN purge complete!", "green"))
+        sys.exit(0)
+
+    # Check for required arguments
+    if not args.args:
+        print(colored("Please specify an input file.", "red"))
+        sys.exit(1)
+
+    # Handle the input file and optional filename
+    input_file = args.args[-1]
+    filename = args.args[0] if len(args.args) > 1 else None
+
+    # Validate input file
+    if not os.path.isfile(input_file):
+        print(colored(f"The specified input file does not exist: {input_file}", "red"))
+        sys.exit(1)
 
     # Make sure the input file is a WAV or AIFF file
+    _, ext = os.path.splitext(input_file)
     if ext.lower() not in [".wav", ".aif", ".aiff"]:
-        print("Invalid file type. Please provide a WAV or AIFF file.")
+        print(colored("Invalid file type. Please provide a WAV or AIFF file.", "red"))
         sys.exit(1)
 
     # Determine desired formats based on arguments
     desired_formats = []
-    if not args.m4a_only:
+    if args.flac_only:
         desired_formats.append("flac")
-    if not args.flac_only:
+    elif args.m4a_only:
         desired_formats.append("m4a")
+    else:
+        desired_formats.extend(["flac", "m4a"])
 
-    # If no upload filename is given, use the input filename minus the version number
-    if args.filename is None:
-        args.filename = re.sub(
-            r"\s*\d+\.\d+\.\d+(_\d+)?", "", os.path.splitext(os.path.basename(args.input_file))[0]
+    # If no upload filename is given, derive it from the input file
+    if filename is None:
+        filename = re.sub(
+            r"\s*\d+\.\d+\.\d+(_\d+)?", "", os.path.splitext(os.path.basename(input_file))[0]
         ).replace(" ", "-")
-        print(colored(f"No filename given, uploading as {args.filename}.{desired_formats[0]}", "cyan"))
+        print(colored(f"No filename given, uploading as {filename}.{desired_formats[0]}", "cyan"))
 
     # Run the main function, aborting on Ctrl-C
     try:
-        main(args.filename, args.input_file, desired_formats)
+        main(filename, input_file, desired_formats)
     except KeyboardInterrupt:
         print(colored("\nAborting.", "red"))
         sys.exit(0)
