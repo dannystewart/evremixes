@@ -8,8 +8,8 @@ import subprocess
 import sys
 import tempfile
 from io import BytesIO
-import inquirer
 
+import inquirer
 import pyperclip
 import requests
 from azure.storage.blob import BlobServiceClient, ContentSettings, StandardBlobTier
@@ -67,7 +67,7 @@ def get_track_metadata_menu(track_data):
     questions = [
         inquirer.List(
             "track",
-            message="Couldn't find a match. Please select the correct track",
+            message="Couldn't match filename. Please select track",
             choices=sorted([f"{track['track_name']}" for track in tracks]),
             carousel=True,
         )
@@ -87,11 +87,12 @@ def convert_audio_file(input_file, file_format):
 
     # Identify the desired file format and then process accordingly
     wav_audio = AudioSegment.from_file(input_file, format="wav")
-    audio_file_path = os.path.join(temp_dir, os.path.basename(input_file).replace(".wav", f".{file_format}"))
+    extension = "m4a" if file_format == "alac" else file_format
+    audio_file_path = os.path.join(temp_dir, os.path.basename(input_file).replace(".wav", f".{extension}"))
 
     if file_format == "flac":
         wav_audio.export(audio_file_path, format="flac")
-    elif file_format == "m4a":
+    elif file_format == "alac":
         wav_audio.export(audio_file_path, format="ipod", codec="alac")
 
     return audio_file_path
@@ -99,7 +100,8 @@ def convert_audio_file(input_file, file_format):
 
 # Add metadata to files
 def add_metadata_to_file(audio_file_path, album_metadata, track_metadata):
-    file_format = os.path.splitext(audio_file_path)[1][1:].lower()
+    file_extension = os.path.splitext(audio_file_path)[1][1:].lower()
+    file_format = "alac" if file_extension == "m4a" else file_extension
 
     # Handle FLAC-specific metadata
     if file_format == "flac":
@@ -118,8 +120,8 @@ def add_metadata_to_file(audio_file_path, album_metadata, track_metadata):
         img.desc = "Cover (front)"
         audio.add_picture(img)
 
-    # Handle M4A-specific metadata
-    elif file_format == "m4a":
+    # Handle ALAC-specific metadata
+    elif file_format == "alac":
         audio = MP4(audio_file_path)
         audio["\xa9nam"] = track_metadata.get("track_name", "")
         audio["trkn"] = [(track_metadata.get("track_number", 0), 0)]
@@ -139,19 +141,21 @@ def process_and_upload_file(input_file, album_metadata, track_metadata, blob_nam
     spinner.start(colored(f"Converting to {file_format.upper()} and adding metadata...", "cyan"))
 
     # Convert file to specified format and add metadata
+    file_extension = file_format
     converted_file = convert_audio_file(input_file, file_format)
     converted_file_with_metadata = add_metadata_to_file(converted_file, album_metadata, track_metadata)
 
     # Set content type for Azure (this makes it playable in browsers)
-    content_settings_kwargs = {"content_type": "audio/flac" if file_format.lower() == "flac" else "audio/mp4"}
-    if file_format.lower() == "m4a":
+    content_settings_kwargs = {"content_type": "audio/flac" if file_format == "flac" else "audio/mp4"}
+    if file_format == "alac":
         content_settings_kwargs["content_disposition"] = "inline"
+        file_extension = "m4a"
     content_settings = ContentSettings(**content_settings_kwargs)
 
     spinner.start(colored(f"Uploading {file_format.upper()} to Azure...", "cyan"))
 
     # Upload file to Azure
-    blob_client = container_client.get_blob_client(f"ev/{blob_name}.{file_format}")
+    blob_client = container_client.get_blob_client(f"ev/{blob_name}.{file_extension}")
     with open(converted_file_with_metadata, "rb") as data:
         blob_client.upload_blob(
             data, content_settings=content_settings, overwrite=True, standard_blob_tier=StandardBlobTier.Hot
@@ -220,12 +224,17 @@ def main(filename, input_file, desired_formats):
         flac_url = f"https://files.dannystewart.com/music/ev/{blob_name}.flac"
         uploaded_urls["flac"] = flac_url
         clipboard_url = flac_url
-    if "m4a" in desired_formats:
-        m4a_url = f"https://files.dannystewart.com/music/ev/{blob_name}.m4a"
-        uploaded_urls["m4a"] = m4a_url
+    if "alac" in desired_formats:
+        alac_url = f"https://files.dannystewart.com/music/ev/{blob_name}.m4a"
+        uploaded_urls["alac"] = alac_url
         if not clipboard_url:
-            clipboard_url = m4a_url
-    pyperclip.copy(clipboard_url)
+            clipboard_url = alac_url
+
+    # Only attempt to copy to clipboard if clipboard_url is not None
+    if clipboard_url:
+        pyperclip.copy(clipboard_url)
+    else:
+        print(colored("No URL was copied to clipboard.", "yellow"))
 
     # Print all uploaded URLs
     print("\nURLs of uploaded files:")
@@ -242,7 +251,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Upload and convert audio file to Azure Blob Storage.")
     parser.add_argument("args", nargs="*", help="Optional input and output file names")
     parser.add_argument("--flac-only", action="store_true", help="Only convert and upload FLAC file")
-    parser.add_argument("--m4a-only", action="store_true", help="Only convert and upload M4A file")
+    parser.add_argument("--alac-only", action="store_true", help="Only convert and upload ALAC file")
     parser.add_argument("--skip-purge", action="store_true", help="Skip Azure CDN purge")
     parser.add_argument("--purge-only", action="store_true", help="Run CDN purge without uploading")
 
@@ -283,21 +292,22 @@ if __name__ == "__main__":
         _, upload_ext = os.path.splitext(filename)
         upload_ext = upload_ext.lower()
         if upload_ext in [".m4a", ".flac"]:
-            desired_formats = [upload_ext.strip(".")]
+            desired_format = "alac" if upload_ext == ".m4a" else "flac"
+            desired_formats = [desired_format]
             filename = os.path.splitext(filename)[0]
         elif args.flac_only:
             desired_formats = ["flac"]
-        elif args.m4a_only:
-            desired_formats = ["m4a"]
+        elif args.alac_only:
+            desired_formats = ["alac"]
         else:
-            desired_formats.extend(["flac", "m4a"])
+            desired_formats.extend(["flac", "alac"])
     else:
         if args.flac_only:
             desired_formats = ["flac"]
-        elif args.m4a_only:
-            desired_formats = ["m4a"]
+        elif args.alac_only:
+            desired_formats = ["alac"]
         else:
-            desired_formats.extend(["flac", "m4a"])
+            desired_formats.extend(["flac", "alac"])
 
     # If no upload filename is given, derive it from the input file
     if filename is None:
