@@ -190,6 +190,7 @@ def main(filename, input_file, desired_formats):
         spinner.start(colored("Matching track metadata...", "cyan"))
         track_metadata = get_track_metadata(filename, track_data)
         if not track_metadata:
+            spinner.stop()
             track_metadata = get_track_metadata_menu(track_data)
             if not track_metadata:
                 spinner.fail(colored("Error: No track was selected.", "red"))
@@ -275,14 +276,27 @@ if __name__ == "__main__":
         print(colored("Invalid file type. Please provide a WAV or AIFF file.", "red"))
         sys.exit(1)
 
-    # Determine desired formats based on arguments
+    # Determine desired formats based on arguments or filename
     desired_formats = []
-    if args.flac_only:
-        desired_formats.append("flac")
-    elif args.m4a_only:
-        desired_formats.append("m4a")
+    if filename:
+        _, upload_ext = os.path.splitext(filename)
+        upload_ext = upload_ext.lower()
+        if upload_ext in [".m4a", ".flac"]:
+            desired_formats = [upload_ext.strip(".")]
+            filename = os.path.splitext(filename)[0]
+        elif args.flac_only:
+            desired_formats = ["flac"]
+        elif args.m4a_only:
+            desired_formats = ["m4a"]
+        else:
+            desired_formats.extend(["flac", "m4a"])
     else:
-        desired_formats.extend(["flac", "m4a"])
+        if args.flac_only:
+            desired_formats = ["flac"]
+        elif args.m4a_only:
+            desired_formats = ["m4a"]
+        else:
+            desired_formats.extend(["flac", "m4a"])
 
     # If no upload filename is given, derive it from the input file
     if filename is None:
