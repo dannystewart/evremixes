@@ -180,7 +180,9 @@ def main(filename, input_file, desired_formats):
             process_and_upload_file(input_file, album_metadata, track_metadata, blob_name, format)
 
         # Purge the Azure CDN cache so the new files are available
-        purge_azure_cdn_cache()
+        if not args.skip_purge:
+            purge_azure_cdn_cache()
+
     except Exception as e:
         spinner.fail(colored(f"An error occurred: {str(e)}", "red"))
 
@@ -233,6 +235,11 @@ if __name__ == "__main__":
         "--m4a-only",
         action="store_true",
         help="Only convert and upload M4A file",
+    )
+    parser.add_argument(
+        "--skip-purge",
+        action="store_true",
+        help="Skip Azure CDN purge",
     )
     args = parser.parse_args()
     _, ext = os.path.splitext(args.input_file)
