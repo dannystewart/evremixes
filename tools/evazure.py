@@ -61,23 +61,27 @@ def get_track_metadata(filename, track_data):
     return None
 
 
-# Menu interface for selecting track metadata
 def get_track_metadata_menu(track_data):
     tracks = track_data.get("tracks", [])
+    choices = sorted([f"{track['track_name']}" for track in tracks]) + ["(skip adding metadata)"]
     questions = [
         inquirer.List(
             "track",
-            message="Couldn't match filename. Please select track",
-            choices=sorted([f"{track['track_name']}" for track in tracks]),
+            message=colored("Couldn't match filename. Select track", "yellow"),
+            choices=choices,
             carousel=True,
         )
     ]
     answers = inquirer.prompt(questions)
     selected_track_name = answers["track"]
 
+    if selected_track_name == "(skip adding metadata)":
+        return {}
+
     for track in tracks:
         if track["track_name"] == selected_track_name:
             return track
+
     return None
 
 
@@ -138,7 +142,8 @@ def add_metadata_to_file(audio_file_path, album_metadata, track_metadata):
 
 # Process and upload files
 def process_and_upload_file(input_file, album_metadata, track_metadata, blob_name, file_format):
-    spinner.start(colored(f"Converting to {file_format.upper()} and adding metadata...", "cyan"))
+    metadata_message = " and adding metadata" if track_metadata else ""
+    spinner.start(colored(f"Converting to {file_format.upper()}{metadata_message}...", "cyan"))
 
     # Convert file to specified format and add metadata
     file_extension = file_format
@@ -194,14 +199,14 @@ def main(filename, input_file, desired_formats):
         # Try to identify the track being uploaded
         spinner.start(colored("Matching track metadata...", "cyan"))
         track_metadata = get_track_metadata(filename, track_data)
-        if not track_metadata:
+        if track_metadata is None:
             spinner.stop()
             track_metadata = get_track_metadata_menu(track_data)
-            if not track_metadata:
+            if track_metadata is None:
                 spinner.fail(colored("Error: No track was selected.", "red"))
                 return
-        track_matched = track_metadata.get("track_name", "")
-        album_metadata = track_data.get("metadata", {})
+        track_matched = track_metadata.get("track_name", "") if track_metadata else "none (skipping metadata)"
+        album_metadata = track_data.get("metadata", {}) if track_data else {}
         spinner.succeed(colored(f"Track matched: {track_matched}", "green"))
 
         # Process and upload the desired formats
