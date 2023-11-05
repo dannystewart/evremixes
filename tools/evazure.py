@@ -159,7 +159,7 @@ def purge_azure_cdn_cache():
 
 
 # Main function
-def main(filename, input_file):
+def main(filename, input_file, desired_formats):
     global album_metadata, track_metadata, cover_data, temp_dir
     album_metadata, track_data, cover_data = fetch_metadata()
     try:
@@ -175,9 +175,9 @@ def main(filename, input_file):
         album_metadata = track_data.get("metadata", {})
         spinner.succeed(colored(f"Track matched: {track_matched}", "green"))
 
-        # Process and upload the FLAC version then the M4A version
-        process_and_upload_file(input_file, album_metadata, track_metadata, blob_name, "flac")
-        process_and_upload_file(input_file, album_metadata, track_metadata, blob_name, "m4a")
+        # Process and upload the desired formats
+        for format in desired_formats:
+            process_and_upload_file(input_file, album_metadata, track_metadata, blob_name, format)
 
         # Purge the Azure CDN cache so the new files are available
         purge_azure_cdn_cache()
@@ -186,13 +186,27 @@ def main(filename, input_file):
 
     spinner.succeed(colored("All done!", "green"))
 
-    # Copy FLAC URL to clipboard and output both URLs
-    flac_url = f"https://files.dannystewart.com/music/ev/{blob_name}.flac"
-    m4a_url = f"https://files.dannystewart.com/music/ev/{blob_name}.m4a"
-    pyperclip.copy(flac_url)
+    # Print URLs of uploaded files and copy one to clipboard
+    uploaded_urls = {}
+    clipboard_url = None
+    if "flac" in desired_formats:
+        flac_url = f"https://files.dannystewart.com/music/ev/{blob_name}.flac"
+        uploaded_urls["flac"] = flac_url
+        clipboard_url = flac_url
+    if "m4a" in desired_formats:
+        m4a_url = f"https://files.dannystewart.com/music/ev/{blob_name}.m4a"
+        uploaded_urls["m4a"] = m4a_url
+        if not clipboard_url:
+            clipboard_url = m4a_url
+
+    # Print all uploaded URLs
     print("\nURLs of uploaded files:")
-    print(colored(flac_url, "blue"), " <- copied to clipboard")
-    print(colored(m4a_url, "blue"))
+    for format, url in uploaded_urls.items():
+        print(colored(url, "blue"), end="")
+        if url == clipboard_url:
+            print("  <- copied to clipboard")
+        else:
+            print()
 
 
 if __name__ == "__main__":
@@ -210,6 +224,16 @@ if __name__ == "__main__":
         default=None,
         help="Filename for upload",
     )
+    parser.add_argument(
+        "--flac-only",
+        action="store_true",
+        help="Only convert and upload FLAC file",
+    )
+    parser.add_argument(
+        "--m4a-only",
+        action="store_true",
+        help="Only convert and upload M4A file",
+    )
     args = parser.parse_args()
     _, ext = os.path.splitext(args.input_file)
 
@@ -218,16 +242,23 @@ if __name__ == "__main__":
         print("Invalid file type. Please provide a WAV or AIFF file.")
         sys.exit(1)
 
+    # Determine desired formats based on arguments
+    desired_formats = []
+    if not args.m4a_only:
+        desired_formats.append("flac")
+    if not args.flac_only:
+        desired_formats.append("m4a")
+
     # If no upload filename is given, use the input filename minus the version number
     if args.filename is None:
         args.filename = re.sub(
             r"\s*\d+\.\d+\.\d+(_\d+)?", "", os.path.splitext(os.path.basename(args.input_file))[0]
         ).replace(" ", "-")
-        print(colored(f"No filename given, uploading as {args.filename}.flac", "cyan"))
+        print(colored(f"No filename given, uploading as {args.filename}.{desired_formats[0]}", "cyan"))
 
     # Run the main function, aborting on Ctrl-C
     try:
-        main(args.filename, args.input_file)
+        main(args.filename, args.input_file, desired_formats)
     except KeyboardInterrupt:
         print(colored("\nAborting.", "red"))
         sys.exit(0)
