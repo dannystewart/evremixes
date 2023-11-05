@@ -123,8 +123,10 @@ def process_and_upload_file(input_file, album_metadata, track_metadata, blob_nam
     converted_file_with_metadata = add_metadata_to_file(converted_file, album_metadata, track_metadata)
 
     # Set content type for Azure (this makes it playable in browsers)
-    content_type = "audio/mp4" if file_format.lower() == "m4a" else "audio/flac"
-    content_settings = ContentSettings(content_type=content_type)
+    content_settings_kwargs = {"content_type": "audio/flac" if file_format.lower() == "flac" else "audio/mp4"}
+    if file_format.lower() == "m4a":
+        content_settings_kwargs["content_disposition"] = "inline"
+    content_settings = ContentSettings(**content_settings_kwargs)
 
     spinner.start(colored(f"Uploading {file_format.upper()} to Azure...", "cyan"))
 
