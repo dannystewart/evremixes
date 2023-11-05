@@ -106,7 +106,7 @@ def process_and_upload(input_file, album_metadata, track_metadata, blob_name, fi
     global temp_dir
     spinner.start(colored(f"Converting to {file_format.upper()} and adding metadata...", "cyan"))
     add_metadata(convert_audio(input_file, file_format), album_metadata, track_metadata)
-    spinner.start(colored(f"Uploading {file_format.upper()}...", "cyan"))
+    spinner.start(colored(f"Uploading {file_format.upper()} to Azure...", "cyan"))
     blob_client = container_client.get_blob_client(f"ev/{blob_name}.{file_format}")
     with open(convert_audio(input_file, file_format), "rb") as data:
         blob_client.upload_blob(data, overwrite=True)
@@ -116,20 +116,8 @@ def process_and_upload(input_file, album_metadata, track_metadata, blob_name, fi
 # Purge Azure CDN cache
 def purge_cdn_cache():
     process = subprocess.run(
-        [
-            "az",
-            "cdn",
-            "endpoint",
-            "purge",
-            "--resource-group",
-            "dsfiles",
-            "--name",
-            "dsfiles",
-            "--profile-name",
-            "dsfiles",
-            "--content-paths",
-            "/ev",
-        ],
+        "az cdn endpoint purge --resource-group dsfiles --name dsfiles --profile-name dsfiles --content-paths /ev",
+        shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
