@@ -12,6 +12,7 @@ from io import BytesIO
 import pyperclip
 import requests
 from azure.storage.blob import BlobServiceClient
+from azure.storage.blob import ContentSettings
 from dotenv import load_dotenv
 from halo import Halo
 from mutagen.flac import FLAC, Picture
@@ -103,13 +104,14 @@ def add_metadata(audio_file_path, album_metadata, track_metadata):
 
 # Process and upload files
 def process_and_upload(input_file, album_metadata, track_metadata, blob_name, file_format):
-    global temp_dir
     spinner.start(colored(f"Converting to {file_format.upper()} and adding metadata...", "cyan"))
-    add_metadata(convert_audio(input_file, file_format), album_metadata, track_metadata)
+    converted_file_path = add_metadata(convert_audio(input_file, file_format), album_metadata, track_metadata)
+    content_type = f"audio/{file_format.lower()}"
+    content_settings = ContentSettings(content_type=content_type)
     spinner.start(colored(f"Uploading {file_format.upper()} to Azure...", "cyan"))
     blob_client = container_client.get_blob_client(f"ev/{blob_name}.{file_format}")
-    with open(convert_audio(input_file, file_format), "rb") as data:
-        blob_client.upload_blob(data, overwrite=True)
+    with open(converted_file_path, "rb") as data:
+        blob_client.upload_blob(data, content_settings=content_settings, overwrite=True)
     spinner.succeed(colored(f"{file_format.upper()} tagged and uploaded!", "green"))
 
 
