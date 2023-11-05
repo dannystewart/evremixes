@@ -183,7 +183,7 @@ if __name__ == "__main__":
         sys.exit(1)
     if args.filename is None:
         args.filename = re.sub(
-            r"\s*\d+\.\d+\.\d+_\d+.*", "", os.path.splitext(os.path.basename(args.input_file))[0]
+            r"\s*\d+\.\d+\.\d+(_\d+)?", "", os.path.splitext(os.path.basename(args.input_file))[0]
         ).replace(" ", "-")
         print(colored(f"No filename given, uploading as {args.filename}.flac", "cyan"))
     try:
