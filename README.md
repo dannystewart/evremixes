@@ -32,7 +32,7 @@ After the files are saved in the intended format, it will go through and apply t
 
 The script will download the remixes to `~/Downloads` on macOS (so you can move them to wherever you want, or simply import and then delete), and to `~/Music` on Windows and Linux. As the files are downloaded and the metadata is applied, they will also be renamed automatically to match your selected track numbering scheme. When finished, they'll be ready for listening and/or import.
 
-[^alac]: Most browsers will only download ALAC files, not play them. Even Apple doesn't support playback in Safari. It's bizarre.
+[^alac]: Most browsers will only download ALAC files, not play them. ~~Even Apple doesn't support playback in Safari.~~ Actually learned this is dependent on MIME type for the uploaded file, which my script now takes into account. An ALAC file with `content-disposition` set to `inline` will play correctly, at least in Safari, but other browsers still may not like it.
 
 [^flac]: While not supported via URL, you can also run the script with `--flac` if you're running it locally.
 
