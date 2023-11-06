@@ -57,21 +57,11 @@ That's not a question, but good! This was a test and you passed. That's why all 
 1. The main `evdl` URL goes to [`evdownloader.sh`](evdownloader.sh) and the `evps` URL (for Windows) goes to [`evdownloader.ps1`](evdownloader.ps1).
 2. If you meet the requirements, those scripts will then download and run a binary of the Python version.
 
-Binaries are scary, I know—they could be anything! But they're all compiled from [`evremixes.py`](evremixes.py). You can even see the compilation scripts I use under `tools`. If you're ultra paranoid, I encourage you to just run the original Python script—but you'll need Python and all the dependencies, and for that you're on your own.
+Binaries are scary, I know—they could be anything! But they're all compiled from [`evremixes.py`](evremixes.py). You can even see the compilation scripts I use (`pycompiler`). If you're ultra paranoid, I encourage you to just run the original Python script—but you'll need Python and all the dependencies, and for that you're on your own.
 
 ### Why is it prompting me to install the macOS Developer Tools?
 
 The need to parse JSON left me with two choices: `jq`, which would require Homebrew, or Python, which Apple provides a version of directly. A lot of Macs already have it, and those that don't can install it safely and easily using a feature that's built into the OS and doesn't even require admin rights. The latter seemed like an easier sell. The Developer Tools contain useful stuff that won't negatively affect your system and I'm honestly shocked when I encounter a Mac that's been around for a while and doesn't have them. Lots of things need them. It's why Apple made them so easy to install.[^deps]
-
-### What's all the other stuff in here?
-
-The `tools` folder contains stuff that's only useful for me:
-
-- [`evazure`](tools/evazure.py): A recently-overhauled script that takes WAV or AIFF Logic bounces, converts them to FLAC and ALAC, adds metadata, and uploads them to Azure blob storage where I keep my remixes. This has largely negated the need for [`evconverter`](tools/evconverter.py), which just copied existing FLAC versions to ALAC.
-- [`evtelegram`](tools/evtelegram.py): Converts, tags, and uploads remixes to a [Telegram channel](https://t.me/+ihiJnfkMIVYzN2Ex).
-- [`pycompiler.sh`](tools/pycompiler.sh) / [`.bat`](tools/pycompiler.bat): One-liners to make it easier to compile the binaries.
-
-Feel free to look, but there's no reason for you to touch, and most of it won't work without environment variables that aren't included here (for obvious reasons).
 
 ### How do I replace albums/songs in the Music app?
 
