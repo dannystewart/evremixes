@@ -60,7 +60,7 @@
             "track_name": "My Heart Is Broken",
             "file_url": "https://files.dannystewart.com/music/ev/My-Heart-Is-Broken.flac",
             "start_date": "2023-08-11",
-            "track_number": 14
+            "track_number": 15
         },
         {
             "track_name": "My Last Breath",
@@ -73,6 +73,12 @@
             "file_url": "https://files.dannystewart.com/music/ev/Taking-Over-Me.flac",
             "start_date": "2023-04-27",
             "track_number": 11
+        },
+        {
+            "track_name": "The End of the Dream",
+            "file_url": "https://files.dannystewart.com/music/ev/The-End-of-the-Dream.flac",
+            "start_date": "2023-10-31",
+            "track_number": 14
         },
         {
             "track_name": "The Game Is Over",
