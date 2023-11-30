@@ -57,10 +57,16 @@
             "track_number": 13
         },
         {
+            "track_name": "Lost In Paradise",
+            "file_url": "https://files.dannystewart.com/music/ev/Lost-In-Paradise.flac",
+            "start_date": "2023-11-28",
+            "track_number": 14
+        },
+        {
             "track_name": "My Heart Is Broken",
             "file_url": "https://files.dannystewart.com/music/ev/My-Heart-Is-Broken.flac",
             "start_date": "2023-08-11",
-            "track_number": 15
+            "track_number": 16
         },
         {
             "track_name": "My Last Breath",
@@ -78,7 +84,7 @@
             "track_name": "The End of the Dream",
             "file_url": "https://files.dannystewart.com/music/ev/The-End-of-the-Dream.flac",
             "start_date": "2023-10-31",
-            "track_number": 14
+            "track_number": 15
         },
         {
             "track_name": "The Game Is Over",
