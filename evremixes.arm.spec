@@ -2,19 +2,17 @@
 
 
 a = Analysis(
-    ['../evremixes.py'],
+    ["./evremixes.py"],
     pathex=[],
     binaries=[],
-    datas=[
-        ('/usr/share/terminfo/78/xterm-256color', 'xterm-256color')
-    ],
+    datas=[("/usr/share/terminfo/78/xterm-256color", "xterm-256color")],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
     excludes=[],
     noarchive=False,
-    onefile=True
+    onefile=True,
 )
 
 pyz = PYZ(a.pure)
@@ -25,7 +23,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='evremixes',
+    name="evremixes",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
