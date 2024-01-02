@@ -1,176 +1,157 @@
 #!/usr/bin/env python3
-
-import argparse
-import inquirer
 import json
 import os
 import platform
-import requests
-import shutil
+import string
 import subprocess
-from halo import Halo
 from io import BytesIO
+
+import inquirer
+import requests
+from halo import Halo
 from mutagen.flac import FLAC, Picture
 from mutagen.mp4 import MP4, MP4Cover
 from PIL import Image
-from pydub import AudioSegment
 from termcolor import colored
 
 
-# Check if ffmpeg is installed
-def ffmpeg_installed():
+def get_track_details():
+    """
+    Download the JSON file with track details and present a choice for track sorting.
+
+    Returns:
+        dict: The loaded track details.
+    """
     try:
-        subprocess.run(["ffmpeg", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=True)
-        return True
-    except subprocess.CalledProcessError:
-        return False
-
-
-# Initialize the spinner
-spinner = Halo(text="Initializing", spinner="dots")
-
-# Determine the operating system
-os_type = platform.system()
-
-# Parse arguments
-parser = argparse.ArgumentParser(description="Download and convert audio tracks.")
-parser.add_argument("--flac", action="store_true", help="Keep original FLAC format")
-args = parser.parse_args()
-
-# Let's assume only Mac users want ALAC, because others are savages
-if os_type != "Darwin":
-    args.flac = True
-
-# Check if ffmpeg is installed; if not, default to FLAC
-if not ffmpeg_installed():
-    print(colored("Warning: ffmpeg not found. Downloads will be in FLAC.", "yellow"))
-    args.flac = True
-
-# Download and load the JSON file with track details
-spinner.start(text=colored("Downloading track details...", "cyan"))
-response = requests.get("https://git.dannystewart.com/danny/evremixes/raw/branch/main/evtracks.json")
-
-# Download track and album metadata
-track_data = json.loads(response.text)
-metadata = track_data.get("metadata", {})
-
-# Download cover art
-cover_response = requests.get(metadata.get("cover_art_url", ""))
-cover_data_original = cover_response.content
-
-# Convert to JPEG and resize to 800x800 using PIL
-image = Image.open(BytesIO(cover_data_original))
-image = image.convert("RGB")  # Convert to RGB if image is not in this mode
-image = image.resize((800, 800))
-
-# Save the image data to a BytesIO object, then to a byte array
-buffered = BytesIO()
-image.save(buffered, format="JPEG")
-cover_data = buffered.getvalue()
-
-spinner.succeed(text=colored("Downloaded track details.", "green"))
-
-# Prompt user for sorting preference using inquirer
-questions = [
-    inquirer.List(
-        "sort_order",
-        message="Choose track order",
-        choices=["playlist order", "chronological by start date"],
-    ),
-]
-answers = inquirer.prompt(questions)
-sorting_choice = answers["sort_order"]
-
-# Sort tracks by track number or date based on user choice
-if sorting_choice == "playlist order":
-    track_data["tracks"] = sorted(track_data["tracks"], key=lambda k: k.get("track_number", 0))
-elif sorting_choice == "chronological by start date":
-    track_data["tracks"] = sorted(track_data["tracks"], key=lambda k: k.get("start_date", ""))
-
-# Set the default output folder based on the operating system
-if os_type == "Darwin":
-    default_output_folder = os.path.expanduser("~/Downloads")
-else:
-    default_output_folder = os.path.expanduser("~/Music")
-
-# Figure out download location
-album_name = metadata.get("album_name")
-album_folder = metadata.get("album_name", "Unknown Album")
-output_folder = os.path.join(default_output_folder, album_folder)
-normalized_output_folder = os.path.normpath(output_folder)
-
-# Replace home directory with tilde (~) if not on Windows
-if os_type != "Windows":
-    home_dir = os.path.expanduser("~")
-    normalized_output_folder = normalized_output_folder.replace(home_dir, "~")
-
-format_type = "FLAC" if args.flac else "ALAC"
-print(colored(f"Downloading in {format_type} to {normalized_output_folder}...", "cyan"))
-
-# Check and create folders
-if not os.path.exists(output_folder):
-    os.makedirs(output_folder)
-elif os.listdir(output_folder):  # Folder exists and has files
-    print(
-        colored(
-            "The folder already exists and contains files. Emptying folder...\n",
-            "yellow",
+        response = requests.get(
+            "https://git.dannystewart.com/danny/evremixes/raw/branch/main/evtracks.json",
+            timeout=10,
         )
-    )
+    except requests.RequestException as e:
+        raise SystemExit(e) from e
 
-    # Deletion code for existing files
+    track_data = json.loads(response.content)
+
+    sort_question = [
+        inquirer.List(
+            "sort_order",
+            message="Choose track order",
+            choices=["playlist order (as intended)", "chronological by start date"],
+        ),
+    ]
+    sort_answer = inquirer.prompt(sort_question)
+    sorting_choice = sort_answer["sort_order"]
+    key = "track_number" if sorting_choice == "playlist order (as intended)" else "start_date"
+    track_data["tracks"] = sorted(track_data["tracks"], key=lambda track: track.get(key, 0))
+
+    return track_data
+
+
+def download_cover_art(metadata):
+    """
+    Download and process the album cover art.
+
+    Args:
+        metadata (dict): Metadata for the album containing cover_art_url.
+
+    Returns:
+        bytes: The processed cover art, resized and encoded as JPEG.
+    """
+    cover_response = requests.get(metadata.get("cover_art_url", ""), timeout=10)
+    cover_data_original = cover_response.content
+
+    image = Image.open(BytesIO(cover_data_original))
+    image = image.convert("RGB")
+    image = image.resize((800, 800))
+
+    buffered = BytesIO()
+    image.save(buffered, format="JPEG")
+    cover_data = buffered.getvalue()
+
+    return cover_data
+
+
+def get_user_choices():
+    """
+    Present menu options to the user to select the file format and download location.
+
+    Returns:
+        tuple: A tuple containing the selected file extension and output folder.
+    """
+    format_question = [
+        inquirer.List(
+            "format",
+            message="Choose file format to download",
+            choices=["ALAC (Apple Lossless)", "FLAC"],
+        ),
+    ]
+    format_answer = inquirer.prompt(format_question)
+    format_choice = format_answer["format"]
+    file_extension = "m4a" if format_choice == "ALAC (Apple Lossless)" else "flac"
+
+    os_type = platform.system()
+    default_downloads_folder = os.path.expanduser("~/Downloads")
+    default_music_folder = os.path.expanduser("~/Music" if os_type != "Darwin" else "~/Downloads")
+
+    folder_question = [
+        inquirer.List(
+            "folder",
+            message="Choose download location",
+            choices=["Downloads folder", "Music folder", "Custom"],
+        ),
+    ]
+    folder_answer = inquirer.prompt(folder_question)
+    folder_choice = folder_answer["folder"]
+    if folder_choice == "Downloads folder":
+        output_folder = default_downloads_folder
+    elif folder_choice == "Music folder":
+        output_folder = default_music_folder
+    else:
+        custom_folder_question = [
+            inquirer.Text(
+                "custom_folder",
+                message="Enter the full path for your custom download location",
+            )
+        ]
+        custom_folder_answer = inquirer.prompt(custom_folder_question)
+        output_folder = custom_folder_answer["custom_folder"]
+
+    return file_extension, output_folder
+
+
+def clear_existing_files(output_folder):
+    """
+    Clear existing files with the specified file extension in the output folder.
+
+    Args:
+        output_folder (str): The path to the output folder.
+    """
+    file_extensions = ("flac", "m4a")
     for filename in os.listdir(output_folder):
-        file_path = os.path.join(output_folder, filename)
-        try:
-            if os.path.isfile(file_path) or os.path.islink(file_path):
-                os.unlink(file_path)
-            elif os.path.isdir(file_path):
-                shutil.rmtree(file_path)
-        except Exception as e:
-            print(f"Failed to delete {file_path}. Reason: {e}")
+        if filename.endswith(file_extensions):
+            file_path = os.path.join(output_folder, filename)
+            try:
+                os.remove(file_path)
+            except Exception as e:
+                print(colored(f"Failed to delete {file_path}. Reason: {e}", "red"))
 
-# Create the output folder if it doesn't exist
-if not os.path.exists(output_folder):
-    os.makedirs(output_folder)
 
-# Loop through each track
-for index, track in enumerate(track_data["tracks"]):
-    track_name = track["track_name"]
+def add_metadata_to_track(track, metadata, output_file_path, cover_data):
+    """
+    Add metadata and cover art to the downloaded track file.
 
-    # Different numbering based on sorting choice
-    if sorting_choice == "track":
-        track_number = str(track.get("track_number", "")).zfill(2)
-    else:
-        track_number = str(index + 1).zfill(2)
+    Args:
+        track (dict): Track details.
+        metadata (dict): Metadata for the album.
+        output_file_path (str): The path of the downloaded track file.
+        cover_data (bytes): The cover art, resized and encoded as JPEG.
+    """
+    try:
+        audio_format = output_file_path.rsplit(".", 1)[1].lower()
+        track_number = str(track.get("track_number", 0)).zfill(2)
 
-    track_num = str(track.get("track_number", ""))
-    print(f"Processing track {int(track_num) if sorting_choice == 'track' else int(track_number)}, {track_name}...")
-
-    # Download FLAC file
-    with Halo(text=colored("Downloading FLAC file...", "cyan"), spinner="dots"):
-        flac_file_path = f"{output_folder}/{track_number} - {track_name}.flac"
-        response = requests.get(track["file_url"])
-        with open(flac_file_path, "wb") as f:
-            f.write(response.content)
-
-    output_file_path = os.path.join(output_folder, f"{track_number} - {track_name}")
-
-    if not args.flac:
-        # Convert FLAC to ALAC (M4A)
-        with Halo(text=colored("Converting FLAC to ALAC...", "cyan"), spinner="dots"):
-            m4a_file_path = f"{output_file_path}.m4a"
-            audio = AudioSegment.from_file(flac_file_path, format="flac")
-            audio.export(m4a_file_path, format="ipod", codec="alac")
-            audio_format = "mp4"
-            output_file_path = m4a_file_path
-    else:
-        audio_format = "flac"
-        output_file_path = f"{output_file_path}.flac"
-
-    # Add metadata and cover art
-    with Halo(text=colored("Adding metadata and cover art...", "cyan"), spinner="dots"):
-        if audio_format == "mp4":
-            audio = MP4(m4a_file_path)
+        if audio_format == "m4a":
+            audio = MP4(output_file_path)
             audio["trkn"] = [(int(track_number), 0)]
             audio["\xa9nam"] = track.get("track_name", "")
             audio["\xa9ART"] = metadata.get("artist_name", "")
@@ -188,7 +169,7 @@ for index, track in enumerate(track_data["tracks"]):
 
         elif audio_format == "flac":
             audio = FLAC(output_file_path)
-            audio["tracknumber"] = str(int(track_number))
+            audio["tracknumber"] = track_number
             audio["title"] = track.get("track_name", "")
             audio["artist"] = metadata.get("artist_name", "")
             audio["album"] = metadata.get("album_name", "")
@@ -200,27 +181,105 @@ for index, track in enumerate(track_data["tracks"]):
             if "comments" in track:
                 audio["description"] = track["comments"]
 
-            # Embed cover art
             pic = Picture()
             pic.data = cover_data
-            pic.type = 3  # Album cover
+            pic.type = 3
             pic.mime = "image/jpeg"
             pic.width = 800
             pic.height = 800
             audio.add_picture(pic)
 
             audio.save()
+        return True
 
-    print(colored(f"Completed {track_name}!", "green"))
+    except Exception:
+        return False
 
-    # Remove the FLAC file
-    if not args.flac:
-        os.remove(flac_file_path)
 
-print(colored("\nAll tracks downloaded and ready! Enjoy!", "green"))
+def download_tracks(track_data, output_folder, file_extension):
+    """
+    Download each track from the provided URL and save it to the output folder.
 
-# Open the folder in the OS
-if os_type == "Windows":
-    subprocess.run(["explorer", os.path.abspath(output_folder)])
-elif os_type == "Darwin":
-    subprocess.run(["open", os.path.abspath(output_folder)])
+    Args:
+        track_data (dict): Loaded track details.
+        output_folder (str): The path to the output folder.
+        file_extension (str): The file extension to download.
+    """
+    os.makedirs(output_folder, exist_ok=True)
+    clear_existing_files(output_folder)
+
+    metadata = track_data["metadata"]
+    cover_data = download_cover_art(metadata)
+
+    home_dir = os.path.expanduser("~")
+    display_folder = output_folder.replace(home_dir, "~")
+    file_format = "Apple Lossless" if file_extension == "m4a" else "FLAC"
+    print(colored(f"Downloading in {file_format} to {display_folder}...\n", "cyan"))
+
+    total_tracks = len(track_data["tracks"])
+    spinner = Halo(spinner="dots")
+    for index, track in enumerate(track_data["tracks"], start=1):
+        track_number = str(track.get("track_number", index)).zfill(2)
+        track_name = track["track_name"]
+        file_url = track["file_url"].rsplit(".", 1)[0] + f".{file_extension}"
+
+        output_file_path = os.path.join(
+            output_folder, f"{track_number} - {track_name}.{file_extension}"
+        )
+        spinner.text = colored(f"Downloading {track_name}... ({index}/{total_tracks})", "cyan")
+        spinner.start()
+
+        try:
+            response = requests.get(file_url, stream=True, timeout=30)
+            response.raise_for_status()
+            with open(output_file_path, "wb") as f:
+                f.write(response.content)
+            spinner.text = colored("Applying metadata...", "cyan")
+            success = add_metadata_to_track(track, metadata, output_file_path, cover_data)
+            if not success:
+                spinner.fail(colored(f"Failed to add metadata to {track_name}.", "red"))
+                continue
+            spinner.succeed(colored(f"Downloaded {track_name}", "green"))
+        except requests.RequestException:
+            spinner.fail(colored(f"Failed to download {track_name}.", "red"))
+
+    spinner.stop()
+    print(
+        colored(
+            f"\nAll {total_tracks} remixes downloaded in {file_format} to {display_folder}. Enjoy!",
+            "green",
+        )
+    )
+
+
+def open_folder(output_folder):
+    """
+    Open the output folder in the OS file explorer.
+
+    Args:
+        output_folder (str): The path to the output folder.
+    """
+    os_type = platform.system()
+    abspath = os.path.abspath(output_folder)
+    if os_type == "Windows":
+        subprocess.run(["explorer", abspath])
+    elif os_type in ["Darwin", "Linux"]:
+        subprocess.run(["open" if os_type == "Darwin" else "xdg-open", abspath])
+
+
+def main():
+    """Main function."""
+    file_extension, base_output_folder = get_user_choices()
+    track_data = get_track_details()
+
+    album_name = track_data["metadata"].get("album_name", "Unknown Album")
+    valid_chars = f"-_.() {string.ascii_letters}{string.digits}"
+    safe_album_name = "".join(c for c in album_name if c in valid_chars)
+    output_folder = os.path.join(base_output_folder, safe_album_name)
+
+    download_tracks(track_data, output_folder, file_extension)
+    open_folder(output_folder)
+
+
+if __name__ == "__main__":
+    main()
