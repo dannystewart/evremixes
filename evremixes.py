@@ -89,9 +89,8 @@ def get_user_choices():
     format_choice = format_answer["format"]
     file_extension = "m4a" if format_choice == "ALAC (Apple Lossless)" else "flac"
 
-    os_type = platform.system()
     default_downloads_folder = os.path.expanduser("~/Downloads")
-    default_music_folder = os.path.expanduser("~/Music" if os_type != "Darwin" else "~/Downloads")
+    default_music_folder = os.path.expanduser("~/Music")
 
     folder_question = [
         inquirer.List(
