@@ -17,7 +17,7 @@ from termcolor import colored
 
 def get_track_details():
     """
-    Download the JSON file with track details and present a choice for track sorting.
+    Download the JSON file with track details.
 
     Returns:
         dict: The loaded track details.
@@ -31,19 +31,9 @@ def get_track_details():
         raise SystemExit(e) from e
 
     track_data = json.loads(response.content)
-
-    sort_question = [
-        inquirer.List(
-            "sort_order",
-            message="Choose track order",
-            choices=["playlist order (as intended)", "chronological by start date"],
-        ),
-    ]
-    sort_answer = inquirer.prompt(sort_question)
-    sorting_choice = sort_answer["sort_order"]
-    key = "track_number" if sorting_choice == "playlist order (as intended)" else "start_date"
-    track_data["tracks"] = sorted(track_data["tracks"], key=lambda track: track.get(key, 0))
-
+    track_data["tracks"] = sorted(
+        track_data["tracks"], key=lambda track: track.get("track_number", 0)
+    )
     return track_data
 
 
@@ -78,11 +68,16 @@ def get_user_choices():
     Returns:
         tuple: A tuple containing the selected file extension and output folder.
     """
+    format_choices = (
+        ["ALAC (Apple Lossless)", "FLAC"]
+        if platform.system() == "Darwin"
+        else ["FLAC", "ALAC (Apple Lossless)"]
+    )
     format_question = [
         inquirer.List(
             "format",
             message="Choose file format to download",
-            choices=["ALAC (Apple Lossless)", "FLAC"],
+            choices=format_choices,
         ),
     ]
     format_answer = inquirer.prompt(format_question)
@@ -96,7 +91,7 @@ def get_user_choices():
         inquirer.List(
             "folder",
             message="Choose download location",
-            choices=["Downloads folder", "Music folder", "Custom"],
+            choices=["Downloads folder", "Music folder", "Enter a custom path"],
         ),
     ]
     folder_answer = inquirer.prompt(folder_question)
@@ -206,15 +201,15 @@ def download_tracks(track_data, output_folder, file_extension):
     """
     os.makedirs(output_folder, exist_ok=True)
     clear_existing_files(output_folder)
-
-    metadata = track_data["metadata"]
-    cover_data = download_cover_art(metadata)
-
     home_dir = os.path.expanduser("~")
     display_folder = output_folder.replace(home_dir, "~")
+    display_folder = os.path.normpath(display_folder)
+
     file_format = "Apple Lossless" if file_extension == "m4a" else "FLAC"
     print(colored(f"Downloading in {file_format} to {display_folder}...\n", "cyan"))
 
+    metadata = track_data["metadata"]
+    cover_data = download_cover_art(metadata)
     total_tracks = len(track_data["tracks"])
     spinner = Halo(spinner="dots")
     for index, track in enumerate(track_data["tracks"], start=1):

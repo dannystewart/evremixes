@@ -19,14 +19,9 @@ You're probably only here to get the remixes, but if you're interested in how th
 
 ## How do these work?
 
-The full version of this script is written in Python. The "canonical" versions of my remixes are the ones officially published [on my website](https://music.dannystewart.com/evanescence/), so the script grabs them from there. [`evtracks.json`](evtracks.json) holds the current list of remixes I have available, their URLs, and any necessary metadata, including album art. It even accounts for two different ways to do track numbers, which it will ask you to choose when it runs:
+The "canonical" versions of my remixes are the ones officially published [on my website](https://music.dannystewart.com/evanescence/), so the script grabs them from there. [`evtracks.json`](evtracks.json) holds the current list of available remixes, metadata, and URLs.
 
-- The "intended" track numbers, according to my playlist order
-- Their start dates, so they can be sorted chronologically in the order I did them
-
-You can download them in FLAC or ALAC (Apple Lossless) format, and the script will ask you where you want to save them (default options are your Downloads and Music folders, but you can also input a custom path). After the files are saved, it will apply the metadata, download and apply the cover art from the URL specified in the JSON, and automatically rename them to match your selected track numbering scheme.
-
-The Python version is a precompiled binary for maximum compatibility (avoiding the need for dependencies as much as possible), but if for some reason you can't run the Python version, there is also a basic Bash version available as a fallback. The Bash version is what runs first and tests to see if you're able to run the Python version. If so, it launches that, but if not, it just runs by itself.
+You're presented with the choice of FLAC or ALAC (Apple Lossless), as well as where you want the files to be saved. The default options are your Downloads and Music folders, but you can also enter a custom path. After downloading, it will apply the correct metadata, album art, and filenames.
 
 ## FAQ (Foreseeably Askable Questions)
 
