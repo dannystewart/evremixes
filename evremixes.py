@@ -108,7 +108,7 @@ def get_user_choices():
             )
         ]
         custom_folder_answer = inquirer.prompt(custom_folder_question)
-        output_folder = custom_folder_answer["custom_folder"]
+        output_folder = os.path.expanduser(custom_folder_answer["custom_folder"])
 
     return file_extension, output_folder
 
