@@ -253,12 +253,17 @@ def open_folder(output_folder):
     Args:
         output_folder (str): The path to the output folder.
     """
-    os_type = platform.system()
-    abspath = os.path.abspath(output_folder)
-    if os_type == "Windows":
-        subprocess.run(["explorer", abspath])
-    elif os_type in ["Darwin", "Linux"]:
-        subprocess.run(["open" if os_type == "Darwin" else "xdg-open", abspath])
+    try:
+        os_type = platform.system()
+        abspath = os.path.abspath(output_folder)
+        if os_type == "Windows":
+            subprocess.run(["explorer", abspath], check=False)
+        elif os_type == "Darwin":
+            subprocess.run(["open", abspath], check=False)
+        elif os_type == "Linux" and "DISPLAY" in os.environ:
+            subprocess.run(["xdg-open", abspath], check=False)
+    except Exception:
+        pass
 
 
 def main():
