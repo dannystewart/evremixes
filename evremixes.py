@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# pylint: disable=global-statement
 import json
 import os
 import platform
@@ -13,6 +14,17 @@ from mutagen.flac import FLAC, Picture
 from mutagen.mp4 import MP4, MP4Cover
 from PIL import Image
 from termcolor import colored
+
+# Define default folders
+DOWNLOADS_FOLDER = os.path.expanduser("~/Downloads")
+MUSIC_FOLDER = os.path.expanduser("~/Music")
+
+# Enable downloading both sets to OneDrive for fancy people
+# Add EVREMIXES_ENABLE_ONEDRIVE=1 to your environment variables to enable
+ENABLE_ONEDRIVE = os.getenv("EVREMIXES_ENABLE_ONEDRIVE") == "1"
+ONEDRIVE_FOLDER = os.path.expanduser(
+    "~/Library/CloudStorage/OneDrive-Personal/Music/Danny Stewart/Evanescence Remixes"
+)
 
 
 def get_track_details():
@@ -66,51 +78,71 @@ def get_user_choices():
     Present menu options to the user to select the file format and download location.
 
     Returns:
-        tuple: A tuple containing the selected file extension and output folder.
+        tuple: A tuple containing the selected file extensions, output folder, and download_both_formats indicator.
     """
-    format_choices = (
-        ["ALAC (Apple Lossless)", "FLAC"]
-        if platform.system() == "Darwin"
-        else ["FLAC", "ALAC (Apple Lossless)"]
-    )
+
+    format_choices = ["FLAC", "ALAC (Apple Lossless)"]
+    if platform.system() == "Darwin":
+        format_choices.reverse()
+
+    if ENABLE_ONEDRIVE:
+        format_choices.insert(0, "Download all directly to OneDrive")
+
     format_question = [
         inquirer.List(
             "format",
             message="Choose file format to download",
             choices=format_choices,
+            carousel=True,
         ),
     ]
     format_answer = inquirer.prompt(format_question)
+
     format_choice = format_answer["format"]
-    file_extension = "m4a" if format_choice == "ALAC (Apple Lossless)" else "flac"
+    download_both_formats = format_choice == "Download all directly to OneDrive"
 
-    default_downloads_folder = os.path.expanduser("~/Downloads")
-    default_music_folder = os.path.expanduser("~/Music")
-
-    folder_question = [
-        inquirer.List(
-            "folder",
-            message="Choose download location",
-            choices=["Downloads folder", "Music folder", "Enter a custom path"],
-        ),
-    ]
-    folder_answer = inquirer.prompt(folder_question)
-    folder_choice = folder_answer["folder"]
-    if folder_choice == "Downloads folder":
-        output_folder = default_downloads_folder
-    elif folder_choice == "Music folder":
-        output_folder = default_music_folder
+    if not download_both_formats:
+        subfolder_name = "ALAC" if format_choice == "ALAC (Apple Lossless)" else "FLAC"
+        file_extension = ["m4a" if format_choice == "ALAC (Apple Lossless)" else "flac"]
     else:
-        custom_folder_question = [
-            inquirer.Text(
-                "custom_folder",
-                message="Enter the full path for your custom download location",
-            )
-        ]
-        custom_folder_answer = inquirer.prompt(custom_folder_question)
-        output_folder = os.path.expanduser(custom_folder_answer["custom_folder"])
+        subfolder_name = None
+        file_extension = ["m4a", "flac"]
 
-    return file_extension, output_folder
+    if not download_both_formats:
+        folder_choices = ["Downloads folder", "Music folder", "Enter a custom path"]
+        if ENABLE_ONEDRIVE:
+            folder_choices.insert(2, "OneDrive folder")
+
+        folder_question = [
+            inquirer.List(
+                "folder",
+                message="Choose download location",
+                choices=folder_choices,
+                carousel=True,
+            ),
+        ]
+        folder_answer = inquirer.prompt(folder_question)
+        folder_choice = folder_answer["folder"]
+
+        if folder_choice == "Downloads folder":
+            output_folder = DOWNLOADS_FOLDER
+        elif folder_choice == "Music folder":
+            output_folder = MUSIC_FOLDER
+        elif folder_choice == "OneDrive folder":
+            output_folder = os.path.join(ONEDRIVE_FOLDER, subfolder_name)
+        else:
+            custom_folder_question = [
+                inquirer.Text(
+                    "custom_folder",
+                    message="Enter the full path for your custom download location",
+                )
+            ]
+            custom_folder_answer = inquirer.prompt(custom_folder_question)
+            output_folder = os.path.expanduser(custom_folder_answer["custom_folder"])
+    else:
+        output_folder = None
+
+    return file_extension, output_folder, download_both_formats
 
 
 def clear_existing_files(output_folder):
@@ -268,16 +300,35 @@ def open_folder(output_folder):
 
 def main():
     """Main function."""
-    file_extension, base_output_folder = get_user_choices()
+    global ENABLE_ONEDRIVE
+
+    # OneDrive is for a very specific use case, so only enable it on macOS
+    os_type = platform.system()
+    if os_type != "Darwin" and ENABLE_ONEDRIVE:
+        print(colored("OneDrive is only supported on macOS.", "red"))
+        ENABLE_ONEDRIVE = False
+
+    file_extensions, base_output_folder, download_both_formats = get_user_choices()
     track_data = get_track_details()
 
     album_name = track_data["metadata"].get("album_name", "Unknown Album")
     valid_chars = f"-_.() {string.ascii_letters}{string.digits}"
     safe_album_name = "".join(c for c in album_name if c in valid_chars)
-    output_folder = os.path.join(base_output_folder, safe_album_name)
 
-    download_tracks(track_data, output_folder, file_extension)
-    open_folder(output_folder)
+    if download_both_formats:
+        for file_extension in file_extensions:
+            subfolder_name = "ALAC" if file_extension == "m4a" else "FLAC"
+            output_folder = os.path.join(ONEDRIVE_FOLDER, subfolder_name)
+            print()
+            download_tracks(track_data, output_folder, file_extension)
+        open_folder(ONEDRIVE_FOLDER)
+    else:
+        if base_output_folder is not None:
+            output_folder = os.path.join(base_output_folder, safe_album_name)
+        else:
+            output_folder = ONEDRIVE_FOLDER
+        download_tracks(track_data, output_folder, file_extensions[0])
+        open_folder(output_folder)
 
 
 if __name__ == "__main__":
