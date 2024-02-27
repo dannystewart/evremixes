@@ -30,6 +30,9 @@ ENABLE_ONEDRIVE = os.getenv("EVREMIXES_ENABLE_ONEDRIVE") == "1"
 ONEDRIVE_PATH = "~/Library/CloudStorage/OneDrive-Personal/Music/Danny Stewart/Evanescence Remixes"
 ONEDRIVE_FOLDER = os.path.expanduser(ONEDRIVE_PATH)
 
+# Enable downloading instrumentals (add EVREMIXES_GET_INSTRUMENTALS=1 to your environment variables to enable)
+ENABLE_INSTRUMENTALS = os.getenv("EVREMIXES_GET_INSTRUMENTALS") == "1"
+
 
 def print_color(text, color_name):
     """Prints a string in a specific color."""
@@ -49,9 +52,7 @@ def get_track_details():
         raise SystemExit(e) from e
 
     track_data = json.loads(response.content)
-    track_data["tracks"] = sorted(
-        track_data["tracks"], key=lambda track: track.get("track_number", 0)
-    )
+    track_data["tracks"] = sorted(track_data["tracks"], key=lambda track: track.get("track_number", 0))
     return track_data
 
 
@@ -109,6 +110,9 @@ def _get_format_choice():
 
     if ENABLE_ONEDRIVE:
         format_choices.insert(0, "Download all directly to OneDrive")
+
+    if ENABLE_INSTRUMENTALS:
+        format_choices = ["Instrumentals in " + choice for choice in format_choices]
 
     format_question = [
         inquirer.List(
@@ -228,9 +232,15 @@ def add_metadata_to_track(track, metadata, output_file_path, cover_data):
 
 def _add_metadata_for_alac(track, metadata, output_file_path, cover_data, track_number):
     """Handle metadata addition for ALAC."""
+    track_name = (
+        track.get("track_name", "") + " (Instrumental)"
+        if ENABLE_INSTRUMENTALS
+        else track.get("track_name", "")
+    )
+
     audio = MP4(output_file_path)
     audio["trkn"] = [(int(track_number), 0)]
-    audio["\xa9nam"] = track.get("track_name", "")
+    audio["\xa9nam"] = track_name
     audio["\xa9ART"] = metadata.get("artist_name", "")
     audio["\xa9alb"] = metadata.get("album_name", "")
     audio["\xa9day"] = str(metadata.get("year", ""))
@@ -297,12 +307,14 @@ def download_tracks(track_data, output_folder, file_extension):
 
     for index, track in enumerate(track_data["tracks"], start=1):
         track_number = str(track.get("track_number", index)).zfill(2)
-        track_name = track["track_name"]
-        file_url = track["file_url"].rsplit(".", 1)[0] + f".{file_extension}"
+        if ENABLE_INSTRUMENTALS:
+            file_url = track["inst_url"].rsplit(".", 1)[0] + f".{file_extension}"
+            track_name = track["track_name"] + " (Instrumental)"
+        else:
+            file_url = track["file_url"].rsplit(".", 1)[0] + f".{file_extension}"
+            track_name = track["track_name"]
 
-        output_file_path = os.path.join(
-            output_folder, f"{track_number} - {track_name}.{file_extension}"
-        )
+        output_file_path = os.path.join(output_folder, f"{track_number} - {track_name}.{file_extension}")
 
         spinner.text = colored(f"Downloading {track_name}... ({index}/{total_tracks})", "cyan")
         spinner.start()
@@ -358,6 +370,13 @@ def main():
     if os_type != "Darwin" and ENABLE_ONEDRIVE:
         print_color("OneDrive is only supported on macOS.", "red")
         ENABLE_ONEDRIVE = False
+
+    if ENABLE_INSTRUMENTALS:
+        inst_str = (
+            "\n[!] Instrumentals environment variable is set, so only instrumentals will"
+            "\n    be downloaded! Unset EVREMIXES_GET_INSTRUMENTALS to get the full songs.\n"
+        )
+        print_color(inst_str, "yellow")
 
     file_extensions, base_output_folder, download_both_formats = get_user_choices()
     track_data = get_track_details()
