@@ -84,11 +84,11 @@ OS=$(uname)
 URL=""
 
 if [ "$OS" == "Darwin" ] && [ "$ARCH" == "x86_64" ]; then
-    URL="https://git.dannystewart.com/danny/evremixes/raw/branch/main/dist/x86/evremixes"
+    URL="https://gitlab.dannystewart.com/danny/evremixes/-/raw/main/dist/x86/evremixes"
 elif [ "$OS" == "Darwin" ] && [ "$ARCH" == "arm64" ]; then
-    URL="https://git.dannystewart.com/danny/evremixes/raw/branch/main/dist/arm/evremixes"
+    URL="https://gitlab.dannystewart.com/danny/evremixes/-/raw/main/dist/arm/evremixes"
 elif [ "$OS" == "Linux" ]; then
-    URL="https://git.dannystewart.com/danny/evremixes/raw/branch/main/dist/linux/evremixes"
+    URL="https://gitlab.dannystewart.com/danny/evremixes/-/raw/main/dist/linux/evremixes"
 else
     echo -e "${RED}Error:${NC} Unsupported OS or architecture."
     rm -r "${TEMP_DIR}"
@@ -120,7 +120,7 @@ echo ""
 echo -e "${GREEN}Saving Evanescence Remixes to ~/Downloads...${NC}"
 
 # Fetch JSON and store it in a variable, sorting tracks by track_number
-JSON_DATA=$(curl -s "https://git.dannystewart.com/danny/evremixes/raw/branch/main/evtracks.json" | python3 -c "import sys, json; data=json.load(sys.stdin); data['tracks'] = sorted(data['tracks'], key=lambda x: x['track_number']); print(json.dumps(data))")
+JSON_DATA=$(curl -s "https://gitlab.dannystewart.com/danny/evremixes/-/raw/main/evtracks.json" | python3 -c "import sys, json; data=json.load(sys.stdin); data['tracks'] = sorted(data['tracks'], key=lambda x: x['track_number']); print(json.dumps(data))")
 
 # Create output folder if it doesn't exist, and handle old files if it does
 if [ -d "$OUTPUT_FOLDER" ]; then

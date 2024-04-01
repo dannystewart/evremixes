@@ -18,7 +18,7 @@ from PIL import Image
 from termcolor import colored
 
 # URL to the JSON file containing track details
-TRACKLIST_URL = "https://git.dannystewart.com/danny/evremixes/raw/branch/main/evtracks.json"
+TRACKLIST_URL = "https://gitlab.dannystewart.com/danny/evremixes/-/raw/main/evtracks.json"
 
 # Define default folders
 DOWNLOADS_FOLDER = os.path.expanduser("~/Downloads")

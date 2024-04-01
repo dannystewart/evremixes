@@ -1,7 +1,7 @@
 # Evanescence remix downloader, now in PowerShell for you Windows users
 
 # The URL of the file to download
-$url = "https://git.dannystewart.com/danny/evremixes/raw/branch/main/dist/win/evremixes.exe"
+$url = "https://gitlab.dannystewart.com/danny/evremixes/-/raw/main/dist/win/evremixes.exe"
 
 # Define potential folders where aria2c might be located
 $potential_folders = @("$env:USERPROFILE\Downloads")
@@ -60,7 +60,7 @@ if (-not $basicMode) {
 
     # Download the file
     Write-Host "Downloading evremixes..."
-    Get-RemoteFile -url "https://git.dannystewart.com/danny/evremixes/raw/branch/main/dist/win/evremixes.exe" -outputPath "evremixes.exe" -outputFolder $tempDir
+    Get-RemoteFile -url "https://gitlab.dannystewart.com/danny/evremixes/-/raw/main/dist/win/evremixes.exe" -outputPath "evremixes.exe" -outputFolder $tempDir
 
     # Run the program in the current context
     Write-Host "Running evremixes..."
@@ -81,7 +81,7 @@ if ($basicMode) {
     $output_folder = "$env:USERPROFILE\Music\Evanescence Remixes"
 
     # Fetch JSON data and sort it by track_number
-    $json_data = Invoke-RestMethod -Uri "https://git.dannystewart.com/danny/evremixes/raw/branch/main/evtracks.json"
+    $json_data = Invoke-RestMethod -Uri "https://gitlab.dannystewart.com/danny/evremixes/-/raw/main/evtracks.json"
     $json_data.tracks = $json_data.tracks | Sort-Object track_number
 
     # Create output folder if it doesn't exist; remove older files if it does
