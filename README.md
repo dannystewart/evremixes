@@ -12,10 +12,10 @@ This runs [`evdownloader.sh`](evdownloader.sh) in case you want to check it befo
 My condolences. But fret not; I wrote [`evdownloader.ps1`](evdownloader.ps1) *just for you*:
 
 ```ps1
-iex (iwr -useb https://dnst.me/evps).Content
+iex (iwr -useb https://dnst.me/evdl).Content
 ```
 
-You're probably only here to get the remixes, but if you're interested in how these work, by all means read on!
+You're probably only here to get the remixes, but if you're interested in how these work, read on!
 
 ## How do these work?
 
@@ -33,6 +33,10 @@ That's not a question, but good! This was a test and you passed. That's why all 
 2. If you meet the requirements, those scripts will then download and run a binary of the Python version.
 
 Binaries are scary, I know—they could be anything! But they're all compiled from [`evremixes.py`](evremixes.py). You can even see the compilation scripts I use (`pycompiler`). If you're ultra paranoid, I encourage you to just run the original Python script—but you'll need Python and all the dependencies, and for that you're on your own.
+
+### Hey, how'd you get the same URL to download a different script per OS?
+
+Glad you asked! In a neat bit of synergy with my [bot program](https://gitlab.dannystewart.com/danny/telegram-bots), that `/evdl` URL actually goes to a [special endpoint](https://gitlab.dannystewart.com/danny/telegram-bots/-/blob/main/app/startup/bots.py?ref_type=heads#L94) on my bot server that determines your user agent and serves up the correct script accordingly!
 
 ### Why is it prompting me to install the macOS Developer Tools?
 
