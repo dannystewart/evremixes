@@ -29,7 +29,7 @@ You're presented with the choice of FLAC or ALAC (Apple Lossless), as well as wh
 
 That's not a question, but good! This was a test and you passed. That's why all the code is published here for you to check before you run it. You could also just [listen to my remixes online](https://music.dannystewart.com/evanescence/) if you prefer. Up to you, you do you! But because I do the whole security thing, here's what those commands download and run:
 
-1. The main `evdl` URL goes to [`evdownloader.sh`](evdownloader.sh) and the `evps` URL (for Windows) goes to [`evdownloader.ps1`](evdownloader.ps1).
+1. The URL goes to [`evdownloader.sh`](evdownloader.sh) on Mac or Linux and [`evdownloader.ps1`](evdownloader.ps1) on Windows.
 2. If you meet the requirements, those scripts will then download and run a binary of the Python version.
 
 Binaries are scary, I know—they could be anything! But they're all compiled from [`evremixes.py`](evremixes.py). You can even see the compilation scripts I use (`pycompiler`). If you're ultra paranoid, I encourage you to just run the original Python script—but you'll need Python and all the dependencies, and for that you're on your own.
