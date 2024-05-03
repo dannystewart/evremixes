@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# pylint: disable=global-statement
+# pylint: disable=global-statement,missing-module-docstring
 
 import contextlib
 import json
@@ -34,17 +34,17 @@ ONEDRIVE_FOLDER = os.path.expanduser(ONEDRIVE_PATH)
 ENABLE_INSTRUMENTALS = os.getenv("EVREMIXES_GET_INSTRUMENTALS") == "1"
 
 
-def print_color(text, color_name):
+def print_color(text: str, color_name: str) -> None:
     """Prints a string in a specific color."""
     print(colored(text, color_name))
 
 
-def get_track_details():
+def get_track_details() -> dict:
     """
     Download the JSON file with track details.
 
     Returns:
-        dict: The loaded track details.
+        The loaded track details.
     """
     try:
         response = requests.get(TRACKLIST_URL, timeout=10)
@@ -56,15 +56,15 @@ def get_track_details():
     return track_data
 
 
-def download_cover_art(metadata):
+def download_cover_art(metadata: dict) -> bytes:
     """
     Download and process the album cover art.
 
     Args:
-        metadata (dict): Metadata for the album containing cover_art_url.
+        metadata: Metadata for the album containing cover_art_url.
 
     Returns:
-        bytes: The processed cover art, resized and encoded as JPEG.
+        The processed cover art, resized and encoded as JPEG.
     """
     cover_response = requests.get(metadata.get("cover_art_url", ""), timeout=10)
     cover_data_original = cover_response.content
@@ -78,12 +78,12 @@ def download_cover_art(metadata):
     return buffered.getvalue()
 
 
-def get_user_choices():
+def get_user_choices() -> tuple:
     """
     Present menu options to the user to select the file format and download location.
 
     Returns:
-        tuple: A tuple containing the selected file extensions, output folder, and download_both_formats indicator.
+        A tuple containing selected file extensions, output folder, and download_both_formats indicator.
     """
     format_choice, download_both_formats = _get_format_choice()
 
@@ -97,12 +97,12 @@ def get_user_choices():
     return file_extension, output_folder, download_both_formats
 
 
-def _get_format_choice():
+def _get_format_choice() -> tuple:
     """
     Presents the user with file format options.
 
     Returns:
-        tuple: A tuple containing the selected format choice and a boolean indicating if both formats should be downloaded.
+        A tuple containing selected format choice and download_both_formats indicator.
     """
     format_choices = ["FLAC", "ALAC (Apple Lossless)"]
     if platform.system() == "Darwin":
@@ -112,7 +112,7 @@ def _get_format_choice():
         format_choices.insert(0, "Download all directly to OneDrive")
 
     if ENABLE_INSTRUMENTALS:
-        format_choices = ["Instrumentals in " + choice for choice in format_choices]
+        format_choices = [f"Instrumentals in {choice}" for choice in format_choices]
 
     format_question = [
         inquirer.List(
@@ -132,16 +132,16 @@ def _get_format_choice():
     return format_choice, download_both_formats
 
 
-def _get_folder_choice(format_choice, download_both_formats):
+def _get_folder_choice(format_choice: str, download_both_formats: bool) -> str | None:
     """
     Presents the user with download location options based on their format choice.
 
     Args:
-        format_choice (str): The user's selected file format.
-        download_both_formats (bool): Indicator if both formats are selected for download.
+        format_choice: The user's selected file format.
+        download_both_formats: Indicator if both formats are selected for download.
 
     Returns:
-        str: The selected output folder path.
+        The selected output folder path.
     """
     if download_both_formats:
         return None
@@ -186,12 +186,12 @@ def _get_folder_choice(format_choice, download_both_formats):
     return os.path.expanduser(custom_folder_answer["custom_folder"])
 
 
-def clear_existing_files(output_folder):
+def clear_existing_files(output_folder: str) -> None:
     """
     Clear existing files with the specified file extension in the output folder.
 
     Args:
-        output_folder (str): The path to the output folder.
+        output_folder: The path to the output folder.
     """
     file_extensions = ("flac", "m4a")
     for filename in os.listdir(output_folder):
@@ -203,18 +203,18 @@ def clear_existing_files(output_folder):
                 print_color(f"Failed to delete {file_path}. Reason: {e}", "red")
 
 
-def add_metadata_to_track(track, metadata, output_file_path, cover_data):
+def add_metadata_to_track(track: dict, metadata: dict, output_file_path: str, cover_data: bytes) -> bool:
     """
     Add metadata and cover art to the downloaded track file.
 
     Args:
-        track (dict): Track details.
-        metadata (dict): Metadata for the album.
-        output_file_path (str): The path of the downloaded track file.
-        cover_data (bytes): The cover art, resized and encoded as JPEG.
+        track: Track details.
+        metadata: Metadata for the album.
+        output_file_path: The path of the downloaded track file.
+        cover_data: The cover art, resized and encoded as JPEG.
 
     Returns:
-        bool: True if metadata was added successfully, False otherwise.
+        True if metadata was added successfully, False otherwise.
     """
     try:
         audio_format = output_file_path.rsplit(".", 1)[1].lower()
@@ -230,7 +230,9 @@ def add_metadata_to_track(track, metadata, output_file_path, cover_data):
         return False
 
 
-def _add_metadata_for_alac(track, metadata, output_file_path, cover_data, track_number):
+def _add_metadata_for_alac(
+    track: dict, metadata: dict, output_file_path: str, cover_data: bytes, track_number: str
+) -> None:
     """Handle metadata addition for ALAC."""
     track_name = (
         track.get("track_name", "") + " (Instrumental)"
@@ -255,7 +257,9 @@ def _add_metadata_for_alac(track, metadata, output_file_path, cover_data, track_
     audio.save()
 
 
-def _add_metadata_for_flac(track, metadata, output_file_path, cover_data, track_number):
+def _add_metadata_for_flac(
+    track: dict, metadata: dict, output_file_path: str, cover_data: bytes, track_number: str
+) -> None:
     """Handle metadata addition for FLAC."""
     audio = FLAC(output_file_path)
     audio["tracknumber"] = track_number
@@ -281,14 +285,14 @@ def _add_metadata_for_flac(track, metadata, output_file_path, cover_data, track_
     audio.save()
 
 
-def download_tracks(track_data, output_folder, file_extension):
+def download_tracks(track_data: dict, output_folder: str, file_extension: str) -> None:
     """
     Download each track from the provided URL and save it to the output folder.
 
     Args:
-        track_data (dict): Loaded track details.
-        output_folder (str): The path to the output folder.
-        file_extension (str): The file extension to download.
+        track_data: Loaded track details.
+        output_folder: The path to the output folder.
+        file_extension: The file extension to download.
     """
     os.makedirs(output_folder, exist_ok=True)
     clear_existing_files(output_folder)
@@ -343,12 +347,12 @@ def download_tracks(track_data, output_folder, file_extension):
     )
 
 
-def open_folder(output_folder):
+def open_folder(output_folder: str) -> None:
     """
     Open the output folder in the OS file explorer.
 
     Args:
-        output_folder (str): The path to the output folder.
+        output_folder: The path to the output folder.
     """
     with contextlib.suppress(Exception):
         os_type = platform.system()
@@ -361,7 +365,7 @@ def open_folder(output_folder):
             subprocess.run(["xdg-open", abspath], check=False)
 
 
-def main():
+def main() -> None:
     """Main function."""
     global ENABLE_ONEDRIVE
 
