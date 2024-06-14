@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-# pylint: disable=global-statement,missing-module-docstring
 
 import contextlib
 import json
@@ -35,11 +34,11 @@ ENABLE_INSTRUMENTALS = os.getenv("EVREMIXES_GET_INSTRUMENTALS") == "1"
 
 
 def print_color(text: str, color_name: str) -> None:
-    """Prints a string in a specific color."""
+    """Print a string in a specific color."""
     print(colored(text, color_name))
 
 
-def get_track_details() -> dict:
+def download_track_info() -> dict[str, list[dict]]:
     """
     Download the JSON file with track details.
 
@@ -51,12 +50,12 @@ def get_track_details() -> dict:
     except requests.RequestException as e:
         raise SystemExit(e) from e
 
-    track_data = json.loads(response.content)
-    track_data["tracks"] = sorted(track_data["tracks"], key=lambda track: track.get("track_number", 0))
-    return track_data
+    track_info = json.loads(response.content)
+    track_info["tracks"] = sorted(track_info["tracks"], key=lambda track: track.get("track_number", 0))
+    return track_info
 
 
-def download_cover_art(metadata: dict) -> bytes:
+def download_cover_art(metadata: dict[str, list[dict]]) -> bytes:
     """
     Download and process the album cover art.
 
@@ -78,31 +77,31 @@ def download_cover_art(metadata: dict) -> bytes:
     return buffered.getvalue()
 
 
-def get_user_choices() -> tuple:
+def get_user_selections() -> tuple[str, str, bool]:
     """
     Present menu options to the user to select the file format and download location.
 
     Returns:
-        A tuple containing selected file extensions, output folder, and download_both_formats indicator.
+        A tuple containing selected file extensions, output folder, and get_both_formats indicator.
     """
-    format_choice, download_both_formats = _get_format_choice()
+    format_choice, get_both_formats = _get_format_selection()
 
-    if not download_both_formats:
+    if not get_both_formats:
         file_extension = ["m4a" if format_choice == "ALAC (Apple Lossless)" else "flac"]
-        output_folder = _get_folder_choice(format_choice, download_both_formats)
+        output_folder = _get_folder_selection(format_choice, get_both_formats)
     else:
         file_extension = ["m4a", "flac"]
         output_folder = None
 
-    return file_extension, output_folder, download_both_formats
+    return file_extension, output_folder, get_both_formats
 
 
-def _get_format_choice() -> tuple:
+def _get_format_selection() -> tuple[str, bool]:
     """
     Presents the user with file format options.
 
     Returns:
-        A tuple containing selected format choice and download_both_formats indicator.
+        A tuple containing selected format choice and get_both_formats indicator.
     """
     format_choices = ["FLAC", "ALAC (Apple Lossless)"]
     if platform.system() == "Darwin":
@@ -127,23 +126,23 @@ def _get_format_choice() -> tuple:
         raise SystemExit
 
     format_choice = format_answer["format"]
-    download_both_formats = format_choice == "Download all directly to OneDrive"
+    get_both_formats = format_choice == "Download all directly to OneDrive"
 
-    return format_choice, download_both_formats
+    return format_choice, get_both_formats
 
 
-def _get_folder_choice(format_choice: str, download_both_formats: bool) -> str | None:
+def _get_folder_selection(format_choice: str, get_both_formats: bool) -> str | None:
     """
     Presents the user with download location options based on their format choice.
 
     Args:
         format_choice: The user's selected file format.
-        download_both_formats: Indicator if both formats are selected for download.
+        get_both_formats: Indicator if both formats are selected for download.
 
     Returns:
-        The selected output folder path.
+        The selected output folder path, or None if the user exits.
     """
-    if download_both_formats:
+    if get_both_formats:
         return None
 
     subfolder_name = "ALAC" if format_choice == "ALAC (Apple Lossless)" else "FLAC"
@@ -186,9 +185,9 @@ def _get_folder_choice(format_choice: str, download_both_formats: bool) -> str |
     return os.path.expanduser(custom_folder_answer["custom_folder"])
 
 
-def clear_existing_files(output_folder: str) -> None:
+def remove_previous_downloads(output_folder: str) -> None:
     """
-    Clear existing files with the specified file extension in the output folder.
+    Remove any existing files with the specified file extension in the output folder.
 
     Args:
         output_folder: The path to the output folder.
@@ -203,7 +202,9 @@ def clear_existing_files(output_folder: str) -> None:
                 print_color(f"Failed to delete {file_path}. Reason: {e}", "red")
 
 
-def add_metadata_to_track(track: dict, metadata: dict, output_file_path: str, cover_data: bytes) -> bool:
+def apply_metadata(
+    track: dict[str, str], metadata: dict[str, list[dict]], output_file_path: str, cover_data: bytes
+) -> bool:
     """
     Add metadata and cover art to the downloaded track file.
 
@@ -221,56 +222,64 @@ def add_metadata_to_track(track: dict, metadata: dict, output_file_path: str, co
         track_number = str(track.get("track_number", 0)).zfill(2)
 
         if audio_format == "m4a":
-            _add_metadata_for_alac(track, metadata, output_file_path, cover_data, track_number)
+            _apply_alac_metadata(track, metadata, output_file_path, cover_data, track_number)
         elif audio_format == "flac":
-            _add_metadata_for_flac(track, metadata, output_file_path, cover_data, track_number)
+            _apply_flac_metadata(track, metadata, output_file_path, cover_data, track_number)
         return True
 
     except Exception:
         return False
 
 
-def _add_metadata_for_alac(
-    track: dict, metadata: dict, output_file_path: str, cover_data: bytes, track_number: str
+def _apply_alac_metadata(
+    track: dict[str, str],
+    track_metadata: dict[str, list[dict]],
+    output_path: str,
+    cover_data: bytes,
+    track_number: str,
 ) -> None:
-    """Handle metadata addition for ALAC."""
+    """Apply metadata for ALAC files."""
     track_name = (
         track.get("track_name", "") + " (Instrumental)"
         if ENABLE_INSTRUMENTALS
         else track.get("track_name", "")
     )
 
-    audio = MP4(output_file_path)
+    audio = MP4(output_path)
     audio["trkn"] = [(int(track_number), 0)]
     audio["\xa9nam"] = track_name
-    audio["\xa9ART"] = metadata.get("artist_name", "")
-    audio["\xa9alb"] = metadata.get("album_name", "")
-    audio["\xa9day"] = str(metadata.get("year", ""))
-    audio["\xa9gen"] = metadata.get("genre", "")
+    audio["\xa9ART"] = track_metadata.get("artist_name", "")
+    audio["\xa9alb"] = track_metadata.get("album_name", "")
+    audio["\xa9day"] = str(track_metadata.get("year", ""))
+    audio["\xa9gen"] = track_metadata.get("genre", "")
     audio["covr"] = [MP4Cover(cover_data, imageformat=MP4Cover.FORMAT_JPEG)]
 
-    if "album_artist" in metadata:
-        audio["aART"] = metadata.get("album_artist", "")
+    if "album_artist" in track_metadata:
+        audio["aART"] = track_metadata.get("album_artist", "")
     if "comments" in track:
         audio["\xa9cmt"] = track["comments"]
 
     audio.save()
 
 
-def _add_metadata_for_flac(
-    track: dict, metadata: dict, output_file_path: str, cover_data: bytes, track_number: str
+def _apply_flac_metadata(
+    track: dict[str, str],
+    track_metadata: dict[str, list[dict]],
+    output_path: str,
+    cover_data: bytes,
+    track_number: str,
 ) -> None:
-    """Handle metadata addition for FLAC."""
-    audio = FLAC(output_file_path)
+    """Apply metadata for FLAC files."""
+    audio = FLAC(output_path)
     audio["tracknumber"] = track_number
     audio["title"] = track.get("track_name", "")
-    audio["artist"] = metadata.get("artist_name", "")
-    audio["album"] = metadata.get("album_name", "")
-    audio["date"] = str(metadata.get("year", ""))
-    audio["genre"] = metadata.get("genre", "")
+    audio["artist"] = track_metadata.get("artist_name", "")
+    audio["album"] = track_metadata.get("album_name", "")
+    audio["date"] = str(track_metadata.get("year", ""))
+    audio["genre"] = track_metadata.get("genre", "")
 
-    if "album_artist" in metadata:
-        audio["albumartist"] = metadata.get("album_artist", "")
+    if "album_artist" in track_metadata:
+        audio["albumartist"] = track_metadata.get("album_artist", "")
     if "comments" in track:
         audio["description"] = track["comments"]
 
@@ -285,17 +294,17 @@ def _add_metadata_for_flac(
     audio.save()
 
 
-def download_tracks(track_data: dict, output_folder: str, file_extension: str) -> None:
+def download_tracks(track_info: dict[str, list[dict]], output_folder: str, file_extension: str) -> None:
     """
     Download each track from the provided URL and save it to the output folder.
 
     Args:
-        track_data: Loaded track details.
+        track_info: Loaded track details.
         output_folder: The path to the output folder.
         file_extension: The file extension to download.
     """
     os.makedirs(output_folder, exist_ok=True)
-    clear_existing_files(output_folder)
+    remove_previous_downloads(output_folder)
     home_dir = os.path.expanduser("~")
     display_folder = output_folder.replace(home_dir, "~")
     display_folder = os.path.normpath(display_folder)
@@ -303,13 +312,13 @@ def download_tracks(track_data: dict, output_folder: str, file_extension: str) -
     file_format = "Apple Lossless" if file_extension == "m4a" else "FLAC"
     print_color(f"Downloading in {file_format} to {display_folder}...\n", "cyan")
 
-    metadata = track_data["metadata"]
+    metadata = track_info["metadata"]
     cover_data = download_cover_art(metadata)
-    total_tracks = len(track_data["tracks"])
+    total_tracks = len(track_info["tracks"])
 
     spinner = Halo(spinner="dots")
 
-    for index, track in enumerate(track_data["tracks"], start=1):
+    for index, track in enumerate(track_info["tracks"], start=1):
         track_number = str(track.get("track_number", index)).zfill(2)
         if ENABLE_INSTRUMENTALS:
             file_url = track["inst_url"].rsplit(".", 1)[0] + f".{file_extension}"
@@ -331,7 +340,7 @@ def download_tracks(track_data: dict, output_folder: str, file_extension: str) -
 
             spinner.text = colored("Applying metadata...", "cyan")
 
-            success = add_metadata_to_track(track, metadata, output_file_path, cover_data)
+            success = apply_metadata(track, metadata, output_file_path, cover_data)
             if not success:
                 spinner.fail(colored(f"Failed to add metadata to {track_name}.", "red"))
                 continue
@@ -347,13 +356,8 @@ def download_tracks(track_data: dict, output_folder: str, file_extension: str) -
     )
 
 
-def open_folder(output_folder: str) -> None:
-    """
-    Open the output folder in the OS file explorer.
-
-    Args:
-        output_folder: The path to the output folder.
-    """
+def open_folder_in_os(output_folder: str) -> None:
+    """Open the output folder in the OS file explorer."""
     with contextlib.suppress(Exception):
         os_type = platform.system()
         abspath = os.path.abspath(output_folder)
@@ -365,8 +369,8 @@ def open_folder(output_folder: str) -> None:
             subprocess.run(["xdg-open", abspath], check=False)
 
 
-def main() -> None:
-    """Main function."""
+def check_config_vars():
+    """Check environment variables for OneDrive or instrumental download."""
     global ENABLE_ONEDRIVE
 
     # OneDrive is for a very specific use case, so only enable it on macOS
@@ -382,27 +386,45 @@ def main() -> None:
         )
         print_color(inst_str, "yellow")
 
-    file_extensions, base_output_folder, download_both_formats = get_user_choices()
-    track_data = get_track_details()
 
-    album_name = track_data["metadata"].get("album_name", "Unknown Album")
+def download_both_formats_to_onedrive(track_info: dict[str, list[dict]], file_extensions: list[str]) -> None:
+    """Download both file formats directly to OneDrive."""
+    for file_extension in file_extensions:
+        subfolder_name = "ALAC" if file_extension == "m4a" else "FLAC"
+        output_folder = os.path.join(ONEDRIVE_FOLDER, subfolder_name)
+        print()
+        download_tracks(track_info, output_folder, file_extension)
+    open_folder_in_os(ONEDRIVE_FOLDER)
+
+
+def download_selected_tracks(
+    track_info: dict[str, list[dict]], file_extensions: list[str], base_output_folder: str
+) -> None:
+    """Download the user's chosen selection to the output folder."""
+    # Create a safe album name for the output folder
+    album_name = track_info["metadata"].get("album_name", "Unknown Album")
     valid_chars = f"-_.() {string.ascii_letters}{string.digits}"
-    safe_album_name = "".join(c for c in album_name if c in valid_chars)
-
-    if download_both_formats:
-        for file_extension in file_extensions:
-            subfolder_name = "ALAC" if file_extension == "m4a" else "FLAC"
-            output_folder = os.path.join(ONEDRIVE_FOLDER, subfolder_name)
-            print()
-            download_tracks(track_data, output_folder, file_extension)
-        open_folder(ONEDRIVE_FOLDER)
+    if base_output_folder is not None:
+        safe_album_name = "".join(c for c in album_name if c in valid_chars)
+        output_folder = os.path.join(base_output_folder, safe_album_name)
     else:
-        if base_output_folder is not None:
-            output_folder = os.path.join(base_output_folder, safe_album_name)
-        else:
-            output_folder = ONEDRIVE_FOLDER
-        download_tracks(track_data, output_folder, file_extensions[0])
-        open_folder(output_folder)
+        output_folder = ONEDRIVE_FOLDER
+    download_tracks(track_info, output_folder, file_extensions[0])
+    open_folder_in_os(output_folder)
+
+
+def main() -> None:
+    """Configure options and download remixes."""
+    check_config_vars()
+
+    file_extensions, base_output_folder, get_both_formats = get_user_selections()
+    track_info = download_track_info()
+
+    if get_both_formats:
+        download_both_formats_to_onedrive(file_extensions, track_info)
+        return
+
+    download_selected_tracks(track_info, file_extensions, base_output_folder)
 
 
 if __name__ == "__main__":
