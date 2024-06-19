@@ -107,10 +107,11 @@ def _get_format_selection() -> tuple[str, bool]:
     if platform.system() == "Darwin":
         format_choices.reverse()
 
-    if ENABLE_ONEDRIVE:
+    if ENABLE_ONEDRIVE and ENABLE_INSTRUMENTALS:
+        format_choices.insert(0, "Download all instrumentals directly to OneDrive")
+    elif ENABLE_ONEDRIVE:
         format_choices.insert(0, "Download all directly to OneDrive")
-
-    if ENABLE_INSTRUMENTALS:
+    elif ENABLE_INSTRUMENTALS:
         format_choices = [f"Instrumentals in {choice}" for choice in format_choices]
 
     format_question = [
@@ -126,7 +127,9 @@ def _get_format_selection() -> tuple[str, bool]:
         raise SystemExit
 
     format_choice = format_answer["format"]
-    get_both_formats = format_choice == "Download all directly to OneDrive"
+    get_both_formats = format_choice.startswith(
+        "Download all directly to OneDrive"
+    ) or format_choice.startswith("Download all instrumentals directly to OneDrive")
 
     return format_choice, get_both_formats
 
@@ -221,6 +224,9 @@ def apply_metadata(
         audio_format = output_file_path.rsplit(".", 1)[1].lower()
         track_number = str(track.get("track_number", 0)).zfill(2)
 
+        if ENABLE_INSTRUMENTALS:
+            track["track_name"] += " (Instrumental)"
+
         if audio_format == "m4a":
             _apply_alac_metadata(track, metadata, output_file_path, cover_data, track_number)
         elif audio_format == "flac":
@@ -239,15 +245,9 @@ def _apply_alac_metadata(
     track_number: str,
 ) -> None:
     """Apply metadata for ALAC files."""
-    track_name = (
-        track.get("track_name", "") + " (Instrumental)"
-        if ENABLE_INSTRUMENTALS
-        else track.get("track_name", "")
-    )
-
     audio = MP4(output_path)
     audio["trkn"] = [(int(track_number), 0)]
-    audio["\xa9nam"] = track_name
+    audio["\xa9nam"] = track.get("track_name", "")
     audio["\xa9ART"] = track_metadata.get("artist_name", "")
     audio["\xa9alb"] = track_metadata.get("album_name", "")
     audio["\xa9day"] = str(track_metadata.get("year", ""))
@@ -323,12 +323,15 @@ def download_tracks(track_info: dict[str, list[dict]], output_folder: str, file_
 
     for index, track in enumerate(track_info["tracks"], start=1):
         track_number = str(track.get("track_number", index)).zfill(2)
+        original_track_name = track["track_name"]
         if ENABLE_INSTRUMENTALS:
             file_url = track["inst_url"].rsplit(".", 1)[0] + f".{file_extension}"
-            track_name = track["track_name"] + " (Instrumental)"
+            track_name = original_track_name
+            if not track_name.endswith(" (Instrumental)"):
+                track_name += " (Instrumental)"
         else:
             file_url = track["file_url"].rsplit(".", 1)[0] + f".{file_extension}"
-            track_name = track["track_name"]
+            track_name = original_track_name
 
         output_file_path = os.path.join(output_folder, f"{track_number} - {track_name}.{file_extension}")
 
@@ -394,6 +397,8 @@ def download_both_formats_to_onedrive(track_info: dict[str, list[dict]], file_ex
     """Download both file formats directly to OneDrive."""
     for file_extension in file_extensions:
         subfolder_name = "ALAC" if file_extension == "m4a" else "FLAC"
+        if ENABLE_INSTRUMENTALS:
+            subfolder_name = "Instrumentals " + subfolder_name
         output_folder = os.path.join(ONEDRIVE_FOLDER, subfolder_name)
         print()
         download_tracks(track_info, output_folder, file_extension)
