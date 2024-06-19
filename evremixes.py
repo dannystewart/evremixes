@@ -303,6 +303,9 @@ def download_tracks(track_info: dict[str, list[dict]], output_folder: str, file_
         output_folder: The path to the output folder.
         file_extension: The file extension to download.
     """
+    if isinstance(track_info, list) and len(track_info) == 1:
+        track_info = track_info[0]
+
     os.makedirs(output_folder, exist_ok=True)
     remove_previous_downloads(output_folder)
     home_dir = os.path.expanduser("~")
@@ -421,7 +424,7 @@ def main() -> None:
     track_info = download_track_info()
 
     if get_both_formats:
-        download_both_formats_to_onedrive(file_extensions, track_info)
+        download_both_formats_to_onedrive(track_info, file_extensions)
         return
 
     download_selected_tracks(track_info, file_extensions, base_output_folder)
