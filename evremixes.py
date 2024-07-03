@@ -191,6 +191,9 @@ class MenuHelper:
 class DownloadHelper:
     """Helper class for downloading tracks."""
 
+    def __init__(self):
+        self.metadata = MetadataHelper()
+
     def download_track_info(self) -> dict[str, list[dict]]:
         """Download the JSON file with track details."""
         try:
