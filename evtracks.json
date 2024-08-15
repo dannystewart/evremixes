@@ -62,21 +62,21 @@
             "file_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Lithium.flac",
             "inst_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Lithium_Inst.flac",
             "start_date": "2021-09-26",
-            "track_number": 13
+            "track_number": 14
         },
         {
             "track_name": "Lost In Paradise",
             "file_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Lost-In-Paradise.flac",
             "inst_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Lost-In-Paradise_Inst.flac",
             "start_date": "2023-11-28",
-            "track_number": 15
+            "track_number": 16
         },
         {
             "track_name": "My Heart Is Broken",
             "file_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/My-Heart-Is-Broken.flac",
             "inst_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/My-Heart-Is-Broken_Inst.flac",
             "start_date": "2023-08-11",
-            "track_number": 14
+            "track_number": 15
         },
         {
             "track_name": "My Last Breath",
@@ -84,6 +84,13 @@
             "inst_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/My-Last-Breath_Inst.flac",
             "start_date": "2023-07-25",
             "track_number": 12
+        },
+        {
+            "track_name": "Snow White Queen",
+            "file_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Snow-White-Queen.flac",
+            "inst_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Snow-White-Queen_Inst.flac",
+            "start_date": "2024-08-15",
+            "track_number": 13
         },
         {
             "track_name": "Taking Over Me",
@@ -97,7 +104,7 @@
             "file_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/The-End-of-the-Dream.flac",
             "inst_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/The-End-of-the-Dream_Inst.flac",
             "start_date": "2023-10-31",
-            "track_number": 16
+            "track_number": 17
         },
         {
             "track_name": "The Game Is Over",
