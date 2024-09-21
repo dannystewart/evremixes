@@ -26,17 +26,22 @@ MUSIC_FOLDER = os.path.expanduser("~/Music")
 
 # Enable downloading both sets to OneDrive for fancy people
 # Add `EVREMIXES_ENABLE_ONEDRIVE=1` to your environment variables to enable
-ENABLE_ONEDRIVE = os.getenv("EVREMIXES_ENABLE_ONEDRIVE") == "1"
+ENABLE_ONEDRIVE = os.getenv("EVREMIXES_ENABLE_ONEDRIVE", "0") == "1"
 ONEDRIVE_PATH = "~/Library/CloudStorage/OneDrive-Personal/Music/Danny Stewart/Evanescence Remixes"
 ONEDRIVE_FOLDER = os.path.expanduser(ONEDRIVE_PATH)
 
 # Enable downloading instrumentals (add `EVREMIXES_GET_INSTRUMENTALS=1` to your environment variables to enable)
-ENABLE_INSTRUMENTALS = os.getenv("EVREMIXES_GET_INSTRUMENTALS") == "1"
+ENABLE_INSTRUMENTALS = os.getenv("EVREMIXES_GET_INSTRUMENTALS", "0") == "1"
 
 
 def print_color(text: str, color_name: str) -> None:
     """Print a string in a specific color."""
     print(colored(text, color_name))
+
+
+def colored_alert(message: str, color: str = "yellow") -> str:
+    exclamation = f"[{colored('!', color)}]"
+    return f"{exclamation} {colored(message, color)}"
 
 
 def check_config_vars():
@@ -49,13 +54,21 @@ def check_config_vars():
         print_color("OneDrive is only supported on macOS.", "red")
         ENABLE_ONEDRIVE = False
 
+    elif ENABLE_ONEDRIVE:
+        onedrive_reminder = colored_alert("OneDrive environment variable is set.", "cyan")
+        print(f"\n{onedrive_reminder}")
+
     # Display a warning/reminder if the instrumental flag is set
     if ENABLE_INSTRUMENTALS:
-        instrumental_reminder = (
-            "\n[!] Instrumentals environment variable is set, so only instrumentals will"
-            "\n    be downloaded! Unset EVREMIXES_GET_INSTRUMENTALS to get the full songs.\n"
+        instrumental_reminder = colored_alert(
+            "Instrumentals environment variable is set, so only instrumentals will\n"
+            "    be downloaded! Set EVREMIXES_GET_INSTRUMENTALS=0 to get the full songs.",
+            "yellow",
         )
-        print_color(instrumental_reminder, "yellow")
+        print(f"\n{instrumental_reminder}")
+
+    if ENABLE_ONEDRIVE or ENABLE_INSTRUMENTALS:
+        print()
 
 
 class MenuHelper:
@@ -99,10 +112,10 @@ class MenuHelper:
             format_choices.reverse()
 
         # Add the option to download both formats directly to OneDrive
-        if ENABLE_ONEDRIVE and ENABLE_INSTRUMENTALS:
-            format_choices.insert(0, "Download all instrumentals directly to OneDrive")
-        elif ENABLE_ONEDRIVE:
-            format_choices.insert(0, "Download all directly to OneDrive")
+        prefix = "instrumentals" if ENABLE_INSTRUMENTALS else "tracks"
+        if ENABLE_ONEDRIVE:
+            onedrive_option = f"Download all {prefix.lower()} directly to OneDrive"
+            format_choices.insert(0, onedrive_option)
         elif ENABLE_INSTRUMENTALS:
             format_choices = [f"Instrumentals in {choice}" for choice in format_choices]
 
@@ -202,7 +215,9 @@ class DownloadHelper:
             raise SystemExit(e) from e
 
         track_info = json.loads(response.content)
-        track_info["tracks"] = sorted(track_info["tracks"], key=lambda track: track.get("track_number", 0))
+        track_info["tracks"] = sorted(
+            track_info["tracks"], key=lambda track: track.get("track_number", 0)
+        )
         return track_info
 
     def download_cover_art(self, metadata: dict[str, list[dict]]) -> bytes:
@@ -265,15 +280,17 @@ class DownloadHelper:
             original_track_name = track["track_name"]
             track_name = original_track_name
 
-            if ENABLE_INSTRUMENTALS:  # For instrumentals, use the instrumental URL and add the suffix
+            # For instrumentals, use the instrumental URL and add the suffix
+            if ENABLE_INSTRUMENTALS:
                 file_url = track["inst_url"].rsplit(".", 1)[0] + f".{file_extension}"
                 if not track_name.endswith(" (Instrumental)"):
                     track_name += " (Instrumental)"
-
             else:  # Otherwise, use the regular URL and track name
                 file_url = track["file_url"].rsplit(".", 1)[0] + f".{file_extension}"
             # Name the output file with the track number and name
-            output_path = os.path.join(output_folder, f"{track_number} - {track_name}.{file_extension}")
+            output_path = os.path.join(
+                output_folder, f"{track_number} - {track_name}.{file_extension}"
+            )
 
             # Display the track name and download progress
             spinner.text = colored(f"Downloading {track_name}... ({index}/{total_tracks})", "cyan")
@@ -366,7 +383,11 @@ class MetadataHelper:
     """Helper class for applying metadata to downloaded tracks."""
 
     def apply_metadata(
-        self, track: dict[str, str], metadata: dict[str, list[dict]], output_path: str, cover_data: bytes
+        self,
+        track: dict[str, str],
+        metadata: dict[str, list[dict]],
+        output_path: str,
+        cover_data: bytes,
     ) -> bool:
         """
         Add metadata and cover art to the downloaded track file.
@@ -383,20 +404,22 @@ class MetadataHelper:
         try:  # Identify the audio format and track number
             audio_format = output_path.rsplit(".", 1)[1].lower()
             track_number = str(track.get("track_number", 0)).zfill(2)
-            disc_number = 1
+            disc_number = 2 if ENABLE_INSTRUMENTALS else 1
 
             # Add the Instrumental suffix if enabled
-            if ENABLE_INSTRUMENTALS:
+            if ENABLE_INSTRUMENTALS and not track["track_name"].endswith(" (Instrumental)"):
                 track["track_name"] += " (Instrumental)"
-                disc_number = 2
 
             # Apply metadata based on the audio format
             if audio_format == "m4a":
-                self._apply_alac_metadata(track, metadata, output_path, cover_data, track_number, disc_number)
+                self._apply_alac_metadata(
+                    track, metadata, output_path, cover_data, track_number, disc_number
+                )
             elif audio_format == "flac":
-                self._apply_flac_metadata(track, metadata, output_path, cover_data, track_number, disc_number)
+                self._apply_flac_metadata(
+                    track, metadata, output_path, cover_data, track_number, disc_number
+                )
             return True
-
         except Exception:
             return False
 
