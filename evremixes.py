@@ -25,8 +25,8 @@ DOWNLOADS_FOLDER = os.path.expanduser("~/Downloads")
 MUSIC_FOLDER = os.path.expanduser("~/Music")
 
 # Enable downloading both sets to OneDrive for fancy people
-# Add `EVREMIXES_ENABLE_ONEDRIVE=1` to your environment variables to enable
-ENABLE_ONEDRIVE = os.getenv("EVREMIXES_ENABLE_ONEDRIVE", "0") == "1"
+# Add `EVREMIXES_ADMIN_DOWNLOAD=1` to your environment variables to enable
+ADMIN_DOWNLOAD = os.getenv("EVREMIXES_ADMIN_DOWNLOAD", "0") == "1"
 ONEDRIVE_PATH = "~/Library/CloudStorage/OneDrive-Personal/Music/Danny Stewart/Evanescence Remixes"
 ONEDRIVE_FOLDER = os.path.expanduser(ONEDRIVE_PATH)
 
@@ -46,16 +46,19 @@ def colored_alert(message: str, color: str = "yellow") -> str:
 
 def check_config_vars():
     """Check environment variables for OneDrive or instrumental download."""
-    global ENABLE_ONEDRIVE
+    global ADMIN_DOWNLOAD
 
-    # OneDrive is for a very specific use case, so only enable it on macOS
+    # OneDrive download is intended for admin-only use and thus restricted to macOS
     os_type = platform.system()
-    if os_type != "Darwin" and ENABLE_ONEDRIVE:
+    if os_type != "Darwin" and ADMIN_DOWNLOAD:
         print_color("OneDrive is only supported on macOS.", "red")
-        ENABLE_ONEDRIVE = False
+        ADMIN_DOWNLOAD = False
 
-    elif ENABLE_ONEDRIVE:
-        onedrive_reminder = colored_alert("OneDrive environment variable is set.", "cyan")
+    elif ADMIN_DOWNLOAD:
+        onedrive_reminder = colored_alert(
+            "Admin download (regular and instrumentals to OneDrive in all formats).",
+            "magenta",
+        )
         print(f"\n{onedrive_reminder}")
 
     # Display a warning/reminder if the instrumental flag is set
@@ -67,7 +70,7 @@ def check_config_vars():
         )
         print(f"\n{instrumental_reminder}")
 
-    if ENABLE_ONEDRIVE or ENABLE_INSTRUMENTALS:
+    if ADMIN_DOWNLOAD or ENABLE_INSTRUMENTALS:
         print()
 
 
@@ -113,7 +116,7 @@ class MenuHelper:
 
         # Add the option to download both formats directly to OneDrive
         prefix = "instrumentals" if ENABLE_INSTRUMENTALS else "tracks"
-        if ENABLE_ONEDRIVE:
+        if ADMIN_DOWNLOAD:
             onedrive_option = f"Download all {prefix.lower()} directly to OneDrive"
             format_choices.insert(0, onedrive_option)
         elif ENABLE_INSTRUMENTALS:
@@ -159,7 +162,7 @@ class MenuHelper:
         folder_choices = ["Downloads folder", "Music folder", "Enter a custom path"]
 
         # Add the OneDrive folder option if the environment variable is set
-        if ENABLE_ONEDRIVE:
+        if ADMIN_DOWNLOAD:
             folder_choices.insert(2, "OneDrive folder")
 
         folder_question = [
@@ -237,7 +240,11 @@ class DownloadHelper:
         return buffered.getvalue()
 
     def download_tracks(
-        self, track_info: dict[str, list[dict]], output_folder: str, file_extension: str
+        self,
+        track_info: dict[str, list[dict]],
+        output_folder: str,
+        file_extension: str,
+        is_instrumental: bool = False,
     ) -> None:
         """
         Download each track from the provided URL and save it to the output folder.
@@ -246,6 +253,7 @@ class DownloadHelper:
             track_info: Loaded track details.
             output_folder: The path to the output folder.
             file_extension: The file extension to download.
+            is_instrumental: Whether to download instrumental tracks.
         """
         # If there's only one track, it's a single track album
         if isinstance(track_info, list) and len(track_info) == 1:
@@ -281,7 +289,7 @@ class DownloadHelper:
             track_name = original_track_name
 
             # For instrumentals, use the instrumental URL and add the suffix
-            if ENABLE_INSTRUMENTALS:
+            if is_instrumental:
                 file_url = track["inst_url"].rsplit(".", 1)[0] + f".{file_extension}"
                 if not track_name.endswith(" (Instrumental)"):
                     track_name += " (Instrumental)"
@@ -323,20 +331,25 @@ class DownloadHelper:
     def download_both_formats_to_onedrive(
         self, track_info: dict[str, list[dict]], file_extensions: list[str]
     ) -> None:
-        """Download both file formats directly to OneDrive."""
+        """Download both file formats and both regular and instrumental tracks directly to OneDrive."""
         # Create the output folders for each file extension
         for file_extension in file_extensions:
             subfolder_name = "ALAC" if file_extension == "m4a" else "FLAC"
 
-            # Add the Instrumentals prefix if downloading instrumentals
-            if ENABLE_INSTRUMENTALS:
-                subfolder_name = f"Instrumentals {subfolder_name}"
-
+            # Download regular tracks
             output_folder = os.path.join(ONEDRIVE_FOLDER, subfolder_name)
             print()
+            self.download_tracks(track_info, output_folder, file_extension, is_instrumental=False)
 
-            # Download the tracks and open the folder in the OS file browser
-            self.download_tracks(track_info, output_folder, file_extension)
+            # Download instrumental tracks
+            instrumental_output_folder = os.path.join(
+                ONEDRIVE_FOLDER, f"Instrumentals {subfolder_name}"
+            )
+            print()
+            self.download_tracks(
+                track_info, instrumental_output_folder, file_extension, is_instrumental=True
+            )
+
         self.open_folder_in_os(ONEDRIVE_FOLDER)
 
     def download_selected_tracks(
@@ -504,11 +517,10 @@ def main() -> None:
         file_extensions, output_folder, get_both_formats = menu_helper.get_user_selections()
         track_info = download_helper.download_track_info()
 
-        if get_both_formats:
+        if ADMIN_DOWNLOAD or get_both_formats:
             download_helper.download_both_formats_to_onedrive(track_info, file_extensions)
-            return
-
-        download_helper.download_selected_tracks(track_info, file_extensions, output_folder)
+        else:
+            download_helper.download_selected_tracks(track_info, file_extensions, output_folder)
 
     except (KeyboardInterrupt, SystemExit):
         print_color("\nExiting.", "red")
