@@ -10,35 +10,15 @@ python = ">=3.11,<3.13"
 halo = "^0.0.31"
 inquirer = "3.2.5"
 mutagen = "^1.47.0"
-pillow = "^10.3.0"
-readchar = "4.0.5"
+pillow = "^10.4.0"
 requests = "^2.32.3"
-termcolor = "^2.4.0"
-types-requests = "^2.32.0.20240602"
+termcolor = "^2.5.0"
+types-requests = "^2.32.0.20241016"
 
 [tool.poetry.group.dev.dependencies]
-pyinstaller = "^6.8.0"
-ruff = "^0.4.8"
+pyinstaller = "^6.11.0"
+ruff = "^0.7.2"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
-
-[tool.black]
-line-length = 100
-
-[tool.flake8]
-max-line-length = 100
-
-[tool.ruff]
-line-length = 100
-exclude = [
-    ".git",
-    ".pyenv",
-    ".venv",
-    ".vscode",
-    "__pypackages__",
-    "build",
-    "dist",
-    "venv",
-]
