@@ -3,5 +3,4 @@
 .history
 .python-version
 .vscode
-build
-poetry.lock
+build/evremixes*

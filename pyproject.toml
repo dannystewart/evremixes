@@ -1,9 +1,11 @@
 [tool.poetry]
 name = "evremixes"
-version = "3.0.0"
+version = "3.0.1"
 description = "Evanescence Remix Downloader"
 authors = ["Danny Stewart <danny@stewart.cc>"]
 readme = "README.md"
+packages = [{include = "evremixes", from = "src"}]
+include = ["*.json"]
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.13"
@@ -18,6 +20,9 @@ types-requests = "^2.32.0.20241016"
 [tool.poetry.group.dev.dependencies]
 pyinstaller = "^6.11.0"
 ruff = "^0.7.2"
+
+[tool.poetry.scripts]
+evremixes = "evremixes.evremixes:main"
 
 [build-system]
 requires = ["poetry-core"]
