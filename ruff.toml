@@ -1,4 +1,4 @@
-# Ruff config version: 0
+# Ruff config version: 2
 # ------------------------------------------------------------------------------
 # Update checklist:
 # □ Bump version number
@@ -47,10 +47,6 @@ target-version = "py312"
 
 # Allow unsafe fixes
 unsafe-fixes = true
-
-[pycodestyle]
-# E501 reports lines that exceed the length of 100
-max-line-length = 110
 
 [format]
 # Use double quotes for strings
@@ -106,6 +102,8 @@ select = [
     "W",    # pylint warnings
 ]
 ignore = [
+    "ANN001", # Missing type annotation for 'self'
+    "ANN002", # Missing type annotation for 'cls'
     "ANN101", # Missing type annotation for 'self'
     "ANN102", # Missing type annotation for 'cls'
     "ANN204", # Missing return type annotation for init
