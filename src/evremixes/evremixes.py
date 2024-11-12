@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from __future__ import annotations
 
 import contextlib
 import json
@@ -30,7 +31,7 @@ ADMIN_DOWNLOAD = os.getenv("EVREMIXES_ADMIN_DOWNLOAD", "0") == "1"
 ONEDRIVE_PATH = "~/Library/CloudStorage/OneDrive-Personal/Music/Danny Stewart/Evanescence Remixes"
 ONEDRIVE_FOLDER = os.path.expanduser(ONEDRIVE_PATH)
 
-# Enable downloading instrumentals (add `EVREMIXES_GET_INSTRUMENTALS=1` to your environment variables to enable)
+# Enable downloading instrumentals (add `EVREMIXES_GET_INSTRUMENTALS=1` environment variable to enable)
 ENABLE_INSTRUMENTALS = os.getenv("EVREMIXES_GET_INSTRUMENTALS", "0") == "1"
 
 
@@ -40,6 +41,7 @@ def print_color(text: str, color_name: str) -> None:
 
 
 def colored_alert(message: str, color: str = "yellow") -> str:
+    """Format a message as an alert with an exclamation point."""
     exclamation = f"[{colored('!', color)}]"
     return f"{exclamation} {colored(message, color)}"
 
@@ -77,7 +79,7 @@ def check_config_vars():
 class MenuHelper:
     """Helper class for presenting menu options to the user."""
 
-    def get_user_selections(self) -> tuple[str, str, bool]:
+    def get_user_selections(self) -> tuple[list[str], str | None, bool]:
         """
         Present menu options to the user to select the file format and download location.
 
@@ -241,7 +243,7 @@ class DownloadHelper:
 
     def download_tracks(
         self,
-        track_info: dict[str, list[dict]],
+        track_info: dict,
         output_folder: str,
         file_extension: str,
         is_instrumental: bool = False,
@@ -353,7 +355,7 @@ class DownloadHelper:
         self.open_folder_in_os(ONEDRIVE_FOLDER)
 
     def download_selected_tracks(
-        self, track_info: dict[str, list[dict]], file_extensions: list[str], base_output_folder: str
+        self, track_info: dict, file_extensions: list[str], base_output_folder: str
     ) -> None:
         """Download the user's chosen selection to the output folder."""
         # Ensure the album name is valid for the output folder
