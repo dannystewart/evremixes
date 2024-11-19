@@ -9,10 +9,11 @@ include = ["*.json"]
 
 [tool.poetry.dependencies]
 python = ">=3.11,<3.13"
+dsutil = {git = "https://gitlab.dannystewart.com/danny/dsutil.git"}
 halo = "^0.0.31"
-inquirer = "3.2.5"
+inquirer = "^3.4.0"
 mutagen = "^1.47.0"
-pillow = "^10.4.0"
+pillow = "^11.0.0"
 requests = "^2.32.3"
 termcolor = "^2.5.0"
 types-requests = "^2.32.0.20241016"
@@ -22,7 +23,7 @@ pyinstaller = "^6.11.0"
 ruff = "^0.7.2"
 
 [tool.poetry.scripts]
-evremixes = "evremixes.evremixes:main"
+evremixes = "evremixes.main:main"
 
 [build-system]
 requires = ["poetry-core"]

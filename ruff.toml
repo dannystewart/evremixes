@@ -1,8 +1,5 @@
-# Ruff config version: 2
-# ------------------------------------------------------------------------------
-# Update checklist:
-# □ Bump version number
-# □ Commit to repo
+# Ruff config version: 4
+# ----------------------
 
 # Extend any existing pyproject.toml configuration
 extend = "pyproject.toml"
