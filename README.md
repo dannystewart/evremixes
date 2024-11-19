@@ -32,7 +32,7 @@ That's not a question, but good! This was a test and you passed. That's why all 
 1. The URL goes to [`evdownloader.sh`](evdownloader.sh) on Mac or Linux and [`evdownloader.ps1`](evdownloader.ps1) on Windows.
 2. If you meet the requirements, those scripts will then download and run a binary of the Python version.
 
-Binaries are scary, I know—they could be anything! But they're all compiled from [`evremixes.py`](evremixes.py). You can even see the compilation scripts I use (`pycompiler`). If you're ultra paranoid, I encourage you to just run the original Python script—but you'll need Python and all the dependencies, and for that you're on your own.
+Binaries are scary, I know—they could be anything! But they're all compiled from the [`evremixes`](src/evremixes/main.py) script. You can even see the compilation scripts I use (`pycompiler`). If you're ultra paranoid, I encourage you to just run the original Python script—but you'll need Python and all the dependencies, and for that you're on your own.
 
 ### Hey, how'd you get the same URL to download a different script per OS?
 

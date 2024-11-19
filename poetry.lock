@@ -255,7 +255,7 @@ files = [
 
 [[package]]
 name = "dsutil"
-version = "2.0.6"
+version = "2.0.7"
 description = "Danny's Python utility scripts"
 optional = false
 python-versions = "^3.11"
@@ -268,6 +268,7 @@ natsort = "^8.4.0"
 "path.py" = "^12.5.0"
 pathlib = "^1.0.1"
 pygments = "^2.18.0"
+python-dotenv = "^1.0.1"
 requests = "^2.32.3"
 send2trash = "^1.8.3"
 soundfile = "^0.12.1"
@@ -279,7 +280,7 @@ tzdata = "^2024.2"
 type = "git"
 url = "https://gitlab.dannystewart.com/danny/dsutil.git"
 reference = "HEAD"
-resolved_reference = "b7766d379ba179764dff712e9d50e197382aec8c"
+resolved_reference = "0343caa3ff37306971ba1ab5f0406d43d6333f40"
 
 [[package]]
 name = "editor"
@@ -740,6 +741,20 @@ packaging = ">=22.0"
 setuptools = ">=42.0.0"
 
 [[package]]
+name = "python-dotenv"
+version = "1.0.1"
+description = "Read key-value pairs from a .env file and set them as environment variables"
+optional = false
+python-versions = ">=3.8"
+files = [
+    {file = "python-dotenv-1.0.1.tar.gz", hash = "sha256:e324ee90a023d808f1959c46bcbc04446a10ced277783dc6ee09987c37ec10ca"},
+    {file = "python_dotenv-1.0.1-py3-none-any.whl", hash = "sha256:f7b63ef50f1b690dddf550d03497b66d609393b40b564ed0d674909a68ebf16a"},
+]
+
+[package.extras]
+cli = ["click (>=5.0)"]
+
+[[package]]
 name = "pywin32-ctypes"
 version = "0.2.3"
 description = "A (partial) reimplementation of pywin32 using ctypes/cffi"
@@ -1048,4 +1063,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.11,<3.13"
-content-hash = "fad159ee3973a17af9a4a0bc45883654c1b3a60cddceab52a2827f777b74894a"
+content-hash = "cb2d737ed9934d0f206abc6555873fd3ccf3ed50a66ba881ed26ff51f561ec6c"

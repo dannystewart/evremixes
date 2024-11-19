@@ -19,7 +19,7 @@ termcolor = "^2.5.0"
 types-requests = "^2.32.0.20241016"
 
 [tool.poetry.group.dev.dependencies]
-pyinstaller = "^6.11.0"
+pyinstaller = "^6.11.1"
 ruff = "^0.7.2"
 
 [tool.poetry.scripts]
