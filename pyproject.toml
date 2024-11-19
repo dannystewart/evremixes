@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "evremixes"
-version = "3.0.2"
+version = "4.0.0"
 description = "Evanescence Remix Downloader"
 authors = ["Danny Stewart <danny@stewart.cc>"]
 readme = "README.md"
