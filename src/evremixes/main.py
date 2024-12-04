@@ -21,9 +21,10 @@ class EvRemixes:
         self.admin = bool(self.env.evremixes_admin_download)
         self.show_env_warnings()
 
-        self.downloads_folder = self.paths.downloads.base
-        self.music_folder = self.paths.music.base
-        self.onedrive_folder = self.paths.onedrive("Music/Danny Stewart/Evanescence Remixes")
+        self.downloads_folder = self.paths.downloads_dir
+        self.music_folder = self.paths.music_dir
+        self.onedrive_subfolder = "Music/Danny Stewart/Evanescence Remixes"
+        self.onedrive_folder = self.paths.get_onedrive_path(self.onedrive_subfolder)
 
         self.menu_helper = MenuHelper(
             self.downloads_folder,
