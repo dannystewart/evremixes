@@ -151,7 +151,7 @@ class DownloadHelper:
     def download_both_formats_to_onedrive(
         self, track_info: dict[str, list[dict]], file_extensions: list[str]
     ) -> None:
-        """Download both file formats and both regular and instrumental tracks directly to OneDrive."""
+        """Download both formats, and both regular and instrumentals, directly to OneDrive."""
         # Create the output folders for each file extension
         for file_extension in file_extensions:
             subfolder_name = "ALAC" if file_extension == "m4a" else "FLAC"
@@ -173,7 +173,7 @@ class DownloadHelper:
         self.open_folder_in_os(self.onedrive_folder)
 
     def download_selected_tracks(
-        self, track_info: dict, file_extensions: list[str], base_output_folder: str
+        self, track_info: dict, file_extensions: list[str], base_output_folder: str | None
     ) -> None:
         """Download the user's chosen selection to the output folder."""
         # Ensure the album name is valid for the output folder

@@ -1,4 +1,4 @@
-# Ruff config version: 4
+# Ruff config version: 6
 # ----------------------
 
 # Extend any existing pyproject.toml configuration
@@ -101,8 +101,6 @@ select = [
 ignore = [
     "ANN001", # Missing type annotation for 'self'
     "ANN002", # Missing type annotation for 'cls'
-    "ANN101", # Missing type annotation for 'self'
-    "ANN102", # Missing type annotation for 'cls'
     "ANN204", # Missing return type annotation for init
     "ANN401", # Dynamically typed expressions (typing.Any) are disallowed
     "B010",   # 'No docstring in module/class/method'
@@ -180,7 +178,7 @@ forced-separate = ["dsutil"]
 max-complexity = 10
 
 [lint.pycodestyle]
-max-doc-length = 110
+max-doc-length = 100
 
 [lint.pydocstyle]
 convention = "google"
