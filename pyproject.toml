@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "evremixes"
 description = "Evanescence Remix Downloader"
-version = "4.0.2"
+version = "4.1.0"
 authors = [{ name = "Danny Stewart", email = "danny@stewart.cc" }]
 readme = "README.md"
 requires-python = ">=3.11,<3.13"
