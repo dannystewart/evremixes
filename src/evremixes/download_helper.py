@@ -66,8 +66,7 @@ class DownloadHelper:
         file_extension: str,
         is_instrumental: bool = False,
     ) -> None:
-        """
-        Download each track from the provided URL and save it to the output folder.
+        """Download each track from the provided URL and save it to the output folder.
 
         Args:
             track_info: Loaded track details.

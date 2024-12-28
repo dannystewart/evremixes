@@ -30,11 +30,10 @@ class MenuHelper:
         self.admin_download = admin
 
     def get_user_selections(self) -> tuple[list[str], str | None, bool]:
-        """
-        Present menu options to the user to select the file format and download location.
+        """Present menu options to the user to select the file format and download location.
 
         Returns:
-            A tuple containing selected file extensions, output folder, and get_both_formats indicator.
+            A tuple containing selected file extensions, output folder, and get_both_formats.
         """
         try:
             format_choice, get_both_formats = self._get_format_selection()
@@ -53,8 +52,7 @@ class MenuHelper:
         return file_extension, output_folder, get_both_formats
 
     def _get_format_selection(self) -> tuple[str, bool]:
-        """
-        Presents the user with file format options.
+        """Presents the user with file format options.
 
         Returns:
             A tuple containing selected format choice and get_both_formats indicator.
@@ -82,8 +80,7 @@ class MenuHelper:
         return format_choice, get_both_formats
 
     def _get_folder_selection(self, format_choice: str, get_both_formats: bool) -> str | None:
-        """
-        Presents the user with download location options based on their format choice.
+        """Presents the user with download location options based on their format choice.
 
         Args:
             format_choice: The user's selected file format.

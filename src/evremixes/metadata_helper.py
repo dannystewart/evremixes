@@ -19,8 +19,7 @@ class MetadataHelper:
         output_path: str,
         cover_data: bytes,
     ) -> bool:
-        """
-        Add metadata and cover art to the downloaded track file.
+        """Add metadata and cover art to the downloaded track file.
 
         Args:
             track: Track details.

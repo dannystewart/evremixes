@@ -9,8 +9,14 @@ from dsutil.shell import handle_keyboard_interrupt
 from dsutil.text import color as colorize
 
 
+def colored_alert(message: str, color: str = "yellow") -> str:
+    """Return a stylized alert message."""
+    exclamation = f"[{colorize('!', color)}]"
+    return f"{exclamation} {colorize(message, color)}"
+
+
 class EvRemixes:
-    """Evanescence remix downloader."""
+    """Evanescence Remix Downloader."""
 
     def __init__(self) -> None:
         self.env = DSEnv("evremixes")
@@ -50,8 +56,7 @@ class EvRemixes:
             )
 
     def initialize_env_vars(self) -> None:
-        """
-        Add and initialize environment variables for admin mode and instrumental downloads.
+        """Add and initialize environment variables for admin mode and instrumental downloads.
 
         NOTE: Admin mode is not going to be helpful for you unless you happen to want all my remixes
         and instrumentals downloaded to exactly the same place in your OneDrive folder as I do. But
@@ -79,14 +84,14 @@ class EvRemixes:
     def show_env_warnings(self) -> None:
         """Note currently set environment variables before running the script."""
         if self.admin:
-            onedrive_reminder = self._colored_alert(
+            onedrive_reminder = colored_alert(
                 "Admin download (regular and instrumentals to OneDrive in all formats).",
                 "magenta",
             )
             print(f"\n{onedrive_reminder}")
 
         if self.instrumentals:
-            instrumental_reminder = self._colored_alert(
+            instrumental_reminder = colored_alert(
                 "Instrumentals environment variable is set, so only instrumentals will\n"
                 "    be downloaded! Set EVREMIXES_GET_INSTRUMENTALS=0 to get the full songs.",
                 "yellow",
@@ -96,14 +101,9 @@ class EvRemixes:
         if self.admin or self.instrumentals:
             print()
 
-    @staticmethod
-    def _colored_alert(message: str, color: str = "yellow") -> str:
-        exclamation = f"[{colorize('!', color)}]"
-        return f"{exclamation} {colorize(message, color)}"
-
 
 def main() -> None:
-    """Run EvRemixes."""
+    """Run the Evanescence Remix Downloader."""
     EvRemixes()
 
 
