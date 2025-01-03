@@ -2,13 +2,26 @@
 
 from __future__ import annotations
 
-import os
 import platform
 import sys
+from pathlib import Path
+from typing import Literal
 
 import inquirer
 
 from dsutil.text import print_colored
+
+LocationChoice = Literal[
+    "Downloads folder",
+    "Music folder",
+    "OneDrive folder",
+    "Enter a custom path",
+]
+FormatChoice = Literal[
+    "FLAC",
+    "ALAC (Apple Lossless)",
+    "Download all tracks directly to OneDrive",
+]
 
 
 class MenuHelper:
@@ -16,20 +29,20 @@ class MenuHelper:
 
     def __init__(
         self,
-        downloads_folder: str,
-        music_folder: str,
-        onedrive_folder: str,
+        downloads_folder: str | Path,
+        music_folder: str | Path,
+        onedrive_folder: str | Path,
         instrumentals: bool = False,
         admin: bool = False,
     ):
         """Initialize the MenuHelper class."""
-        self.downloads_folder = downloads_folder
-        self.music_folder = music_folder
-        self.onedrive_folder = onedrive_folder
-        self.enable_instrumentals = instrumentals
-        self.admin_download = admin
+        self.downloads_folder: Path = Path(downloads_folder)
+        self.music_folder: Path = Path(music_folder)
+        self.onedrive_folder: Path = Path(onedrive_folder)
+        self.enable_instrumentals: bool = instrumentals
+        self.admin_download: bool = admin
 
-    def get_user_selections(self) -> tuple[list[str], str | None, bool]:
+    def get_user_selections(self) -> tuple[list[str], Path | None, bool]:
         """Present menu options to the user to select the file format and download location.
 
         Returns:
@@ -79,12 +92,15 @@ class MenuHelper:
 
         return format_choice, get_both_formats
 
-    def _get_folder_selection(self, format_choice: str, get_both_formats: bool) -> str | None:
+    def _get_folder_selection(self, format_choice: str, get_both_formats: bool) -> Path | None:
         """Presents the user with download location options based on their format choice.
 
         Args:
             format_choice: The user's selected file format.
             get_both_formats: Indicator if both formats are selected for download.
+
+        Raises:
+            SystemExit: If the user cancels the operation.
 
         Returns:
             The selected output folder path, or None if the user exits.
@@ -109,7 +125,7 @@ class MenuHelper:
         if folder_choice == "Music folder":
             return self.music_folder
         if folder_choice == "OneDrive folder":
-            return os.path.join(self.onedrive_folder, subfolder_name)
+            return Path(self.onedrive_folder) / subfolder_name
 
         # Ask the user to enter a custom folder path
         custom_folder_question = [
@@ -124,9 +140,9 @@ class MenuHelper:
         if custom_folder_answer is None:
             raise SystemExit
 
-        return os.path.expanduser(custom_folder_answer["custom_folder"])
+        return Path(custom_folder_answer["custom_folder"]).expanduser()
 
-    def _get_inquirer_list(self, menu_options: list, message: str, choices: list) -> str:
+    def _get_inquirer_list(self, menu_options: str, message: str, choices: list[str]) -> str:
         format_question = [
             inquirer.List(menu_options, message=message, choices=choices, carousel=True)
         ]

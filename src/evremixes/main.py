@@ -19,7 +19,7 @@ class EvRemixes:
     """Evanescence Remix Downloader."""
 
     def __init__(self) -> None:
-        self.env = DSEnv("evremixes")
+        self.env = DSEnv()
         self.paths = DSPaths("evremixes")
 
         self.initialize_env_vars()

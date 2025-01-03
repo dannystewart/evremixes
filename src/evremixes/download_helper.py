@@ -9,6 +9,8 @@ import platform
 import string
 import subprocess
 from io import BytesIO
+from pathlib import Path
+from typing import Literal, TypedDict
 
 import requests
 from halo import Halo
@@ -23,6 +25,37 @@ from dsutil.text import print_colored
 TRACKLIST_URL = "https://gitlab.dannystewart.com/danny/evremixes/raw/main/evtracks.json"
 
 
+class TrackData(TypedDict):
+    """Data for a track."""
+
+    track_name: str
+    file_url: str
+    inst_url: str
+    start_date: str
+    track_number: int
+
+
+class AlbumMetadata(TypedDict):
+    """Metadata for an album."""
+
+    album_name: str
+    album_artist: str
+    artist_name: str
+    genre: Literal["Electronic"]
+    year: int
+    cover_art_url: str
+
+
+class TrackInfo(TypedDict):
+    """Data for an album."""
+
+    metadata: AlbumMetadata
+    tracks: list[TrackData]
+
+
+FileFormat = Literal["flac", "m4a"]
+
+
 class DownloadHelper:
     """Helper class for downloading tracks."""
 
@@ -30,8 +63,28 @@ class DownloadHelper:
         self.metadata = MetadataHelper()
         self.onedrive_folder = onedrive_folder
 
-    def download_track_info(self) -> dict[str, list[dict]]:
-        """Download the JSON file with track details."""
+    @property
+    def supported_formats(self) -> dict[FileFormat, str]:
+        """Map file extensions to their display names."""
+        return {"flac": "FLAC", "m4a": "ALAC (Apple Lossless)"}
+
+    def get_format_display_name(self, extension: FileFormat) -> str:
+        """Get the user-friendly name for a file format."""
+        return self.supported_formats[extension]
+
+    def get_display_path(self, path: Path) -> str:
+        """Convert a path to a user-friendly display format with ~ for home directory."""
+        try:
+            return f"~/{path.relative_to(Path.home())}"
+        except ValueError:
+            return str(path)
+
+    def download_track_info(self) -> dict[str, list[dict[str, str | int]] | dict[str, str]]:
+        """Download the JSON file with track details.
+
+        Raises:
+            SystemExit: If the download fails.
+        """
         try:
             response = requests.get(TRACKLIST_URL, timeout=10)
         except requests.RequestException as e:
@@ -44,25 +97,37 @@ class DownloadHelper:
         return track_info
 
     def download_cover_art(self, metadata: dict[str, list[dict]]) -> bytes:
-        """Download and process the album cover art."""
-        # Download the cover art from the URL in the metadata
-        cover_response = requests.get(metadata.get("cover_art_url", ""), timeout=10)
-        cover_data_original = cover_response.content
+        """Download and process the album cover art.
 
-        # Resize and convert the cover art to JPEG
-        image = Image.open(BytesIO(cover_data_original))
-        image = image.convert("RGB")
-        image = image.resize((800, 800))
+        Raises:
+            ValueError: If the download or processing fails.
+        """
+        cover_art_url = metadata["cover_art_url"]
+        try:  # Download the cover art from the URL in the metadata
+            cover_response = requests.get(cover_art_url, timeout=10)
+            cover_response.raise_for_status()
 
-        # Save the resized image as a JPEG and return the bytes
-        buffered = BytesIO()
-        image.save(buffered, format="JPEG")
-        return buffered.getvalue()
+            # Resize and convert the cover art to JPEG
+            image = Image.open(BytesIO(cover_response.content))
+            image = image.convert("RGB")
+            image = image.resize((800, 800))
+
+            # Save the resized image as a JPEG and return the bytes
+            buffered = BytesIO()
+            image.save(buffered, format="JPEG", quality=95, optimize=True)
+            return buffered.getvalue()
+
+        except requests.RequestException as e:
+            msg = f"Failed to download cover art: {e}"
+            raise ValueError(msg) from e
+        except OSError as e:
+            msg = f"Failed to process cover art: {e}"
+            raise ValueError(msg) from e
 
     def download_tracks(
         self,
-        track_info: dict,
-        output_folder: str,
+        track_info: TrackInfo,
+        output_folder: Path,
         file_extension: str,
         is_instrumental: bool = False,
     ) -> None:
@@ -74,20 +139,15 @@ class DownloadHelper:
             file_extension: The file extension to download.
             is_instrumental: Whether to download instrumental tracks.
         """
-        # If there's only one track, it's a single track album
-        if isinstance(track_info, list) and len(track_info) == 1:
-            track_info = track_info[0]
-
         # Create the output folder if it doesn't exist
-        os.makedirs(output_folder, exist_ok=True)
+        output_folder = Path(output_folder)
+        output_folder.mkdir(parents=True, exist_ok=True)
 
-        # Remove any existing files with the specified file extension in the output folder
+        # Remove any existing files with the specified file extension
         self.remove_previous_downloads(output_folder)
 
         # Display the output folder path with ~ for the user's home directory
-        home_dir = os.path.expanduser("~")
-        display_folder = output_folder.replace(home_dir, "~")
-        display_folder = os.path.normpath(display_folder)
+        display_folder = self.get_display_path(output_folder)
 
         # Determine the file format based on the file extension
         file_format = "Apple Lossless" if file_extension == "m4a" else "FLAC"
@@ -115,19 +175,16 @@ class DownloadHelper:
             else:  # Otherwise, use the regular URL and track name
                 file_url = track["file_url"].rsplit(".", 1)[0] + f".{file_extension}"
             # Name the output file with the track number and name
-            output_path = os.path.join(
-                output_folder, f"{track_number} - {track_name}.{file_extension}"
-            )
+            output_path = output_folder / f"{track_number} - {track_name}.{file_extension}"
 
             # Display the track name and download progress
             spinner.text = colored(f"Downloading {track_name}... ({index}/{total_tracks})", "cyan")
             spinner.start()
 
-            try:  # Download the track file and save it to the output folder
+            try:
                 response = requests.get(file_url, stream=True, timeout=30)
                 response.raise_for_status()
-                with open(output_path, "wb") as f:
-                    f.write(response.content)
+                output_path.write_bytes(response.content)
 
                 spinner.text = colored("Applying metadata...", "cyan")
 
@@ -156,13 +213,13 @@ class DownloadHelper:
             subfolder_name = "ALAC" if file_extension == "m4a" else "FLAC"
 
             # Download regular tracks
-            output_folder = os.path.join(self.onedrive_folder, subfolder_name)
+            output_folder = Path(self.onedrive_folder) / subfolder_name
             print()
             self.download_tracks(track_info, output_folder, file_extension, is_instrumental=False)
 
             # Download instrumental tracks
-            instrumental_output_folder = os.path.join(
-                self.onedrive_folder, f"Instrumentals {subfolder_name}"
+            instrumental_output_folder = (
+                Path(self.onedrive_folder) / f"Instrumentals {subfolder_name}"
             )
             print()
             self.download_tracks(
@@ -172,40 +229,42 @@ class DownloadHelper:
         self.open_folder_in_os(self.onedrive_folder)
 
     def download_selected_tracks(
-        self, track_info: dict, file_extensions: list[str], base_output_folder: str | None
+        self, track_info: dict, file_extensions: list[str], base_output_folder: str | Path | None
     ) -> None:
         """Download the user's chosen selection to the output folder."""
-        # Ensure the album name is valid for the output folder
         album_name = track_info["metadata"].get("album_name", "Unknown Album")
         valid_chars = f"-_.() {string.ascii_letters}{string.digits}"
 
-        if base_output_folder is not None:  # Use the selected output folder
+        if base_output_folder is not None:
             safe_album_name = "".join(c for c in album_name if c in valid_chars)
-            output_folder = os.path.join(base_output_folder, safe_album_name)
-        else:  # Otherwise, save to OneDrive
-            output_folder = self.onedrive_folder
+            output_folder = Path(base_output_folder) / safe_album_name
+        else:
+            output_folder = Path(self.onedrive_folder)
+
         self.download_tracks(track_info, output_folder, file_extensions[0])
         self.open_folder_in_os(output_folder)
 
-    def remove_previous_downloads(self, output_folder: str) -> None:
+    def remove_previous_downloads(self, output_folder: str | Path) -> None:
         """Remove any existing files with the specified file extension in the output folder."""
-        file_extensions = ("flac", "m4a")
-        for filename in os.listdir(output_folder):
-            if filename.endswith(file_extensions):
-                file_path = os.path.join(output_folder, filename)
+        output_folder = Path(output_folder)
+        file_extensions = (".flac", ".m4a")
+
+        for file_path in output_folder.glob("*"):
+            if file_path.suffix.lower() in file_extensions:
                 try:
-                    os.remove(file_path)
+                    file_path.unlink()
                 except Exception as e:
                     print_colored(f"Failed to delete {file_path}. Reason: {e}", "red")
 
-    def open_folder_in_os(self, output_folder: str) -> None:
+    def open_folder_in_os(self, output_folder: str | Path) -> None:
         """Open the output folder in the OS file browser."""
         with contextlib.suppress(Exception):
+            output_folder = Path(output_folder).resolve()
             os_type = platform.system()
-            abspath = os.path.abspath(output_folder)
+
             if os_type == "Windows":
-                subprocess.run(["explorer", abspath], check=False)
+                subprocess.run(["explorer", str(output_folder)], check=False)
             elif os_type == "Darwin":
-                subprocess.run(["open", abspath], check=False)
+                subprocess.run(["open", str(output_folder)], check=False)
             elif os_type == "Linux" and "DISPLAY" in os.environ:
-                subprocess.run(["xdg-open", abspath], check=False)
+                subprocess.run(["xdg-open", str(output_folder)], check=False)

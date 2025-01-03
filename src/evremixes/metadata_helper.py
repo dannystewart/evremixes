@@ -2,8 +2,13 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from mutagen.flac import FLAC, Picture
 from mutagen.mp4 import MP4, MP4Cover
+
+if TYPE_CHECKING:
+    from pathlib import Path
 
 
 class MetadataHelper:
@@ -15,8 +20,8 @@ class MetadataHelper:
     def apply_metadata(
         self,
         track: dict[str, str],
-        metadata: dict[str, list[dict]],
-        output_path: str,
+        metadata: dict[str, list[dict] | str],
+        output_path: Path,
         cover_data: bytes,
     ) -> bool:
         """Add metadata and cover art to the downloaded track file.
@@ -30,8 +35,8 @@ class MetadataHelper:
         Returns:
             True if metadata was added successfully, False otherwise.
         """
-        try:  # Identify the audio format and track number
-            audio_format = output_path.rsplit(".", 1)[1].lower()
+        try:
+            audio_format = output_path.suffix[1:].lower()  # also using Path's suffix property
             track_number = str(track.get("track_number", 0)).zfill(2)
             disc_number = 2 if self.enable_instrumentals else 1
 
