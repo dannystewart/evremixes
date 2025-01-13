@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from .download_helper import DownloadHelper
-from .menu_helper import MenuHelper
-
 from dsutil.env import DSEnv
 from dsutil.paths import DSPaths
 from dsutil.shell import handle_keyboard_interrupt
 from dsutil.text import color as colorize
+
+from .download_helper import DownloadHelper
+from .menu_helper import MenuHelper
 
 
 def colored_alert(message: str, color: str = "yellow") -> str:

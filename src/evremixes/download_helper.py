@@ -17,9 +17,9 @@ from halo import Halo
 from PIL import Image
 from termcolor import colored
 
-from .metadata_helper import MetadataHelper
-
 from dsutil.text import print_colored
+
+from .metadata_helper import MetadataHelper
 
 # URL to the JSON file containing track details
 TRACKLIST_URL = "https://gitlab.dannystewart.com/danny/evremixes/raw/main/evtracks.json"

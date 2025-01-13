@@ -1,5 +1,5 @@
-# Ruff config version: 9
-# ----------------------
+# Ruff config version: 11
+# -----------------------
 
 # Files and directories to exclude
 exclude = [
@@ -154,9 +154,11 @@ ignore = [
     "W293",    # Blank line contains whitespace
 ]
 
-# Allow fix for all enabled rules (when `--fix`) is provided.
+# Allow fix for all enabled rules (when `--fix`) is provided
 fixable = ["ALL"]
-unfixable = []
+
+# Prevent removal of unused variables (to avoid removing while working)
+unfixable = ["F841"]
 
 # Allow unused variables when underscore-prefixed.
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
@@ -177,7 +179,17 @@ docstring-quotes = "single"
 
 [lint.isort]
 required-imports = ["from __future__ import annotations"]
-forced-separate = ["dsutil"]
+section-order = [
+  "future",
+  "standard-library",
+  "third-party",
+  "personal",
+  "first-party",
+  "local-folder",
+]
+
+[lint.isort.sections]
+personal = ["dsutil"]
 
 [lint.mccabe]
 max-complexity = 10
