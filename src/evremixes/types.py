@@ -1,26 +1,42 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import Literal
 
-TrackType = Literal["Regular Tracks", "Instrumentals", "Both"]
 
-DownloadMode = Literal["regular", "instrumental", "both"]
+class Format(StrEnum):
+    """File format choices."""
 
-FileFormat = Literal["FLAC", "M4A"]
+    FLAC = "flac"
+    ALAC = "m4a"
 
-FormatChoice = Literal[
-    "FLAC",
-    "ALAC (Apple Lossless)",
-    "Download all tracks directly to OneDrive",
-]
+    @property
+    def display_name(self) -> str:
+        """Return the display name for the format."""
+        return "FLAC" if self == Format.FLAC else "ALAC (Apple Lossless)"
 
-LocationChoice = Literal[
-    "Downloads folder",
-    "Music folder",
-    "OneDrive folder",
-    "Custom path",
-]
+    @property
+    def extension(self) -> str:
+        """Return the file extension for the format."""
+        return self.value
+
+
+class TrackType(StrEnum):
+    """Track type choices."""
+
+    REGULAR = "Regular Tracks"
+    INSTRUMENTAL = "Instrumentals"
+    BOTH = "Both"
+
+
+class Location(StrEnum):
+    """Download location choices."""
+
+    DOWNLOADS = "Downloads folder"
+    MUSIC = "Music folder"
+    ONEDRIVE = "OneDrive folder"
+    CUSTOM = "Custom path"
 
 
 @dataclass

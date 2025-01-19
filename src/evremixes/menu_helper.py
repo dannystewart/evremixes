@@ -11,12 +11,10 @@ import inquirer
 from dsutil.paths import DSPaths
 
 from evremixes.config import DownloadConfig
+from evremixes.types import Format, Location, TrackType
 
 if TYPE_CHECKING:
-    from pathlib import Path
-
     from evremixes.config import EvRemixesConfig
-    from evremixes.types import FormatChoice, LocationChoice, TrackType
 
 
 class MenuHelper:
@@ -36,31 +34,35 @@ class MenuHelper:
         return DownloadConfig(track_type, format_choice, location)
 
     def _prompt_track_type(self) -> TrackType:
-        choices: list[TrackType] = ["Regular Tracks", "Instrumentals", "Both"]
+        choices = list(TrackType)
         return self._get_selection("Choose track type", choices)
 
-    def _prompt_format(self) -> FormatChoice:
-        choices: list[FormatChoice] = ["FLAC", "ALAC (Apple Lossless)"]
+    def _prompt_format(self) -> Format:
+        choices = list(Format)
         if platform.system() == "Darwin":
             choices.reverse()
-        return self._get_selection("Choose format", choices)
+
+        format_map = {f.display_name: f for f in choices}
+        selected = self._get_selection("Choose format", list(format_map.keys()))
+
+        return format_map[selected]
 
     def _prompt_location(self) -> Path:
-        choices: list[LocationChoice] = ["Downloads folder", "Music folder", "Custom path"]
+        choices = [Location.DOWNLOADS, Location.MUSIC, Location.CUSTOM]
         if self.admin_mode:
-            choices.insert(2, "OneDrive folder")
+            choices.insert(2, Location.ONEDRIVE)
 
         location = self._get_selection("Choose download location", choices)
 
         match location:
-            case "Downloads folder":
+            case Location.DOWNLOADS:
                 return self.paths.downloads_dir
-            case "Music folder":
+            case Location.MUSIC:
                 return self.paths.music_dir
-            case "OneDrive folder":
+            case Location.ONEDRIVE:
                 return self.paths.get_onedrive_path()
-            case "Custom path":
-                return inquirer.text("Enter custom path").expanduser()
+            case Location.CUSTOM:
+                return Path(inquirer.text("Enter custom path")).expanduser()
 
     def _get_selection[T](self, message: str, choices: list[T]) -> T:
         """Get a user selection from a list of choices.

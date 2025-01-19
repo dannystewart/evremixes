@@ -15,16 +15,18 @@ from halo import Halo
 from termcolor import colored
 
 from dsutil import LocalLogger
+from dsutil.shell import handle_keyboard_interrupt
 from dsutil.text import print_colored
 
 from evremixes.metadata_helper import MetadataHelper
+from evremixes.types import TrackType
 
 if TYPE_CHECKING:
     from logging import Logger
 
     from evremixes.audio_data import FileFormat
     from evremixes.config import DownloadConfig, EvRemixesConfig
-    from evremixes.types import AlbumInfo
+    from evremixes.types import AlbumInfo, Format
 
 
 class DownloadHelper:
@@ -35,6 +37,7 @@ class DownloadHelper:
         self.metadata = MetadataHelper(config)
         self.logger: Logger = LocalLogger().get_logger()
 
+    @handle_keyboard_interrupt()
     def download_tracks(self, album_info: AlbumInfo, config: DownloadConfig) -> None:
         """Download tracks according to configuration."""
         # Sanitize album name for folder creation
@@ -44,49 +47,43 @@ class DownloadHelper:
         # Get base output folder
         base_folder = config.location / album_name
 
-        # Get format extension and display name
-        ext = "flac" if config.format == "FLAC" else "m4a"
-        format_display = "FLAC" if config.format == "FLAC" else "Apple Lossless"
-
         # Download cover art once
         cover_data = self.metadata.download_cover_art(album_info.cover_art_url)
 
         match config.track_type:
-            case "Regular Tracks":
+            case TrackType.REGULAR:
                 self._download_track_set(
-                    album_info, base_folder, ext, format_display, cover_data, is_instrumental=False
+                    album_info, base_folder, config.format, cover_data, is_instrumental=False
                 )
-            case "Instrumentals":
+            case TrackType.INSTRUMENTAL:
                 self._download_track_set(
                     album_info,
                     base_folder,
-                    ext,
-                    format_display,
+                    config.format,
                     cover_data,
                     is_instrumental=True,
                 )
-            case "Both":
+            case TrackType.BOTH:
                 self._download_track_set(
-                    album_info, base_folder, ext, format_display, cover_data, is_instrumental=False
+                    album_info, base_folder, config.format, cover_data, is_instrumental=False
                 )
                 print()
                 self._download_track_set(
                     album_info,
                     base_folder / "Instrumentals",
-                    ext,
-                    format_display,
+                    config.format,
                     cover_data,
                     is_instrumental=True,
                 )
 
         self.open_folder_in_os(base_folder)
 
+    @handle_keyboard_interrupt()
     def _download_track_set(
         self,
         album_info: AlbumInfo,
         output_folder: Path,
-        extension: str,
-        format_display: str,
+        file_format: Format,
         cover_data: bytes,
         is_instrumental: bool,
     ) -> None:
@@ -95,7 +92,7 @@ class DownloadHelper:
         self.remove_previous_downloads(output_folder)
 
         display_folder = self.get_display_path(output_folder)
-        print_colored(f"Downloading in {format_display} to {display_folder}...\n", "cyan")
+        print_colored(f"Downloading in {file_format.display_name} to {display_folder}...\n", "cyan")
 
         spinner = Halo(spinner="dots")
         total_tracks = len(album_info.tracks)
@@ -105,13 +102,13 @@ class DownloadHelper:
             track_name = track.track_name
 
             if is_instrumental:
-                file_url = track.inst_url.rsplit(".", 1)[0] + f".{extension}"
+                file_url = track.inst_url.rsplit(".", 1)[0] + f".{file_format.extension}"
                 if not track_name.endswith(" (Instrumental)"):
                     track_name += " (Instrumental)"
             else:
-                file_url = track.file_url.rsplit(".", 1)[0] + f".{extension}"
+                file_url = track.file_url.rsplit(".", 1)[0] + f".{file_format.extension}"
 
-            output_path = output_folder / f"{track_number} - {track_name}.{extension}"
+            output_path = output_folder / f"{track_number} - {track_name}.{file_format.extension}"
 
             spinner.text = colored(f"Downloading {track_name}... ({index}/{total_tracks})", "cyan")
             spinner.start()
@@ -135,7 +132,7 @@ class DownloadHelper:
 
         spinner.stop()
         print_colored(
-            f"\nAll {total_tracks} remixes downloaded in {format_display} to {display_folder}. Enjoy!",
+            f"\nAll {total_tracks} remixes downloaded in {file_format.display_name} to {display_folder}. Enjoy!",
             "green",
         )
 
