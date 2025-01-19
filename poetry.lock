@@ -158,7 +158,7 @@ files = [
 
 [[package]]
 name = "dsutil"
-version = "1.7.2"
+version = "1.8.0"
 description = "Personal Python utility library"
 optional = false
 python-versions = ">=3.12"
@@ -185,7 +185,7 @@ dev = ["mypy (>=1.14.1)", "ruff (>=0.8.5)"]
 type = "git"
 url = "https://gitlab.dannystewart.com/danny/dsutil.git"
 reference = "HEAD"
-resolved_reference = "1af8e1291fe2d9359a066b2d69b4c30bca3f73c3"
+resolved_reference = "97df7b6a868212ebaff060db9db44e4dd5623efb"
 
 [[package]]
 name = "editor"
