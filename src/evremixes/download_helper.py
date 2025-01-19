@@ -10,7 +10,7 @@ import string
 import subprocess
 from io import BytesIO
 from pathlib import Path
-from typing import Literal, TypedDict
+from typing import TYPE_CHECKING
 
 import requests
 from halo import Halo
@@ -19,47 +19,20 @@ from termcolor import colored
 
 from dsutil.text import print_colored
 
-from .metadata_helper import MetadataHelper
+from evremixes.config import AlbumInfo, TrackMetadata
+from evremixes.metadata_helper import MetadataHelper
+
+if TYPE_CHECKING:
+    from evremixes.audio_data import FileFormat
 
 # URL to the JSON file containing track details
 TRACKLIST_URL = "https://gitlab.dannystewart.com/danny/evremixes/raw/main/evtracks.json"
 
 
-class TrackData(TypedDict):
-    """Data for a track."""
-
-    track_name: str
-    file_url: str
-    inst_url: str
-    start_date: str
-    track_number: int
-
-
-class AlbumMetadata(TypedDict):
-    """Metadata for an album."""
-
-    album_name: str
-    album_artist: str
-    artist_name: str
-    genre: Literal["Electronic"]
-    year: int
-    cover_art_url: str
-
-
-class TrackInfo(TypedDict):
-    """Data for an album."""
-
-    metadata: AlbumMetadata
-    tracks: list[TrackData]
-
-
-FileFormat = Literal["flac", "m4a"]
-
-
 class DownloadHelper:
     """Helper class for downloading tracks."""
 
-    def __init__(self, onedrive_folder: str) -> None:
+    def __init__(self, onedrive_folder: Path) -> None:
         self.metadata = MetadataHelper()
         self.onedrive_folder = onedrive_folder
 
@@ -79,7 +52,7 @@ class DownloadHelper:
         except ValueError:
             return str(path)
 
-    def download_track_info(self) -> dict[str, list[dict[str, str | int]] | dict[str, str]]:
+    def download_album_and_track_info(self) -> AlbumInfo:
         """Download the JSON file with track details.
 
         Raises:
@@ -90,21 +63,28 @@ class DownloadHelper:
         except requests.RequestException as e:
             raise SystemExit(e) from e
 
-        track_info = json.loads(response.content)
-        track_info["tracks"] = sorted(
-            track_info["tracks"], key=lambda track: track.get("track_number", 0)
+        track_data = json.loads(response.content)
+        track_data["tracks"] = sorted(
+            track_data["tracks"], key=lambda track: track.get("track_number", 0)
         )
-        return track_info
+        return AlbumInfo(
+            album_name=track_data["metadata"]["album_name"],
+            album_artist=track_data["metadata"]["album_artist"],
+            artist_name=track_data["metadata"]["artist_name"],
+            genre=track_data["metadata"]["genre"],
+            year=track_data["metadata"]["year"],
+            cover_art_url=track_data["metadata"]["cover_art_url"],
+            tracks=[TrackMetadata(**track) for track in track_data["tracks"]],
+        )
 
-    def download_cover_art(self, metadata: dict[str, list[dict]]) -> bytes:
+    def download_cover_art(self, cover_url: str) -> bytes:
         """Download and process the album cover art.
 
         Raises:
             ValueError: If the download or processing fails.
         """
-        cover_art_url = metadata["cover_art_url"]
         try:  # Download the cover art from the URL in the metadata
-            cover_response = requests.get(cover_art_url, timeout=10)
+            cover_response = requests.get(cover_url, timeout=10)
             cover_response.raise_for_status()
 
             # Resize and convert the cover art to JPEG
@@ -126,7 +106,7 @@ class DownloadHelper:
 
     def download_tracks(
         self,
-        track_info: TrackInfo,
+        album_info: AlbumInfo,
         output_folder: Path,
         file_extension: str,
         is_instrumental: bool = False,
@@ -134,7 +114,7 @@ class DownloadHelper:
         """Download each track from the provided URL and save it to the output folder.
 
         Args:
-            track_info: Loaded track details.
+            album_info: Loaded track details.
             output_folder: The path to the output folder.
             file_extension: The file extension to download.
             is_instrumental: Whether to download instrumental tracks.
@@ -154,26 +134,25 @@ class DownloadHelper:
         print_colored(f"Downloading in {file_format} to {display_folder}...\n", "cyan")
 
         # Get the metadata and cover art
-        metadata = track_info["metadata"]
-        cover_data = self.download_cover_art(metadata)
-        total_tracks = len(track_info["tracks"])
+        cover_data = self.download_cover_art(album_info.cover_art_url)
+        total_tracks = len(album_info.tracks)
 
         # Display a spinner while downloading each track
         spinner = Halo(spinner="dots")
 
         # Download each track and apply metadata
-        for index, track in enumerate(track_info["tracks"], start=1):
-            track_number = str(track.get("track_number", index)).zfill(2)
-            original_track_name = track["track_name"]
+        for index, track in enumerate(album_info.tracks, start=1):
+            track_number = str(track.track_number).zfill(2)
+            original_track_name = track.track_name
             track_name = original_track_name
 
             # For instrumentals, use the instrumental URL and add the suffix
             if is_instrumental:
-                file_url = track["inst_url"].rsplit(".", 1)[0] + f".{file_extension}"
+                file_url = track.inst_url.rsplit(".", 1)[0] + f".{file_extension}"
                 if not track_name.endswith(" (Instrumental)"):
                     track_name += " (Instrumental)"
             else:  # Otherwise, use the regular URL and track name
-                file_url = track["file_url"].rsplit(".", 1)[0] + f".{file_extension}"
+                file_url = track.file_url.rsplit(".", 1)[0] + f".{file_extension}"
             # Name the output file with the track number and name
             output_path = output_folder / f"{track_number} - {track_name}.{file_extension}"
 
@@ -189,7 +168,7 @@ class DownloadHelper:
                 spinner.text = colored("Applying metadata...", "cyan")
 
                 # Apply metadata to the downloaded track
-                success = self.metadata.apply_metadata(track, metadata, output_path, cover_data)
+                success = self.metadata.apply_metadata(track, album_info, output_path, cover_data)
                 if not success:
                     spinner.fail(colored(f"Failed to add metadata to {track_name}.", "red"))
                     continue
@@ -205,7 +184,7 @@ class DownloadHelper:
         )
 
     def download_both_formats_to_onedrive(
-        self, track_info: dict[str, list[dict]], file_extensions: list[str]
+        self, album_info: AlbumInfo, file_extensions: list[str]
     ) -> None:
         """Download both formats, and both regular and instrumentals, directly to OneDrive."""
         # Create the output folders for each file extension
@@ -215,7 +194,7 @@ class DownloadHelper:
             # Download regular tracks
             output_folder = Path(self.onedrive_folder) / subfolder_name
             print()
-            self.download_tracks(track_info, output_folder, file_extension, is_instrumental=False)
+            self.download_tracks(album_info, output_folder, file_extension, is_instrumental=False)
 
             # Download instrumental tracks
             instrumental_output_folder = (
@@ -223,25 +202,28 @@ class DownloadHelper:
             )
             print()
             self.download_tracks(
-                track_info, instrumental_output_folder, file_extension, is_instrumental=True
+                album_info, instrumental_output_folder, file_extension, is_instrumental=True
             )
 
         self.open_folder_in_os(self.onedrive_folder)
 
     def download_selected_tracks(
-        self, track_info: dict, file_extensions: list[str], base_output_folder: str | Path | None
+        self,
+        album_info: AlbumInfo,
+        file_extensions: list[str],
+        base_output_folder: str | Path | None,
     ) -> None:
         """Download the user's chosen selection to the output folder."""
-        album_name = track_info["metadata"].get("album_name", "Unknown Album")
-        valid_chars = f"-_.() {string.ascii_letters}{string.digits}"
-
         if base_output_folder is not None:
+            album_name = album_info.album_name
+            valid_chars = f"-_.() {string.ascii_letters}{string.digits}"
+
             safe_album_name = "".join(c for c in album_name if c in valid_chars)
             output_folder = Path(base_output_folder) / safe_album_name
         else:
             output_folder = Path(self.onedrive_folder)
 
-        self.download_tracks(track_info, output_folder, file_extensions[0])
+        self.download_tracks(album_info, output_folder, file_extensions[0])
         self.open_folder_in_os(output_folder)
 
     def remove_previous_downloads(self, output_folder: str | Path) -> None:

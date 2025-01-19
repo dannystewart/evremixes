@@ -3,13 +3,15 @@ from __future__ import annotations
 from dsutil.env import DSEnv
 from dsutil.paths import DSPaths
 from dsutil.shell import handle_keyboard_interrupt
+from dsutil.text import ColorName
 from dsutil.text import color as colorize
 
-from .download_helper import DownloadHelper
-from .menu_helper import MenuHelper
+from evremixes.config import EvRemixesConfig
+from evremixes.download_helper import DownloadHelper
+from evremixes.menu_helper import MenuHelper
 
 
-def colored_alert(message: str, color: str = "yellow") -> str:
+def colored_alert(message: str, color: ColorName = "yellow") -> str:
     """Return a stylized alert message."""
     exclamation = f"[{colorize('!', color)}]"
     return f"{exclamation} {colorize(message, color)}"
@@ -27,26 +29,16 @@ class EvRemixes:
         self.admin = bool(self.env.evremixes_admin_download)
         self.show_env_warnings()
 
-        self.downloads_folder = self.paths.downloads_dir
-        self.music_folder = self.paths.music_dir
-        self.onedrive_subfolder = "Music/Danny Stewart/Evanescence Remixes"
-        self.onedrive_folder = self.paths.get_onedrive_path(self.onedrive_subfolder)
-
-        self.menu_helper = MenuHelper(
-            self.downloads_folder,
-            self.music_folder,
-            self.onedrive_folder,
-            self.instrumentals,
-            self.admin,
-        )
-        self.download_helper = DownloadHelper(self.onedrive_folder)
+        self.config = EvRemixesConfig(instrumentals=self.instrumentals, admin=self.admin)
+        self.menu_helper = MenuHelper(self.config)
+        self.download_helper = DownloadHelper(self.config.onedrive_folder)
         self.run_evremixes()
 
     @handle_keyboard_interrupt()
     def run_evremixes(self):
         """Configure options and download remixes."""
         file_extensions, output_folder, get_both_formats = self.menu_helper.get_user_selections()
-        track_info = self.download_helper.download_track_info()
+        track_info = self.download_helper.download_album_and_track_info()
 
         if self.admin or get_both_formats:
             self.download_helper.download_both_formats_to_onedrive(track_info, file_extensions)

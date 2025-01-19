@@ -10,6 +10,8 @@ from mutagen.mp4 import MP4, MP4Cover
 if TYPE_CHECKING:
     from pathlib import Path
 
+    from evremixes.config import AlbumInfo, TrackMetadata
+
 
 class MetadataHelper:
     """Helper class for applying metadata to downloaded tracks."""
@@ -18,17 +20,13 @@ class MetadataHelper:
         self.enable_instrumentals = instrumentals
 
     def apply_metadata(
-        self,
-        track: dict[str, str],
-        metadata: dict[str, list[dict] | str],
-        output_path: Path,
-        cover_data: bytes,
+        self, track: TrackMetadata, album_info: AlbumInfo, output_path: Path, cover_data: bytes
     ) -> bool:
         """Add metadata and cover art to the downloaded track file.
 
         Args:
             track: Track details.
-            metadata: Metadata for the album.
+            album_info: Metadata for the album.
             output_path: The path of the downloaded track file.
             cover_data: The cover art, resized and encoded as JPEG.
 
@@ -36,22 +34,22 @@ class MetadataHelper:
             True if metadata was added successfully, False otherwise.
         """
         try:
-            audio_format = output_path.suffix[1:].lower()  # also using Path's suffix property
-            track_number = str(track.get("track_number", 0)).zfill(2)
+            audio_format = output_path.suffix[1:].lower()
+            track_number = str(track.track_number).zfill(2)
             disc_number = 2 if self.enable_instrumentals else 1
 
             # Add the Instrumental suffix if enabled
-            if self.enable_instrumentals and not track["track_name"].endswith(" (Instrumental)"):
-                track["track_name"] += " (Instrumental)"
+            if self.enable_instrumentals and not track.track_name.endswith(" (Instrumental)"):
+                track.track_name += " (Instrumental)"
 
             # Apply metadata based on the audio format
             if audio_format == "m4a":
                 self._apply_alac_metadata(
-                    track, metadata, output_path, cover_data, track_number, disc_number
+                    track, album_info, output_path, cover_data, track_number, disc_number
                 )
             elif audio_format == "flac":
                 self._apply_flac_metadata(
-                    track, metadata, output_path, cover_data, track_number, disc_number
+                    track, album_info, output_path, cover_data, track_number, disc_number
                 )
             return True
         except Exception:
@@ -59,9 +57,9 @@ class MetadataHelper:
 
     def _apply_alac_metadata(
         self,
-        track: dict[str, str],
-        track_metadata: dict[str, list[dict]],
-        output_path: str,
+        track: TrackMetadata,
+        album_info: AlbumInfo,
+        output_path: Path,
         cover_data: bytes,
         track_number: str,
         disc_number: int,
@@ -72,17 +70,15 @@ class MetadataHelper:
         # Add the metadata to the track
         audio["trkn"] = [(int(track_number), 0)]
         audio["disk"] = [(disc_number, 0)]
-        audio["\xa9nam"] = track.get("track_name", "")
-        audio["\xa9ART"] = track_metadata.get("artist_name", "")
-        audio["\xa9alb"] = track_metadata.get("album_name", "")
-        audio["\xa9day"] = str(track_metadata.get("year", ""))
-        audio["\xa9gen"] = track_metadata.get("genre", "")
+        audio["\xa9nam"] = track.track_name
+        audio["\xa9ART"] = album_info.artist_name
+        audio["\xa9alb"] = album_info.album_name
+        audio["\xa9day"] = str(album_info.year)
+        audio["\xa9gen"] = album_info.genre
 
-        # Add the album artist and comments if available
-        if "album_artist" in track_metadata:
-            audio["aART"] = track_metadata.get("album_artist", "")
-        if "comments" in track:
-            audio["\xa9cmt"] = track["comments"]
+        # Add the album artist if available
+        if album_info.album_artist:
+            audio["aART"] = album_info.album_artist
 
         # Add the cover art to the track
         audio["covr"] = [MP4Cover(cover_data, imageformat=MP4Cover.FORMAT_JPEG)]
@@ -91,9 +87,9 @@ class MetadataHelper:
 
     def _apply_flac_metadata(
         self,
-        track: dict[str, str],
-        track_metadata: dict[str, list[dict]],
-        output_path: str,
+        track: TrackMetadata,
+        album_info: AlbumInfo,
+        output_path: Path,
         cover_data: bytes,
         track_number: str,
         disc_number: int,
@@ -104,17 +100,15 @@ class MetadataHelper:
         # Add the metadata to the track
         audio["tracknumber"] = track_number
         audio["discnumber"] = str(disc_number)
-        audio["title"] = track.get("track_name", "")
-        audio["artist"] = track_metadata.get("artist_name", "")
-        audio["album"] = track_metadata.get("album_name", "")
-        audio["date"] = str(track_metadata.get("year", ""))
-        audio["genre"] = track_metadata.get("genre", "")
+        audio["title"] = track.track_name
+        audio["artist"] = album_info.artist_name
+        audio["album"] = album_info.album_name
+        audio["date"] = str(album_info.year)
+        audio["genre"] = album_info.genre
 
         # Add the cover art to the track
-        if "album_artist" in track_metadata:
-            audio["albumartist"] = track_metadata.get("album_artist", "")
-        if "comments" in track:
-            audio["description"] = track["comments"]
+        if album_info.album_artist:
+            audio["albumartist"] = album_info.album_artist
 
         # Add the cover art to the track
         pic = Picture()

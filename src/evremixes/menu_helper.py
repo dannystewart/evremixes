@@ -5,11 +5,14 @@ from __future__ import annotations
 import platform
 import sys
 from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 import inquirer
 
 from dsutil.text import print_colored
+
+if TYPE_CHECKING:
+    from evremixes.config import EvRemixesConfig
 
 LocationChoice = Literal[
     "Downloads folder",
@@ -27,20 +30,13 @@ FormatChoice = Literal[
 class MenuHelper:
     """Helper class for presenting menu options to the user."""
 
-    def __init__(
-        self,
-        downloads_folder: str | Path,
-        music_folder: str | Path,
-        onedrive_folder: str | Path,
-        instrumentals: bool = False,
-        admin: bool = False,
-    ):
+    def __init__(self, config: EvRemixesConfig):
         """Initialize the MenuHelper class."""
-        self.downloads_folder: Path = Path(downloads_folder)
-        self.music_folder: Path = Path(music_folder)
-        self.onedrive_folder: Path = Path(onedrive_folder)
-        self.enable_instrumentals: bool = instrumentals
-        self.admin_download: bool = admin
+        self.downloads_folder: Path = config.downloads_folder
+        self.music_folder: Path = config.music_folder
+        self.onedrive_folder: Path = config.onedrive_folder
+        self.enable_instrumentals: bool = config.instrumentals
+        self.admin_download: bool = config.admin
 
     def get_user_selections(self) -> tuple[list[str], Path | None, bool]:
         """Present menu options to the user to select the file format and download location.
