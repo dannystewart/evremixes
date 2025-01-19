@@ -9,6 +9,7 @@ description = "Evanescence Remix Downloader"
 authors = [{ name = "Danny Stewart", email = "danny@stewart.cc" }]
 readme = "README.md"
 requires-python = ">=3.12,<3.13"
+include = [{ include = "evremixes", from = "src" }]
 dependencies = [
     "dsutil @ git+https://gitlab.dannystewart.com/danny/dsutil.git",
     "halo>=0.0.31",
