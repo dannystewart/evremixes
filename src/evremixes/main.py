@@ -1,20 +1,14 @@
 from __future__ import annotations
 
+from dsutil import configure_traceback
 from dsutil.env import DSEnv
-from dsutil.paths import DSPaths
 from dsutil.shell import handle_keyboard_interrupt
-from dsutil.text import ColorName
-from dsutil.text import color as colorize
 
 from evremixes.config import EvRemixesConfig
 from evremixes.download_helper import DownloadHelper
 from evremixes.menu_helper import MenuHelper
 
-
-def colored_alert(message: str, color: ColorName = "yellow") -> str:
-    """Return a stylized alert message."""
-    exclamation = f"[{colorize('!', color)}]"
-    return f"{exclamation} {colorize(message, color)}"
+configure_traceback()
 
 
 class EvRemixes:
@@ -22,81 +16,29 @@ class EvRemixes:
 
     def __init__(self) -> None:
         self.env = DSEnv()
-        self.paths = DSPaths("evremixes")
+        self.env.add_bool("EVREMIXES_ADMIN_DOWNLOAD", attr_name="admin", required=False)
 
-        self.initialize_env_vars()
-        self.instrumentals = bool(self.env.evremixes_get_instrumentals)
-        self.admin = bool(self.env.evremixes_admin_download)
-        self.show_env_warnings()
-
-        self.config = EvRemixesConfig(instrumentals=self.instrumentals, admin=self.admin)
+        self.config = EvRemixesConfig(admin=self.env.admin)
         self.menu_helper = MenuHelper(self.config)
-        self.download_helper = DownloadHelper(self.config.onedrive_folder)
-        self.run_evremixes()
+        self.download_helper = DownloadHelper(self.config)
 
     @handle_keyboard_interrupt()
     def run_evremixes(self):
         """Configure options and download remixes."""
-        file_extensions, output_folder, get_both_formats = self.menu_helper.get_user_selections()
+        inst, exts, dest, get_both = self.menu_helper.get_user_selections()
+        self.config.instrumentals = inst
         track_info = self.download_helper.download_album_and_track_info()
 
-        if self.admin or get_both_formats:
-            self.download_helper.download_both_formats_to_onedrive(track_info, file_extensions)
+        if self.config.admin or get_both:
+            self.download_helper.download_both_formats_to_onedrive(track_info, exts)
         else:
-            self.download_helper.download_selected_tracks(
-                track_info, file_extensions, output_folder
-            )
-
-    def initialize_env_vars(self) -> None:
-        """Add and initialize environment variables for admin mode and instrumental downloads.
-
-        NOTE: Admin mode is not going to be helpful for you unless you happen to want all my remixes
-        and instrumentals downloaded to exactly the same place in your OneDrive folder as I do. But
-        hey, if you do, this is the flag for you, so knock yourself out.
-
-        Environment Variables:
-            - `EVREMIXES_ADMIN_DOWNLOAD=1` configures the script to download as admin.
-            - `EVREMIXES_GET_INSTRUMENTALS=1` configures the script to download instrumentals.
-        """
-        self.env.add_var(
-            "EVREMIXES_ADMIN_DOWNLOAD",
-            required=False,
-            default="0",
-            var_type=int,
-            description="Enable admin download mode (both formats to OneDrive)",
-        )
-        self.env.add_var(
-            "EVREMIXES_GET_INSTRUMENTALS",
-            required=False,
-            default="0",
-            var_type=int,
-            description="Enable instrumental downloads only",
-        )
-
-    def show_env_warnings(self) -> None:
-        """Note currently set environment variables before running the script."""
-        if self.admin:
-            onedrive_reminder = colored_alert(
-                "Admin download (regular and instrumentals to OneDrive in all formats).",
-                "magenta",
-            )
-            print(f"\n{onedrive_reminder}")
-
-        if self.instrumentals:
-            instrumental_reminder = colored_alert(
-                "Instrumentals environment variable is set, so only instrumentals will\n"
-                "    be downloaded! Set EVREMIXES_GET_INSTRUMENTALS=0 to get the full songs.",
-                "yellow",
-            )
-            print(f"\n{instrumental_reminder}")
-
-        if self.admin or self.instrumentals:
-            print()
+            self.download_helper.download_selected_tracks(track_info, exts, dest)
 
 
 def main() -> None:
     """Run the Evanescence Remix Downloader."""
-    EvRemixes()
+    evremixes = EvRemixes()
+    evremixes.run_evremixes()
 
 
 if __name__ == "__main__":

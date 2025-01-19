@@ -2,11 +2,9 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import ClassVar, Literal
+from typing import ClassVar
 
 from dsutil.paths import DSPaths
-
-FileFormat = Literal["flac", "m4a"]
 
 
 @dataclass
@@ -17,11 +15,11 @@ class EvRemixesConfig:
         "https://gitlab.dannystewart.com/danny/evremixes/raw/main/evtracks.json"
     )
 
-    # Whether to download instrumentals instead of regular tracks
-    instrumentals: bool
-
     # Whether to download as admin (all tracks and formats direct to OneDrive)
     admin: bool
+
+    # Whether to download instrumentals instead of regular tracks
+    instrumentals: bool = False
 
     # Local folders
     downloads_folder: Path = field(init=False)
@@ -39,26 +37,8 @@ class EvRemixesConfig:
         self.onedrive_folder = Path(self.paths.get_onedrive_path(self.onedrive_subfolder))
         self.onedrive_path = Path(self.onedrive_folder) / self.onedrive_subfolder
 
+        if self.admin:
+            from dsutil.text import color
 
-@dataclass
-class AlbumInfo:
-    """Data for an album."""
-
-    album_name: str
-    album_artist: str
-    artist_name: str
-    genre: Literal["Electronic"]
-    year: int
-    cover_art_url: str
-    tracks: list[TrackMetadata]
-
-
-@dataclass
-class TrackMetadata:
-    """Data for a track."""
-
-    track_name: str
-    file_url: str
-    inst_url: str
-    start_date: str
-    track_number: int
+            notice = "Admin mode: saving all versions and formats to custom OneDrive location."
+            print(f"[{color('!', "yellow")}] {color(notice, "magenta")}\n")

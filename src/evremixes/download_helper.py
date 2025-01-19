@@ -19,11 +19,12 @@ from termcolor import colored
 
 from dsutil.text import print_colored
 
-from evremixes.config import AlbumInfo, TrackMetadata
 from evremixes.metadata_helper import MetadataHelper
+from evremixes.types import AlbumInfo, TrackMetadata
 
 if TYPE_CHECKING:
     from evremixes.audio_data import FileFormat
+    from evremixes.config import EvRemixesConfig
 
 # URL to the JSON file containing track details
 TRACKLIST_URL = "https://gitlab.dannystewart.com/danny/evremixes/raw/main/evtracks.json"
@@ -32,9 +33,9 @@ TRACKLIST_URL = "https://gitlab.dannystewart.com/danny/evremixes/raw/main/evtrac
 class DownloadHelper:
     """Helper class for downloading tracks."""
 
-    def __init__(self, onedrive_folder: Path) -> None:
+    def __init__(self, config: EvRemixesConfig) -> None:
         self.metadata = MetadataHelper()
-        self.onedrive_folder = onedrive_folder
+        self.config = config
 
     @property
     def supported_formats(self) -> dict[FileFormat, str]:
@@ -109,7 +110,6 @@ class DownloadHelper:
         album_info: AlbumInfo,
         output_folder: Path,
         file_extension: str,
-        is_instrumental: bool = False,
     ) -> None:
         """Download each track from the provided URL and save it to the output folder.
 
@@ -117,7 +117,6 @@ class DownloadHelper:
             album_info: Loaded track details.
             output_folder: The path to the output folder.
             file_extension: The file extension to download.
-            is_instrumental: Whether to download instrumental tracks.
         """
         # Create the output folder if it doesn't exist
         output_folder = Path(output_folder)
@@ -147,7 +146,7 @@ class DownloadHelper:
             track_name = original_track_name
 
             # For instrumentals, use the instrumental URL and add the suffix
-            if is_instrumental:
+            if self.config.instrumentals:
                 file_url = track.inst_url.rsplit(".", 1)[0] + f".{file_extension}"
                 if not track_name.endswith(" (Instrumental)"):
                     track_name += " (Instrumental)"
@@ -192,20 +191,18 @@ class DownloadHelper:
             subfolder_name = "ALAC" if file_extension == "m4a" else "FLAC"
 
             # Download regular tracks
-            output_folder = Path(self.onedrive_folder) / subfolder_name
+            output_folder = Path(self.config.onedrive_folder) / subfolder_name
             print()
-            self.download_tracks(album_info, output_folder, file_extension, is_instrumental=False)
+            self.download_tracks(album_info, output_folder, file_extension)
 
             # Download instrumental tracks
             instrumental_output_folder = (
-                Path(self.onedrive_folder) / f"Instrumentals {subfolder_name}"
+                Path(self.config.onedrive_folder) / f"Instrumentals {subfolder_name}"
             )
             print()
-            self.download_tracks(
-                album_info, instrumental_output_folder, file_extension, is_instrumental=True
-            )
+            self.download_tracks(album_info, instrumental_output_folder, file_extension)
 
-        self.open_folder_in_os(self.onedrive_folder)
+        self.open_folder_in_os(self.config.onedrive_folder)
 
     def download_selected_tracks(
         self,
@@ -221,7 +218,7 @@ class DownloadHelper:
             safe_album_name = "".join(c for c in album_name if c in valid_chars)
             output_folder = Path(base_output_folder) / safe_album_name
         else:
-            output_folder = Path(self.onedrive_folder)
+            output_folder = Path(self.config.onedrive_folder)
 
         self.download_tracks(album_info, output_folder, file_extensions[0])
         self.open_folder_in_os(output_folder)

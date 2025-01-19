@@ -10,7 +10,7 @@ from mutagen.mp4 import MP4, MP4Cover
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from evremixes.config import AlbumInfo, TrackMetadata
+    from evremixes.types import AlbumInfo, TrackMetadata
 
 
 class MetadataHelper:

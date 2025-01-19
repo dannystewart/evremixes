@@ -13,18 +13,7 @@ from dsutil.text import print_colored
 
 if TYPE_CHECKING:
     from evremixes.config import EvRemixesConfig
-
-LocationChoice = Literal[
-    "Downloads folder",
-    "Music folder",
-    "OneDrive folder",
-    "Enter a custom path",
-]
-FormatChoice = Literal[
-    "FLAC",
-    "ALAC (Apple Lossless)",
-    "Download all tracks directly to OneDrive",
-]
+    from evremixes.types import TrackType
 
 
 class MenuHelper:
@@ -38,14 +27,18 @@ class MenuHelper:
         self.enable_instrumentals: bool = config.instrumentals
         self.admin_download: bool = config.admin
 
-    def get_user_selections(self) -> tuple[list[str], Path | None, bool]:
-        """Present menu options to the user to select the file format and download location.
+    def get_user_selections(self) -> tuple[bool, list[str], Path | None, bool]:
+        """Present menu options to the user to select track type, file format and download location.
 
         Returns:
-            A tuple containing selected file extensions, output folder, and get_both_formats.
+            A tuple containing instrumental flag, file extensions, output folder, and format option.
         """
         try:
-            format_choice, get_both_formats = self._get_format_selection()
+            # First get the track type selection
+            track_type = self._get_track_type_selection()
+
+            # Pass the track type to format selection
+            format_choice, get_both_formats = self._get_format_selection(track_type)
 
             if not get_both_formats:
                 file_extension = ["m4a" if format_choice == "ALAC (Apple Lossless)" else "flac"]
@@ -58,10 +51,25 @@ class MenuHelper:
             print_colored("\nExiting.", "red")
             sys.exit(1)
 
-        return file_extension, output_folder, get_both_formats
+        return track_type == "Instrumentals", file_extension, output_folder, get_both_formats
 
-    def _get_format_selection(self) -> tuple[str, bool]:
+    def _get_track_type_selection(self) -> TrackType:
+        """Present the user with track type options.
+
+        Returns:
+            The selected track type.
+        """
+        track_choices: list[Literal["Regular Tracks", "Instrumentals"]] = [
+            "Regular Tracks",
+            "Instrumentals",
+        ]
+        return self._get_inquirer_list("track_type", "Choose track type to download", track_choices)  # type: ignore
+
+    def _get_format_selection(self, track_type: TrackType) -> tuple[str, bool]:
         """Presents the user with file format options.
+
+        Args:
+            track_type: The selected track type (regular or instrumentals)
 
         Returns:
             A tuple containing selected format choice and get_both_formats indicator.
@@ -74,12 +82,9 @@ class MenuHelper:
             format_choices.reverse()
 
         # Add the option to download both formats directly to OneDrive
-        prefix = "instrumentals" if self.enable_instrumentals else "tracks"
         if self.admin_download:
-            onedrive_option = f"Download all {prefix.lower()} directly to OneDrive"
+            onedrive_option = f"Download all {track_type.lower()} directly to OneDrive"
             format_choices.insert(0, onedrive_option)
-        elif self.enable_instrumentals:
-            format_choices = [f"Instrumentals in {choice}" for choice in format_choices]
 
         format_choice = self._get_inquirer_list(
             "format", "Choose file format to download", format_choices
