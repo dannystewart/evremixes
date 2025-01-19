@@ -26,9 +26,6 @@ if TYPE_CHECKING:
     from evremixes.audio_data import FileFormat
     from evremixes.config import EvRemixesConfig
 
-# URL to the JSON file containing track details
-TRACKLIST_URL = "https://gitlab.dannystewart.com/danny/evremixes/raw/main/evtracks.json"
-
 
 class DownloadHelper:
     """Helper class for downloading tracks."""
@@ -60,7 +57,7 @@ class DownloadHelper:
             SystemExit: If the download fails.
         """
         try:
-            response = requests.get(TRACKLIST_URL, timeout=10)
+            response = requests.get(self.config.TRACKLIST_URL, timeout=10)
         except requests.RequestException as e:
             raise SystemExit(e) from e
 
