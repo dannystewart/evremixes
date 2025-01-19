@@ -35,13 +35,13 @@ class DownloadHelper:
         self.config = config
 
     @property
-    def supported_formats(self) -> dict[FileFormat, str]:
+    def supported_format_names(self) -> dict[FileFormat, str]:
         """Map file extensions to their display names."""
         return {"flac": "FLAC", "m4a": "ALAC (Apple Lossless)"}
 
     def get_format_display_name(self, extension: FileFormat) -> str:
         """Get the user-friendly name for a file format."""
-        return self.supported_formats[extension]
+        return self.supported_format_names[extension]
 
     def get_display_path(self, path: Path) -> str:
         """Convert a path to a user-friendly display format with ~ for home directory."""
@@ -199,26 +199,26 @@ class DownloadHelper:
         self, album_info: AlbumInfo, file_extensions: list[str], output_folder: str | Path
     ) -> None:
         """Download the user's chosen selection to the output folder."""
-        album_name = album_info.album_name
+        album = album_info.album_name
         valid_chars = f"-_.() {string.ascii_letters}{string.digits}"
-        safe_album_name = "".join(c for c in album_name if c in valid_chars)
+        album_name = "".join(c for c in album if c in valid_chars)
 
         if self.config.download_mode == "both":  # Two passes for regular and instrumental
             # Regular tracks
             self.config.download_mode = "regular"
-            output_folder = Path(output_folder) / safe_album_name
+            output_folder = Path(output_folder) / album_name
             self.download_tracks(album_info, output_folder, file_extensions[0])
             print()
 
             # Instrumental tracks
             self.config.download_mode = "instrumental"
-            output_folder = Path(output_folder) / safe_album_name / "Instrumentals"
+            output_folder = Path(output_folder) / album_name / "Instrumentals"
             self.download_tracks(album_info, output_folder, file_extensions[0])
 
             # Restore original mode
             self.config.download_mode = "both"
         else:  # Single pass for regular or instrumental only
-            output_folder = Path(output_folder) / safe_album_name
+            output_folder = Path(output_folder) / album_name
             self.download_tracks(album_info, output_folder, file_extensions[0])
 
         self.open_folder_in_os(output_folder)

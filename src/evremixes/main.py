@@ -21,7 +21,7 @@ class EvRemixes:
 
     def __init__(self) -> None:
         self.env = DSEnv()
-        self.env.add_bool("EVREMIXES_ADMIN_DOWNLOAD", attr_name="admin", required=False)
+        self.env.add_bool("EVREMIXES_ADMIN", attr_name="admin", required=False)
 
         self.config = EvRemixesConfig(admin=self.env.admin)
         self.menu_helper = MenuHelper(self.config)
