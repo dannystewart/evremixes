@@ -2,9 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import ClassVar
+from typing import TYPE_CHECKING, ClassVar
 
 from dsutil.paths import DSPaths
+
+if TYPE_CHECKING:
+    from evremixes.types import DownloadMode
 
 
 @dataclass
@@ -20,6 +23,9 @@ class EvRemixesConfig:
 
     # Whether to download instrumentals instead of regular tracks
     instrumentals: bool = False
+
+    # Track download mode ('regular', 'instrumental', 'both')
+    download_mode: DownloadMode = "regular"
 
     # Local folders
     downloads_folder: Path = field(init=False)

@@ -5,7 +5,7 @@ from __future__ import annotations
 import platform
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 import inquirer
 
@@ -27,7 +27,7 @@ class MenuHelper:
         self.enable_instrumentals: bool = config.instrumentals
         self.admin_download: bool = config.admin
 
-    def get_user_selections(self) -> tuple[bool, list[str], Path | None, bool]:
+    def prompt_user_for_selections(self) -> tuple[TrackType, list[str], Path, bool]:
         """Present menu options to the user to select track type, file format and download location.
 
         Returns:
@@ -38,42 +38,28 @@ class MenuHelper:
             track_type = self._get_track_type_selection()
 
             # Pass the track type to format selection
-            format_choice, get_both_formats = self._get_format_selection(track_type)
+            format_choice, download_both = self._get_format_selection(track_type)
 
-            if not get_both_formats:
+            if not download_both:
                 file_extension = ["m4a" if format_choice == "ALAC (Apple Lossless)" else "flac"]
-                output_folder = self._get_folder_selection(format_choice, get_both_formats)
             else:
                 file_extension = ["m4a", "flac"]
-                output_folder = None
+
+            output_folder = self._get_folder_selection(format_choice)
 
         except (KeyboardInterrupt, SystemExit):
             print_colored("\nExiting.", "red")
             sys.exit(1)
 
-        return track_type == "Instrumentals", file_extension, output_folder, get_both_formats
+        return track_type, file_extension, output_folder, download_both
 
     def _get_track_type_selection(self) -> TrackType:
-        """Present the user with track type options.
-
-        Returns:
-            The selected track type.
-        """
-        track_choices: list[Literal["Regular Tracks", "Instrumentals"]] = [
-            "Regular Tracks",
-            "Instrumentals",
-        ]
+        """Get the user's track type selection."""
+        track_choices: list[TrackType] = ["Regular Tracks", "Instrumentals", "Both"]
         return self._get_inquirer_list("track_type", "Choose track type to download", track_choices)  # type: ignore
 
     def _get_format_selection(self, track_type: TrackType) -> tuple[str, bool]:
-        """Presents the user with file format options.
-
-        Args:
-            track_type: The selected track type (regular or instrumentals)
-
-        Returns:
-            A tuple containing selected format choice and get_both_formats indicator.
-        """
+        """Get the user's file format selection."""
         # Define the file format choices
         format_choices = ["FLAC", "ALAC (Apple Lossless)"]
 
@@ -93,23 +79,12 @@ class MenuHelper:
 
         return format_choice, get_both_formats
 
-    def _get_folder_selection(self, format_choice: str, get_both_formats: bool) -> Path | None:
-        """Presents the user with download location options based on their format choice.
-
-        Args:
-            format_choice: The user's selected file format.
-            get_both_formats: Indicator if both formats are selected for download.
+    def _get_folder_selection(self, format_choice: str) -> Path:
+        """Present the user with download location options based on their format choice.
 
         Raises:
             SystemExit: If the user cancels the operation.
-
-        Returns:
-            The selected output folder path, or None if the user exits.
         """
-        # If downloading both formats, we already know where we're saving to
-        if get_both_formats:
-            return None
-
         # Determine the subfolder name based on the format choice
         subfolder_name = "ALAC" if format_choice == "ALAC (Apple Lossless)" else "FLAC"
         folder_choices = ["Downloads folder", "Music folder", "Enter a custom path"]

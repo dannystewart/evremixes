@@ -106,10 +106,7 @@ class DownloadHelper:
             raise ValueError(msg) from e
 
     def download_tracks(
-        self,
-        album_info: AlbumInfo,
-        output_folder: Path,
-        file_extension: str,
+        self, album_info: AlbumInfo, output_folder: Path, file_extension: str
     ) -> None:
         """Download each track from the provided URL and save it to the output folder.
 
@@ -142,16 +139,16 @@ class DownloadHelper:
         # Download each track and apply metadata
         for index, track in enumerate(album_info.tracks, start=1):
             track_number = str(track.track_number).zfill(2)
-            original_track_name = track.track_name
-            track_name = original_track_name
+            track_name = track.track_name
 
-            # For instrumentals, use the instrumental URL and add the suffix
-            if self.config.instrumentals:
+            # Choose URL and name based on download mode
+            if self.config.download_mode == "instrumental":
                 file_url = track.inst_url.rsplit(".", 1)[0] + f".{file_extension}"
                 if not track_name.endswith(" (Instrumental)"):
                     track_name += " (Instrumental)"
-            else:  # Otherwise, use the regular URL and track name
+            else:
                 file_url = track.file_url.rsplit(".", 1)[0] + f".{file_extension}"
+
             # Name the output file with the track number and name
             output_path = output_folder / f"{track_number} - {track_name}.{file_extension}"
 
@@ -182,11 +179,8 @@ class DownloadHelper:
             "green",
         )
 
-    def download_both_formats_to_onedrive(
-        self, album_info: AlbumInfo, file_extensions: list[str]
-    ) -> None:
-        """Download both formats, and both regular and instrumentals, directly to OneDrive."""
-        # Create the output folders for each file extension
+    def download_to_onedrive(self, album_info: AlbumInfo, file_extensions: list[str]) -> None:
+        """Download both formats, and both regular and instrumentals if selected."""
         for file_extension in file_extensions:
             subfolder_name = "ALAC" if file_extension == "m4a" else "FLAC"
 
@@ -204,23 +198,32 @@ class DownloadHelper:
 
         self.open_folder_in_os(self.config.onedrive_folder)
 
-    def download_selected_tracks(
-        self,
-        album_info: AlbumInfo,
-        file_extensions: list[str],
-        base_output_folder: str | Path | None,
+    def download_selections(
+        self, album_info: AlbumInfo, file_extensions: list[str], output_folder: str | Path
     ) -> None:
         """Download the user's chosen selection to the output folder."""
-        if base_output_folder is not None:
-            album_name = album_info.album_name
-            valid_chars = f"-_.() {string.ascii_letters}{string.digits}"
+        album_name = album_info.album_name
+        valid_chars = f"-_.() {string.ascii_letters}{string.digits}"
+        safe_album_name = "".join(c for c in album_name if c in valid_chars)
 
-            safe_album_name = "".join(c for c in album_name if c in valid_chars)
-            output_folder = Path(base_output_folder) / safe_album_name
-        else:
-            output_folder = Path(self.config.onedrive_folder)
+        if self.config.download_mode == "both":  # Two passes for regular and instrumental
+            # Regular tracks
+            self.config.download_mode = "regular"
+            output_folder = Path(output_folder) / safe_album_name
+            self.download_tracks(album_info, output_folder, file_extensions[0])
+            print()
 
-        self.download_tracks(album_info, output_folder, file_extensions[0])
+            # Instrumental tracks
+            self.config.download_mode = "instrumental"
+            output_folder = Path(output_folder) / safe_album_name / "Instrumentals"
+            self.download_tracks(album_info, output_folder, file_extensions[0])
+
+            # Restore original mode
+            self.config.download_mode = "both"
+        else:  # Single pass for regular or instrumental only
+            output_folder = Path(output_folder) / safe_album_name
+            self.download_tracks(album_info, output_folder, file_extensions[0])
+
         self.open_folder_in_os(output_folder)
 
     def remove_previous_downloads(self, output_folder: str | Path) -> None:

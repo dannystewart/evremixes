@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from dsutil import configure_traceback
 from dsutil.env import DSEnv
 from dsutil.shell import handle_keyboard_interrupt
@@ -7,6 +9,9 @@ from dsutil.shell import handle_keyboard_interrupt
 from evremixes.config import EvRemixesConfig
 from evremixes.download_helper import DownloadHelper
 from evremixes.menu_helper import MenuHelper
+
+if TYPE_CHECKING:
+    from evremixes.types import DownloadMode, TrackType
 
 configure_traceback()
 
@@ -25,14 +30,24 @@ class EvRemixes:
     @handle_keyboard_interrupt()
     def run_evremixes(self):
         """Configure options and download remixes."""
-        inst, exts, dest, get_both = self.menu_helper.get_user_selections()
-        self.config.instrumentals = inst
+        track_type, exts, dest, admin = self.menu_helper.prompt_user_for_selections()
+        self.set_download_mode(track_type)
+
         track_info = self.download_helper.download_album_and_track_info()
 
-        if self.config.admin or get_both:
-            self.download_helper.download_both_formats_to_onedrive(track_info, exts)
+        if admin:
+            self.download_helper.download_to_onedrive(track_info, exts)
         else:
-            self.download_helper.download_selected_tracks(track_info, exts, dest)
+            self.download_helper.download_selections(track_info, exts, dest)
+
+    def set_download_mode(self, track_type: TrackType) -> None:
+        """Set the download mode based on the track type selection."""
+        mode_map: dict[TrackType, DownloadMode] = {
+            "Regular Tracks": "regular",
+            "Instrumentals": "instrumental",
+            "Both": "both",
+        }
+        self.config.download_mode = mode_map[track_type]
 
 
 def main() -> None:

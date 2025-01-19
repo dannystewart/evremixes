@@ -3,7 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-TrackType = Literal["Regular", "Instrumentals"]
+TrackType = Literal["Regular Tracks", "Instrumentals", "Both"]
+
+DownloadMode = Literal["regular", "instrumental", "both"]
 
 FileFormat = Literal["flac", "m4a"]
 
