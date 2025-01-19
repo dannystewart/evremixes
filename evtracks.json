@@ -5,7 +5,8 @@
         "artist_name": "Danny Stewart",
         "genre": "Electronic",
         "year": 2024,
-        "cover_art_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Evanescence-Remixes.png"
+        "cover_art_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Evanescence-Remixes.png",
+        "inst_art_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Evanescence-Remixes-Instrumentals.png"
     },
     "tracks": [
         {
