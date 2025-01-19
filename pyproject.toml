@@ -4,7 +4,7 @@ build-backend = "poetry.core.masonry.api"
 
 [project]
 name = "evremixes"
-version = "4.3.1"
+version = "4.4.0"
 description = "Evanescence Remix Downloader"
 authors = [{ name = "Danny Stewart", email = "danny@stewart.cc" }]
 readme = "README.md"
