@@ -7,7 +7,7 @@ TrackType = Literal["Regular Tracks", "Instrumentals", "Both"]
 
 DownloadMode = Literal["regular", "instrumental", "both"]
 
-FileFormat = Literal["flac", "m4a"]
+FileFormat = Literal["FLAC", "M4A"]
 
 FormatChoice = Literal[
     "FLAC",
@@ -19,7 +19,7 @@ LocationChoice = Literal[
     "Downloads folder",
     "Music folder",
     "OneDrive folder",
-    "Enter a custom path",
+    "Custom path",
 ]
 
 

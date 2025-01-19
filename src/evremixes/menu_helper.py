@@ -3,17 +3,20 @@
 from __future__ import annotations
 
 import platform
-import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import inquirer
 
-from dsutil.text import print_colored
+from dsutil.paths import DSPaths
+
+from evremixes.config import DownloadConfig
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from evremixes.config import EvRemixesConfig
-    from evremixes.types import TrackType
+    from evremixes.types import FormatChoice, LocationChoice, TrackType
 
 
 class MenuHelper:
@@ -21,108 +24,54 @@ class MenuHelper:
 
     def __init__(self, config: EvRemixesConfig):
         """Initialize the MenuHelper class."""
-        self.downloads_folder: Path = config.downloads_folder
-        self.music_folder: Path = config.music_folder
-        self.onedrive_folder: Path = config.onedrive_folder
-        self.enable_instrumentals: bool = config.instrumentals
-        self.admin_download: bool = config.admin
+        self.paths = DSPaths("evremixes")
+        self.admin_mode: bool = config.admin
 
-    def prompt_user_for_selections(self) -> tuple[TrackType, list[str], Path, bool]:
-        """Present menu options to the user to select track type, file format and download location.
+    def get_selections(self) -> DownloadConfig:
+        """Get all user selections in sequence."""
+        track_type = self._prompt_track_type()
+        format_choice = self._prompt_format()
+        location = self._prompt_location()
 
-        Returns:
-            A tuple containing instrumental flag, file extensions, output folder, and format option.
-        """
-        try:
-            # First get the track type selection
-            track_type = self._get_track_type_selection()
+        return DownloadConfig(track_type, format_choice, location)
 
-            # Pass the track type to format selection
-            format_choice, download_both = self._get_format_selection(track_type)
+    def _prompt_track_type(self) -> TrackType:
+        choices: list[TrackType] = ["Regular Tracks", "Instrumentals", "Both"]
+        return self._get_selection("Choose track type", choices)
 
-            if not download_both:
-                file_extension = ["m4a" if format_choice == "ALAC (Apple Lossless)" else "flac"]
-            else:
-                file_extension = ["m4a", "flac"]
-
-            output_folder = self._get_folder_selection(format_choice)
-
-        except (KeyboardInterrupt, SystemExit):
-            print_colored("\nExiting.", "red")
-            sys.exit(1)
-
-        return track_type, file_extension, output_folder, download_both
-
-    def _get_track_type_selection(self) -> TrackType:
-        """Get the user's track type selection."""
-        track_choices: list[TrackType] = ["Regular Tracks", "Instrumentals", "Both"]
-        return self._get_inquirer_list("track_type", "Choose track type to download", track_choices)  # type: ignore
-
-    def _get_format_selection(self, track_type: TrackType) -> tuple[str, bool]:
-        """Get the user's file format selection."""
-        # Define the file format choices
-        format_choices = ["FLAC", "ALAC (Apple Lossless)"]
-
-        # Display ALAC first on macOS to match the system's default
+    def _prompt_format(self) -> FormatChoice:
+        choices: list[FormatChoice] = ["FLAC", "ALAC (Apple Lossless)"]
         if platform.system() == "Darwin":
-            format_choices.reverse()
+            choices.reverse()
+        return self._get_selection("Choose format", choices)
 
-        # Add the option to download both formats directly to OneDrive
-        if self.admin_download:
-            onedrive_option = f"Download all {track_type.lower()} directly to OneDrive"
-            format_choices.insert(0, onedrive_option)
+    def _prompt_location(self) -> Path:
+        choices: list[LocationChoice] = ["Downloads folder", "Music folder", "Custom path"]
+        if self.admin_mode:
+            choices.insert(2, "OneDrive folder")
 
-        format_choice = self._get_inquirer_list(
-            "format", "Choose file format to download", format_choices
-        )
-        get_both_formats = format_choice.startswith("Download all")
+        location = self._get_selection("Choose download location", choices)
 
-        return format_choice, get_both_formats
+        match location:
+            case "Downloads folder":
+                return self.paths.downloads_dir
+            case "Music folder":
+                return self.paths.music_dir
+            case "OneDrive folder":
+                return self.paths.get_onedrive_path()
+            case "Custom path":
+                return inquirer.text("Enter custom path").expanduser()
 
-    def _get_folder_selection(self, format_choice: str) -> Path:
-        """Present the user with download location options based on their format choice.
+    def _get_selection[T](self, message: str, choices: list[T]) -> T:
+        """Get a user selection from a list of choices.
 
         Raises:
-            SystemExit: If the user cancels the operation.
+            SystemExit: If the user cancels the selection.
         """
-        # Determine the subfolder name based on the format choice
-        subfolder_name = "ALAC" if format_choice == "ALAC (Apple Lossless)" else "FLAC"
-        folder_choices = ["Downloads folder", "Music folder", "Enter a custom path"]
+        question = [inquirer.List("selection", message=message, choices=choices, carousel=True)]
 
-        # Add the OneDrive folder option if the environment variable is set
-        if self.admin_download:
-            folder_choices.insert(2, "OneDrive folder")
-
-        folder_choice = self._get_inquirer_list(
-            "folder", "Choose download location", folder_choices
-        )
-        if folder_choice == "Downloads folder":
-            return self.downloads_folder
-        if folder_choice == "Music folder":
-            return self.music_folder
-        if folder_choice == "OneDrive folder":
-            return Path(self.onedrive_folder) / subfolder_name
-
-        # Ask the user to enter a custom folder path
-        custom_folder_question = [
-            inquirer.Text(
-                "custom_folder",
-                message="Enter the full path for your custom download location",
-            )
-        ]
-
-        # Get the custom folder path from the user and exit if they cancel
-        custom_folder_answer = inquirer.prompt(custom_folder_question)
-        if custom_folder_answer is None:
+        result = inquirer.prompt(question)
+        if result is None:
             raise SystemExit
 
-        return Path(custom_folder_answer["custom_folder"]).expanduser()
-
-    def _get_inquirer_list(self, menu_options: str, message: str, choices: list[str]) -> str:
-        format_question = [
-            inquirer.List(menu_options, message=message, choices=choices, carousel=True)
-        ]
-        format_answer = inquirer.prompt(format_question)
-        if format_answer is None:
-            raise SystemExit
-        return format_answer[menu_options]
+        return result["selection"]

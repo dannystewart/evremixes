@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, ClassVar
 from dsutil.paths import DSPaths
 
 if TYPE_CHECKING:
-    from evremixes.types import DownloadMode
+    from evremixes.types import FormatChoice, TrackType
 
 
 @dataclass
@@ -23,9 +23,6 @@ class EvRemixesConfig:
 
     # Whether to download instrumentals instead of regular tracks
     instrumentals: bool = False
-
-    # Track download mode ('regular', 'instrumental', 'both')
-    download_mode: DownloadMode = "regular"
 
     # Local folders
     downloads_folder: Path = field(init=False)
@@ -48,3 +45,12 @@ class EvRemixesConfig:
 
             notice = "Admin mode: saving all versions and formats to custom OneDrive location."
             print(f"[{color('!', "yellow")}] {color(notice, "magenta")}\n")
+
+
+@dataclass
+class DownloadConfig:
+    """User's download configuration choices."""
+
+    track_type: TrackType
+    format: FormatChoice
+    location: Path

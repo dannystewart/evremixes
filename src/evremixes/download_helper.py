@@ -3,153 +3,116 @@
 from __future__ import annotations
 
 import contextlib
-import json
 import os
 import platform
 import string
 import subprocess
-from io import BytesIO
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import requests
 from halo import Halo
-from PIL import Image
 from termcolor import colored
 
+from dsutil import LocalLogger
 from dsutil.text import print_colored
 
 from evremixes.metadata_helper import MetadataHelper
-from evremixes.types import AlbumInfo, TrackMetadata
 
 if TYPE_CHECKING:
+    from logging import Logger
+
     from evremixes.audio_data import FileFormat
-    from evremixes.config import EvRemixesConfig
+    from evremixes.config import DownloadConfig, EvRemixesConfig
+    from evremixes.types import AlbumInfo
 
 
 class DownloadHelper:
     """Helper class for downloading tracks."""
 
     def __init__(self, config: EvRemixesConfig) -> None:
-        self.metadata = MetadataHelper()
         self.config = config
+        self.metadata = MetadataHelper(config)
+        self.logger: Logger = LocalLogger().get_logger()
 
-    @property
-    def supported_format_names(self) -> dict[FileFormat, str]:
-        """Map file extensions to their display names."""
-        return {"flac": "FLAC", "m4a": "ALAC (Apple Lossless)"}
+    def download_tracks(self, album_info: AlbumInfo, config: DownloadConfig) -> None:
+        """Download tracks according to configuration."""
+        # Sanitize album name for folder creation
+        valid_chars = f"-_.() {string.ascii_letters}{string.digits}"
+        album_name = "".join(c for c in album_info.album_name if c in valid_chars)
 
-    def get_format_display_name(self, extension: FileFormat) -> str:
-        """Get the user-friendly name for a file format."""
-        return self.supported_format_names[extension]
+        # Get base output folder
+        base_folder = config.location / album_name
 
-    def get_display_path(self, path: Path) -> str:
-        """Convert a path to a user-friendly display format with ~ for home directory."""
-        try:
-            return f"~/{path.relative_to(Path.home())}"
-        except ValueError:
-            return str(path)
+        # Get format extension and display name
+        ext = "flac" if config.format == "FLAC" else "m4a"
+        format_display = "FLAC" if config.format == "FLAC" else "Apple Lossless"
 
-    def download_album_and_track_info(self) -> AlbumInfo:
-        """Download the JSON file with track details.
+        # Download cover art once
+        cover_data = self.metadata.download_cover_art(album_info.cover_art_url)
 
-        Raises:
-            SystemExit: If the download fails.
-        """
-        try:
-            response = requests.get(self.config.TRACKLIST_URL, timeout=10)
-        except requests.RequestException as e:
-            raise SystemExit(e) from e
+        match config.track_type:
+            case "Regular Tracks":
+                self._download_track_set(
+                    album_info, base_folder, ext, format_display, cover_data, is_instrumental=False
+                )
+            case "Instrumentals":
+                self._download_track_set(
+                    album_info,
+                    base_folder,
+                    ext,
+                    format_display,
+                    cover_data,
+                    is_instrumental=True,
+                )
+            case "Both":
+                self._download_track_set(
+                    album_info, base_folder, ext, format_display, cover_data, is_instrumental=False
+                )
+                print()
+                self._download_track_set(
+                    album_info,
+                    base_folder / "Instrumentals",
+                    ext,
+                    format_display,
+                    cover_data,
+                    is_instrumental=True,
+                )
 
-        track_data = json.loads(response.content)
-        track_data["tracks"] = sorted(
-            track_data["tracks"], key=lambda track: track.get("track_number", 0)
-        )
-        return AlbumInfo(
-            album_name=track_data["metadata"]["album_name"],
-            album_artist=track_data["metadata"]["album_artist"],
-            artist_name=track_data["metadata"]["artist_name"],
-            genre=track_data["metadata"]["genre"],
-            year=track_data["metadata"]["year"],
-            cover_art_url=track_data["metadata"]["cover_art_url"],
-            tracks=[TrackMetadata(**track) for track in track_data["tracks"]],
-        )
+        self.open_folder_in_os(base_folder)
 
-    def download_cover_art(self, cover_url: str) -> bytes:
-        """Download and process the album cover art.
-
-        Raises:
-            ValueError: If the download or processing fails.
-        """
-        try:  # Download the cover art from the URL in the metadata
-            cover_response = requests.get(cover_url, timeout=10)
-            cover_response.raise_for_status()
-
-            # Resize and convert the cover art to JPEG
-            image = Image.open(BytesIO(cover_response.content))
-            image = image.convert("RGB")
-            image = image.resize((800, 800))
-
-            # Save the resized image as a JPEG and return the bytes
-            buffered = BytesIO()
-            image.save(buffered, format="JPEG", quality=95, optimize=True)
-            return buffered.getvalue()
-
-        except requests.RequestException as e:
-            msg = f"Failed to download cover art: {e}"
-            raise ValueError(msg) from e
-        except OSError as e:
-            msg = f"Failed to process cover art: {e}"
-            raise ValueError(msg) from e
-
-    def download_tracks(
-        self, album_info: AlbumInfo, output_folder: Path, file_extension: str
+    def _download_track_set(
+        self,
+        album_info: AlbumInfo,
+        output_folder: Path,
+        extension: str,
+        format_display: str,
+        cover_data: bytes,
+        is_instrumental: bool,
     ) -> None:
-        """Download each track from the provided URL and save it to the output folder.
-
-        Args:
-            album_info: Loaded track details.
-            output_folder: The path to the output folder.
-            file_extension: The file extension to download.
-        """
-        # Create the output folder if it doesn't exist
-        output_folder = Path(output_folder)
+        """Download a single set of tracks."""
         output_folder.mkdir(parents=True, exist_ok=True)
-
-        # Remove any existing files with the specified file extension
         self.remove_previous_downloads(output_folder)
 
-        # Display the output folder path with ~ for the user's home directory
         display_folder = self.get_display_path(output_folder)
+        print_colored(f"Downloading in {format_display} to {display_folder}...\n", "cyan")
 
-        # Determine the file format based on the file extension
-        file_format = "Apple Lossless" if file_extension == "m4a" else "FLAC"
-        print_colored(f"Downloading in {file_format} to {display_folder}...\n", "cyan")
-
-        # Get the metadata and cover art
-        cover_data = self.download_cover_art(album_info.cover_art_url)
+        spinner = Halo(spinner="dots")
         total_tracks = len(album_info.tracks)
 
-        # Display a spinner while downloading each track
-        spinner = Halo(spinner="dots")
-
-        # Download each track and apply metadata
         for index, track in enumerate(album_info.tracks, start=1):
-            track_number = str(track.track_number).zfill(2)
+            track_number = f"{track.track_number:02d}"
             track_name = track.track_name
 
-            # Choose URL and name based on download mode
-            if self.config.download_mode == "instrumental":
-                file_url = track.inst_url.rsplit(".", 1)[0] + f".{file_extension}"
+            if is_instrumental:
+                file_url = track.inst_url.rsplit(".", 1)[0] + f".{extension}"
                 if not track_name.endswith(" (Instrumental)"):
                     track_name += " (Instrumental)"
             else:
-                file_url = track.file_url.rsplit(".", 1)[0] + f".{file_extension}"
+                file_url = track.file_url.rsplit(".", 1)[0] + f".{extension}"
 
-            # Name the output file with the track number and name
-            output_path = output_folder / f"{track_number} - {track_name}.{file_extension}"
+            output_path = output_folder / f"{track_number} - {track_name}.{extension}"
 
-            # Display the track name and download progress
             spinner.text = colored(f"Downloading {track_name}... ({index}/{total_tracks})", "cyan")
             spinner.start()
 
@@ -159,12 +122,12 @@ class DownloadHelper:
                 output_path.write_bytes(response.content)
 
                 spinner.text = colored("Applying metadata...", "cyan")
-
-                # Apply metadata to the downloaded track
                 success = self.metadata.apply_metadata(track, album_info, output_path, cover_data)
+
                 if not success:
                     spinner.fail(colored(f"Failed to add metadata to {track_name}.", "red"))
                     continue
+
                 spinner.succeed(colored(f"Downloaded {track_name}", "green"))
 
             except requests.RequestException:
@@ -172,68 +135,30 @@ class DownloadHelper:
 
         spinner.stop()
         print_colored(
-            f"\nAll {total_tracks} remixes downloaded in {file_format} to {display_folder}. Enjoy!",
+            f"\nAll {total_tracks} remixes downloaded in {format_display} to {display_folder}. Enjoy!",
             "green",
         )
-
-    def download_to_onedrive(self, album_info: AlbumInfo, file_extensions: list[str]) -> None:
-        """Download both formats, and both regular and instrumentals if selected."""
-        for file_extension in file_extensions:
-            subfolder_name = "ALAC" if file_extension == "m4a" else "FLAC"
-
-            # Download regular tracks
-            output_folder = Path(self.config.onedrive_folder) / subfolder_name
-            print()
-            self.download_tracks(album_info, output_folder, file_extension)
-
-            # Download instrumental tracks
-            instrumental_output_folder = (
-                Path(self.config.onedrive_folder) / f"Instrumentals {subfolder_name}"
-            )
-            print()
-            self.download_tracks(album_info, instrumental_output_folder, file_extension)
-
-        self.open_folder_in_os(self.config.onedrive_folder)
-
-    def download_selections(
-        self, album_info: AlbumInfo, file_extensions: list[str], output_folder: str | Path
-    ) -> None:
-        """Download the user's chosen selection to the output folder."""
-        album = album_info.album_name
-        valid_chars = f"-_.() {string.ascii_letters}{string.digits}"
-        album_name = "".join(c for c in album if c in valid_chars)
-
-        if self.config.download_mode == "both":  # Two passes for regular and instrumental
-            # Regular tracks
-            self.config.download_mode = "regular"
-            output_folder = Path(output_folder) / album_name
-            self.download_tracks(album_info, output_folder, file_extensions[0])
-            print()
-
-            # Instrumental tracks
-            self.config.download_mode = "instrumental"
-            output_folder = Path(output_folder) / album_name / "Instrumentals"
-            self.download_tracks(album_info, output_folder, file_extensions[0])
-
-            # Restore original mode
-            self.config.download_mode = "both"
-        else:  # Single pass for regular or instrumental only
-            output_folder = Path(output_folder) / album_name
-            self.download_tracks(album_info, output_folder, file_extensions[0])
-
-        self.open_folder_in_os(output_folder)
 
     def remove_previous_downloads(self, output_folder: str | Path) -> None:
         """Remove any existing files with the specified file extension in the output folder."""
         output_folder = Path(output_folder)
         file_extensions = (".flac", ".m4a")
 
-        for file_path in output_folder.glob("*"):
+        # Remove matching files
+        for file_path in output_folder.rglob("*"):
             if file_path.suffix.lower() in file_extensions:
                 try:
                     file_path.unlink()
                 except Exception as e:
-                    print_colored(f"Failed to delete {file_path}. Reason: {e}", "red")
+                    self.logger.error("Failed to delete %s: %s", file_path, str(e))
+
+        # Remove empty directories from bottom up
+        for dirpath in sorted(
+            output_folder.rglob("*"), key=lambda x: len(str(x.resolve()).split("/")), reverse=True
+        ):
+            if dirpath.is_dir():
+                with contextlib.suppress(OSError):
+                    dirpath.rmdir()
 
     def open_folder_in_os(self, output_folder: str | Path) -> None:
         """Open the output folder in the OS file browser."""
@@ -247,3 +172,15 @@ class DownloadHelper:
                 subprocess.run(["open", str(output_folder)], check=False)
             elif os_type == "Linux" and "DISPLAY" in os.environ:
                 subprocess.run(["xdg-open", str(output_folder)], check=False)
+
+    def get_display_path(self, path: Path) -> str:
+        """Convert a path to a user-friendly display format with ~ for home directory."""
+        try:
+            return f"~/{path.relative_to(Path.home())}"
+        except ValueError:
+            return str(path)
+
+    @property
+    def supported_format_names(self) -> dict[FileFormat, str]:
+        """Map file extensions to their display names."""
+        return {"flac": "FLAC", "m4a": "ALAC (Apple Lossless)"}
