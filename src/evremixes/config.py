@@ -40,12 +40,6 @@ class EvRemixesConfig:
         self.onedrive_folder = Path(self.paths.get_onedrive_path(self.onedrive_subfolder))
         self.onedrive_path = Path(self.onedrive_folder) / self.onedrive_subfolder
 
-        if self.admin:
-            from dsutil.text import color
-
-            notice = "Admin mode: saving all versions and formats to custom OneDrive location."
-            print(f"[{color('!', "yellow")}] {color(notice, "magenta")}\n")
-
 
 @dataclass
 class DownloadConfig:

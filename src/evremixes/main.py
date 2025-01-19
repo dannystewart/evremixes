@@ -25,11 +25,17 @@ class EvRemixes:
 
         # Get track metadata and download config
         self.album_info = self.download_helper.metadata.download_metadata()
-        self.download_config = self.menu_helper.get_selections()
+
+        # Only get menu selections if not in admin mode
+        if not self.config.admin:
+            self.download_config = self.menu_helper.get_selections()
 
     def download_tracks(self) -> None:
         """Download the tracks."""
-        self.download_helper.download_tracks(self.album_info, self.download_config)
+        if self.config.admin:
+            self.download_helper.download_admin_tracks(self.album_info)
+        else:
+            self.download_helper.download_tracks(self.album_info, self.download_config)
 
 
 def main() -> None:

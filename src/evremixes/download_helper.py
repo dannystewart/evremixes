@@ -15,18 +15,18 @@ from halo import Halo
 from termcolor import colored
 
 from dsutil import LocalLogger
-from dsutil.shell import handle_keyboard_interrupt
+from dsutil.shell import confirm_action, handle_keyboard_interrupt
 from dsutil.text import print_colored
 
 from evremixes.metadata_helper import MetadataHelper
-from evremixes.types import TrackType
+from evremixes.types import Format, TrackType
 
 if TYPE_CHECKING:
     from logging import Logger
 
     from evremixes.audio_data import FileFormat
     from evremixes.config import DownloadConfig, EvRemixesConfig
-    from evremixes.types import AlbumInfo, Format
+    from evremixes.types import AlbumInfo
 
 
 class DownloadHelper:
@@ -135,6 +135,37 @@ class DownloadHelper:
             f"\nAll {total_tracks} remixes downloaded in {file_format.display_name} to {display_folder}. Enjoy!",
             "green",
         )
+
+    @handle_keyboard_interrupt()
+    def download_admin_tracks(self, album_info: AlbumInfo) -> None:
+        """Download all track versions to the custom OneDrive location."""
+        base_path = self.config.onedrive_folder
+        cover_data = self.metadata.download_cover_art(album_info.cover_art_url)
+
+        if not confirm_action(
+            "This will remove and replace all existing tracks. Continue?",
+            default_to_yes=True,
+            prompt_color="yellow",
+        ):
+            return
+
+        # Download all combinations
+        for file_format in Format:
+            # Regular tracks
+            output_folder = base_path / Path(file_format.extension.upper())
+            self._download_track_set(
+                album_info, output_folder, file_format, cover_data, is_instrumental=False
+            )
+            print()
+
+            # Instrumental tracks
+            output_folder = base_path / Path(f"Instrumentals {file_format.extension.upper()}")
+            self._download_track_set(
+                album_info, output_folder, file_format, cover_data, is_instrumental=True
+            )
+            print()
+
+        self.open_folder_in_os(base_path)
 
     def remove_previous_downloads(self, output_folder: str | Path) -> None:
         """Remove any existing files with the specified file extension in the output folder."""
