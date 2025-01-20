@@ -25,7 +25,7 @@ class Format(StrEnum):
 class TrackType(StrEnum):
     """Track type choices."""
 
-    REGULAR = "Regular Tracks"
+    ORIGINAL = "Originals"
     INSTRUMENTAL = "Instrumentals"
     BOTH = "Both"
 

@@ -51,7 +51,7 @@ class DownloadHelper:
         cover_data = self.metadata.download_cover_art(album_info.cover_art_url)
 
         match config.track_type:
-            case TrackType.REGULAR:
+            case TrackType.ORIGINAL:
                 self._download_track_set(
                     album_info, base_folder, config.format, cover_data, is_instrumental=False
                 )
@@ -151,7 +151,7 @@ class DownloadHelper:
 
         # Download all combinations
         for file_format in Format:
-            # Regular tracks
+            # Original tracks
             output_folder = base_path / Path(file_format.extension.upper())
             self._download_track_set(
                 album_info, output_folder, file_format, cover_data, is_instrumental=False
