@@ -79,7 +79,12 @@ class MetadataHelper:
             raise ValueError(msg) from e
 
     def apply_metadata(
-        self, track: TrackMetadata, album_info: AlbumInfo, output_path: Path, cover_data: bytes
+        self,
+        track: TrackMetadata,
+        album_info: AlbumInfo,
+        output_path: Path,
+        cover_data: bytes,
+        is_instrumental: bool,
     ) -> bool:
         """Add metadata and cover art to the downloaded track file.
 
@@ -88,27 +93,38 @@ class MetadataHelper:
             album_info: Metadata for the album.
             output_path: The path of the downloaded track file.
             cover_data: The cover art, resized and encoded as JPEG.
+            is_instrumental: Whether the track is an instrumental.
 
         Returns:
             True if metadata was added successfully, False otherwise.
         """
         try:
             audio_format = output_path.suffix[1:].lower()
-            track_number = str(track.track_number).zfill(2)
-            disc_number = 2 if self.config.instrumentals else 1
+            disc_number = 2 if is_instrumental else 1
 
-            # Add the Instrumental suffix if enabled
-            if self.config.instrumentals and not track.track_name.endswith(" (Instrumental)"):
-                track.track_name += " (Instrumental)"
+            # Create display title with instrumental suffix if needed
+            display_title = track.track_name
+            if is_instrumental and not display_title.endswith(" (Instrumental)"):
+                display_title += " (Instrumental)"
 
             # Apply metadata based on the audio format
             if audio_format == "m4a":
                 self._apply_alac_metadata(
-                    track, album_info, output_path, cover_data, track_number, disc_number
+                    album_info,
+                    output_path,
+                    cover_data,
+                    track.track_number,
+                    disc_number,
+                    display_title,
                 )
             elif audio_format == "flac":
                 self._apply_flac_metadata(
-                    track, album_info, output_path, cover_data, track_number, disc_number
+                    album_info,
+                    output_path,
+                    cover_data,
+                    track.track_number,
+                    disc_number,
+                    display_title,
                 )
             return True
         except Exception:
@@ -116,20 +132,20 @@ class MetadataHelper:
 
     def _apply_alac_metadata(
         self,
-        track: TrackMetadata,
         album_info: AlbumInfo,
         output_path: Path,
         cover_data: bytes,
-        track_number: str,
+        track_number: int,
         disc_number: int,
+        display_title: str,
     ) -> None:
         """Apply metadata for ALAC files."""
         audio = MP4(output_path)
 
         # Add the metadata to the track
-        audio["trkn"] = [(int(track_number), 0)]
+        audio["trkn"] = [(track_number, 0)]
         audio["disk"] = [(disc_number, 0)]
-        audio["\xa9nam"] = track.track_name
+        audio["\xa9nam"] = display_title
         audio["\xa9ART"] = album_info.artist_name
         audio["\xa9alb"] = album_info.album_name
         audio["\xa9day"] = str(album_info.year)
@@ -146,20 +162,20 @@ class MetadataHelper:
 
     def _apply_flac_metadata(
         self,
-        track: TrackMetadata,
         album_info: AlbumInfo,
         output_path: Path,
         cover_data: bytes,
-        track_number: str,
+        track_number: int,
         disc_number: int,
+        display_title: str,
     ) -> None:
         """Apply metadata for FLAC files."""
         audio = FLAC(output_path)
 
         # Add the metadata to the track
-        audio["tracknumber"] = track_number
+        audio["tracknumber"] = str(track_number)
         audio["discnumber"] = str(disc_number)
-        audio["title"] = track.track_name
+        audio["title"] = display_title
         audio["artist"] = album_info.artist_name
         audio["album"] = album_info.album_name
         audio["date"] = str(album_info.year)

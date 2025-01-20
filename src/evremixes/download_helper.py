@@ -119,7 +119,9 @@ class DownloadHelper:
                 output_path.write_bytes(response.content)
 
                 spinner.text = colored("Applying metadata...", "cyan")
-                success = self.metadata.apply_metadata(track, album_info, output_path, cover_data)
+                success = self.metadata.apply_metadata(
+                    track, album_info, output_path, cover_data, is_instrumental
+                )
 
                 if not success:
                     spinner.fail(colored(f"Failed to add metadata to {track_name}.", "red"))
