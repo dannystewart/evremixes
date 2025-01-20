@@ -42,7 +42,7 @@ class MenuHelper:
         if platform.system() == "Darwin":
             choices.reverse()
 
-        format_map = {f.display_name: f for f in choices}
+        format_map = {f.menu_name: f for f in choices}
         selected = self._get_selection("Choose format", list(format_map.keys()))
 
         return format_map[selected]

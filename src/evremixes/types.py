@@ -12,9 +12,14 @@ class Format(StrEnum):
     ALAC = "m4a"
 
     @property
+    def menu_name(self) -> str:
+        """Return the display name for the format."""
+        return "FLAC" if self == Format.FLAC else "ALAC"
+
+    @property
     def display_name(self) -> str:
         """Return the display name for the format."""
-        return "FLAC" if self == Format.FLAC else "ALAC (Apple Lossless)"
+        return "FLAC" if self == Format.FLAC else "ALAC"
 
     @property
     def extension(self) -> str:
