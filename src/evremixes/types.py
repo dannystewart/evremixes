@@ -14,7 +14,7 @@ class Format(StrEnum):
     @property
     def menu_name(self) -> str:
         """Return the display name for the format."""
-        return "FLAC" if self == Format.FLAC else "ALAC"
+        return "FLAC" if self == Format.FLAC else "ALAC (Apple Lossless)"
 
     @property
     def display_name(self) -> str:
