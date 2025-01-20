@@ -54,6 +54,7 @@ class AlbumInfo:
     genre: Literal["Electronic"]
     year: int
     cover_art_url: str
+    inst_art_url: str
     tracks: list[TrackMetadata]
 
 

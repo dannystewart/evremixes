@@ -47,45 +47,29 @@ class DownloadHelper:
         # Get base output folder
         base_folder = config.location / album_name
 
-        # Download cover art once
-        cover_data = self.metadata.download_cover_art(album_info.cover_art_url)
-
         match config.track_type:
             case TrackType.ORIGINAL:
                 self._download_track_set(
-                    album_info, base_folder, config.format, cover_data, is_instrumental=False
+                    album_info, base_folder, config.format, is_instrumental=False
                 )
             case TrackType.INSTRUMENTAL:
                 self._download_track_set(
-                    album_info,
-                    base_folder,
-                    config.format,
-                    cover_data,
-                    is_instrumental=True,
+                    album_info, base_folder, config.format, is_instrumental=True
                 )
             case TrackType.BOTH:
                 self._download_track_set(
-                    album_info, base_folder, config.format, cover_data, is_instrumental=False
+                    album_info, base_folder, config.format, is_instrumental=False
                 )
                 print()
                 self._download_track_set(
-                    album_info,
-                    base_folder / "Instrumentals",
-                    config.format,
-                    cover_data,
-                    is_instrumental=True,
+                    album_info, base_folder / "Instrumentals", config.format, is_instrumental=True
                 )
 
         self.open_folder_in_os(base_folder)
 
     @handle_keyboard_interrupt()
     def _download_track_set(
-        self,
-        album_info: AlbumInfo,
-        output_folder: Path,
-        file_format: Format,
-        cover_data: bytes,
-        is_instrumental: bool,
+        self, album_info: AlbumInfo, output_folder: Path, file_format: Format, is_instrumental: bool
     ) -> None:
         """Download a single set of tracks."""
         output_folder.mkdir(parents=True, exist_ok=True)
@@ -93,6 +77,10 @@ class DownloadHelper:
 
         display_folder = self.get_display_path(output_folder)
         print_colored(f"Downloading in {file_format.display_name} to {display_folder}...\n", "cyan")
+
+        # Choose appropriate cover art based on track type
+        cover_url = album_info.inst_art_url if is_instrumental else album_info.cover_art_url
+        cover_data = self.metadata.download_cover_art(cover_url)
 
         spinner = Halo(spinner="dots")
         total_tracks = len(album_info.tracks)
@@ -134,7 +122,7 @@ class DownloadHelper:
 
         spinner.stop()
         print_colored(
-            f"\nAll {total_tracks} remixes downloaded in {file_format.display_name} to {display_folder}. Enjoy!",
+            f"\nAll {total_tracks} remixes downloaded in {file_format.menu_name} to {display_folder}. Enjoy!",
             "green",
         )
 
@@ -142,7 +130,6 @@ class DownloadHelper:
     def download_admin_tracks(self, album_info: AlbumInfo) -> None:
         """Download all track versions to the custom OneDrive location."""
         base_path = self.config.onedrive_folder
-        cover_data = self.metadata.download_cover_art(album_info.cover_art_url)
 
         if not confirm_action(
             "This will remove and replace all existing tracks. Continue?",
@@ -154,17 +141,13 @@ class DownloadHelper:
         # Download all combinations
         for file_format in Format:
             # Original tracks
-            output_folder = base_path / Path(file_format.extension.upper())
-            self._download_track_set(
-                album_info, output_folder, file_format, cover_data, is_instrumental=False
-            )
+            output_folder = base_path / Path(file_format.display_name)
+            self._download_track_set(album_info, output_folder, file_format, is_instrumental=False)
             print()
 
             # Instrumental tracks
-            output_folder = base_path / Path(f"Instrumentals {file_format.extension.upper()}")
-            self._download_track_set(
-                album_info, output_folder, file_format, cover_data, is_instrumental=True
-            )
+            output_folder = base_path / Path(f"Instrumentals {file_format.display_name}")
+            self._download_track_set(album_info, output_folder, file_format, is_instrumental=True)
             print()
 
         self.open_folder_in_os(base_path)

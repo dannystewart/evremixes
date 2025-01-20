@@ -48,6 +48,7 @@ class MetadataHelper:
             genre=track_data["metadata"]["genre"],
             year=track_data["metadata"]["year"],
             cover_art_url=track_data["metadata"]["cover_art_url"],
+            inst_art_url=track_data["metadata"]["inst_art_url"],
             tracks=[TrackMetadata(**track) for track in track_data["tracks"]],
         )
 
