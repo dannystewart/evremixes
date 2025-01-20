@@ -8,8 +8,8 @@ from typing import Literal
 class Format(StrEnum):
     """File format choices."""
 
-    FLAC = "flac"
     ALAC = "m4a"
+    FLAC = "flac"
 
     @property
     def menu_name(self) -> str:
