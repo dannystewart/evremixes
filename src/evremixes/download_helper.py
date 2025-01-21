@@ -122,7 +122,7 @@ class DownloadHelper:
 
         spinner.stop()
         print_colored(
-            f"\nAll {total_tracks} remixes downloaded in {file_format.menu_name} to {display_folder}. Enjoy!",
+            f"\nAll {total_tracks} remixes downloaded in {file_format.display_name} to {display_folder}. Enjoy!",
             "green",
         )
 
