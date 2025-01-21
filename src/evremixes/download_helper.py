@@ -15,7 +15,7 @@ from halo import Halo
 from termcolor import colored
 
 from dsutil import LocalLogger
-from dsutil.shell import confirm_action, handle_keyboard_interrupt
+from dsutil.shell import handle_keyboard_interrupt
 from dsutil.text import print_colored
 
 from evremixes.metadata_helper import MetadataHelper
@@ -130,13 +130,6 @@ class DownloadHelper:
     def download_admin_tracks(self, album_info: AlbumInfo) -> None:
         """Download all track versions to the custom OneDrive location."""
         base_path = self.config.onedrive_folder
-
-        if not confirm_action(
-            "This will remove and replace all existing tracks. Continue?",
-            default_to_yes=True,
-            prompt_color="yellow",
-        ):
-            return
 
         # Download all combinations
         for file_format in Format:
