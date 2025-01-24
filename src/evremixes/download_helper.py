@@ -65,6 +65,9 @@ class DownloadHelper:
                     album_info, base_folder / "Instrumentals", config.format, is_instrumental=True
                 )
 
+        if not self.config.admin:
+            print_colored("\nEnjoy!", "green")
+
         self.open_folder_in_os(base_folder)
 
     @handle_keyboard_interrupt()
@@ -121,10 +124,9 @@ class DownloadHelper:
                 spinner.fail(colored(f"Failed to download {track_name}.", "red"))
 
         spinner.stop()
-        download_message = f"All {total_tracks} remixes downloaded in {file_format.display_name} to {display_folder}."
-        download_message += "" if self.config.admin else " Enjoy!"
+        track_type = "instrumentals" if is_instrumental else "remixes"
         print_colored(
-            f"\nAll {total_tracks} remixes downloaded in {file_format.display_name} to {display_folder}. Enjoy!",
+            f"\nAll {total_tracks} {track_type} downloaded in {file_format.display_name} to {display_folder}.",
             "green",
         )
 
@@ -183,8 +185,9 @@ class DownloadHelper:
 
     def get_display_path(self, path: Path) -> str:
         """Convert a path to a user-friendly display format with ~ for home directory."""
+        path_delimiter = "/" if platform.system() != "Windows" else "\\"
         try:
-            return f"~/{path.relative_to(Path.home())}"
+            return f"~{path_delimiter}{path.relative_to(Path.home())}"
         except ValueError:
             return str(path)
 
