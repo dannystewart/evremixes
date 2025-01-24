@@ -19,55 +19,63 @@ from dsutil.shell import handle_keyboard_interrupt
 from dsutil.text import print_colored
 
 from evremixes.metadata_helper import MetadataHelper
-from evremixes.types import AudioFormat, VersionType
+from evremixes.types import AudioFormat, TrackVersions
 
 if TYPE_CHECKING:
     from logging import Logger
 
-    from evremixes.config import EvRemixesConfig, UserChoices
+    from evremixes.config import DownloadConfig
     from evremixes.types import AlbumInfo
 
 
 class TrackDownloader:
     """Helper class for downloading tracks."""
 
-    def __init__(self, config: EvRemixesConfig) -> None:
+    def __init__(self, config: DownloadConfig) -> None:
         self.config = config
         self.metadata = MetadataHelper(config)
         self.logger: Logger = LocalLogger().get_logger()
 
     @handle_keyboard_interrupt()
-    def download_tracks(self, album_info: AlbumInfo, user_choices: UserChoices) -> None:
-        """Download tracks according to configuration."""
+    def download_tracks(self, album_info: AlbumInfo, config: DownloadConfig) -> None:
+        """Download tracks according to configuration.
+
+        Raises:
+            ValueError: If the configuration is incomplete.
+        """
+        if config.versions is None or config.audio_format is None or config.location is None:
+            msg = "Download configuration is incomplete"
+            raise ValueError(msg)
+
         # Sanitize album name for folder creation
         valid_chars = f"-_.() {string.ascii_letters}{string.digits}"
         album_name = "".join(c for c in album_info.album_name if c in valid_chars)
 
         # Get base output folder
-        base_folder = user_choices.location / album_name
+        base_folder = config.location / album_name
 
-        match user_choices.version:
-            case VersionType.ORIGINAL:
+        match config.versions:
+            case TrackVersions.ORIGINAL:
                 self._download_track_set(
-                    album_info, base_folder, user_choices.audio_format, is_instrumental=False
+                    album_info, base_folder, config.audio_format, is_instrumental=False
                 )
-            case VersionType.INSTRUMENTAL:
+            case TrackVersions.INSTRUMENTAL:
                 self._download_track_set(
-                    album_info, base_folder, user_choices.audio_format, is_instrumental=True
+                    album_info, base_folder, config.audio_format, is_instrumental=True
                 )
-            case VersionType.BOTH:
+            case TrackVersions.BOTH:
                 self._download_track_set(
-                    album_info, base_folder, user_choices.audio_format, is_instrumental=False
+                    album_info, base_folder, config.audio_format, is_instrumental=False
                 )
                 print()
                 self._download_track_set(
                     album_info,
                     base_folder / "Instrumentals",
-                    user_choices.audio_format,
+                    config.audio_format,
                     is_instrumental=True,
                 )
 
-        if not self.config.admin:
+        if not config.is_admin:
             print_colored("\nEnjoy!", "green")
 
         self.open_folder_in_os(base_folder)
@@ -80,16 +88,16 @@ class TrackDownloader:
         file_format: AudioFormat,
         is_instrumental: bool,
     ) -> None:
-        """Download a single set of tracks."""
+        """Download a single complete set of tracks."""
         output_folder.mkdir(parents=True, exist_ok=True)
         self.remove_previous_downloads(output_folder)
 
         display_folder = self.format_path_for_display(output_folder)
         print_colored(f"Downloading in {file_format.display_name} to {display_folder}...\n", "cyan")
 
-        # Choose appropriate cover art based on track type
+        # Choose cover art based on track type
         cover_url = album_info.inst_art_url if is_instrumental else album_info.cover_art_url
-        cover_data = self.metadata.download_cover_art(cover_url)
+        cover_data = self.metadata.get_cover_art(cover_url)
 
         spinner = Halo(spinner="dots")
         total_tracks = len(album_info.tracks)
@@ -148,7 +156,6 @@ class TrackDownloader:
             output_folder = base_path / Path(file_format.display_name)
             self._download_track_set(album_info, output_folder, file_format, is_instrumental=False)
             print()
-
             # Instrumental tracks
             output_folder = base_path / Path(f"Instrumentals {file_format.display_name}")
             self._download_track_set(album_info, output_folder, file_format, is_instrumental=True)

@@ -12,14 +12,14 @@ class AudioFormat(StrEnum):
     ALAC = "m4a"
 
     @property
-    def menu_name(self) -> str:
+    def menu_choice(self) -> str:
         """Return the display name for the format."""
         return "FLAC" if self == AudioFormat.FLAC else "ALAC (Apple Lossless)"
 
     @property
     def display_name(self) -> str:
         """Return the display name for the format."""
-        return "FLAC" if self == AudioFormat.FLAC else "ALAC"
+        return self.name.upper()
 
     @property
     def extension(self) -> str:
@@ -27,16 +27,16 @@ class AudioFormat(StrEnum):
         return self.value
 
 
-class VersionType(StrEnum):
-    """Track type choices."""
+class TrackVersions(StrEnum):
+    """Choices for which track set to download."""
 
     ORIGINAL = "Original versions"
     INSTRUMENTAL = "Instrumental versions"
-    BOTH = "Both versions"
+    BOTH = "Both sets"
 
 
-class Location(StrEnum):
-    """Download location choices."""
+class DownloadLocation(StrEnum):
+    """Choices for download location."""
 
     DOWNLOADS = "Downloads folder"
     MUSIC = "Music folder"
@@ -46,7 +46,7 @@ class Location(StrEnum):
 
 @dataclass
 class AlbumInfo:
-    """Data for an album."""
+    """Full metadata for an album (track set)."""
 
     album_name: str
     album_artist: str
@@ -60,7 +60,7 @@ class AlbumInfo:
 
 @dataclass
 class TrackMetadata:
-    """Data for a track."""
+    """Metadata for a single track."""
 
     track_name: str
     file_url: str

@@ -8,65 +8,57 @@ from typing import TYPE_CHECKING
 
 import inquirer
 
-from dsutil.paths import DSPaths
-
-from evremixes.config import UserChoices
-from evremixes.types import AudioFormat, Location, VersionType
+from evremixes.types import AudioFormat, DownloadLocation, TrackVersions
 
 if TYPE_CHECKING:
-    from evremixes.config import EvRemixesConfig
+    from evremixes.config import DownloadConfig
 
 
 class MenuHelper:
     """Helper class for presenting menu options to the user."""
 
-    def __init__(self, config: EvRemixesConfig):
+    def __init__(self, config: DownloadConfig):
         """Initialize the MenuHelper class."""
-        self.paths = DSPaths("evremixes")
-        self.admin_mode: bool = config.admin
+        self.paths = config.paths
+        self.admin_mode = config.is_admin
 
-    def get_selections(self) -> UserChoices:
-        """Get all user selections in sequence."""
-        track_type = self._prompt_track_type()
-        format_choice = self._prompt_format()
-        location = self._prompt_location()
-
-        return UserChoices(track_type, format_choice, location)
-
-    def _prompt_track_type(self) -> VersionType:
-        choices = list(VersionType)
+    def prompt_for_versions(self) -> TrackVersions:
+        """Prompt the user to choose which versions to download."""
+        choices = list(TrackVersions)
         return self._get_selection("Choose which versions to download", choices)
 
-    def _prompt_format(self) -> AudioFormat:
+    def prompt_for_format(self) -> AudioFormat:
+        """Prompt the user to choose an audio format."""
         choices = list(AudioFormat)
         if platform.system() == "Darwin":
             choices.reverse()
 
-        format_map = {f.menu_name: f for f in choices}
+        format_map = {f.menu_choice: f for f in choices}
         selected = self._get_selection("Choose a format", list(format_map.keys()))
 
         return format_map[selected]
 
-    def _prompt_location(self) -> Path:
+    def prompt_for_location(self) -> Path:
+        """Prompt the user to choose a download location."""
         choices = (
-            [Location.DOWNLOADS, Location.MUSIC]
+            [DownloadLocation.DOWNLOADS, DownloadLocation.MUSIC]
             if platform.system() == "Darwin"
-            else [Location.MUSIC, Location.DOWNLOADS]
+            else [DownloadLocation.MUSIC, DownloadLocation.DOWNLOADS]
         )
-        choices.append(Location.CUSTOM)
+        choices.append(DownloadLocation.CUSTOM)
         if self.admin_mode:
-            choices.insert(2, Location.ONEDRIVE)
+            choices.insert(2, DownloadLocation.ONEDRIVE)
 
         location = self._get_selection("Choose download location", choices)
 
         match location:
-            case Location.DOWNLOADS:
+            case DownloadLocation.DOWNLOADS:
                 return self.paths.downloads_dir
-            case Location.MUSIC:
-                return self.paths.music_dir
-            case Location.ONEDRIVE:
+            case DownloadLocation.MUSIC:
+                return self.paths.get_music_path("Danny Stewart")
+            case DownloadLocation.ONEDRIVE:
                 return self.paths.get_onedrive_path()
-            case Location.CUSTOM:
+            case DownloadLocation.CUSTOM:
                 return Path(inquirer.text("Enter custom path")).expanduser()
 
     def _get_selection[T](self, message: str, choices: list[T]) -> T:

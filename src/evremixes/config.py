@@ -5,47 +5,51 @@ from typing import TYPE_CHECKING, ClassVar
 
 from dsutil.paths import DSPaths
 
+from evremixes.menu_helper import MenuHelper
+
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from evremixes.types import AudioFormat, VersionType
+    from evremixes.types import AudioFormat, TrackVersions
 
 
 @dataclass
-class UserChoices:
-    """Dataclass to hold the user's download choices at runtime."""
-
-    version: VersionType
-    audio_format: AudioFormat
-    location: Path
-
-
-@dataclass
-class EvRemixesConfig:
+class DownloadConfig:
     """Configuration for the downloader."""
 
     TRACKLIST_URL: ClassVar[str] = (
         "https://gitlab.dannystewart.com/danny/evremixes/raw/main/evtracks.json"
     )
+    ONEDRIVE_SUBFOLDER: ClassVar[str] = "Music/Danny Stewart/Evanescence Remixes"
+
+    # Path helper
+    paths: DSPaths = field(init=False)
 
     # Whether to download as admin (all tracks and formats direct to OneDrive)
-    admin: bool
+    is_admin: bool
 
-    # Whether to download instrumentals instead of regular tracks
-    instrumentals: bool = False
-
-    # Local folders
-    downloads_path: Path = field(init=False)
-    music_path: Path = field(init=False)
-
-    # OneDrive folders (admin only)
-    onedrive_folder: Path = field(init=False)
-    onedrive_subfolder: str = "Music/Danny Stewart/Evanescence Remixes"
-    onedrive_path: Path = field(init=False)
+    # User choices made at runtime
+    versions: TrackVersions | None = None
+    audio_format: AudioFormat | None = None
+    location: Path | None = None
 
     def __post_init__(self):
         self.paths = DSPaths("evremixes")
-        self.downloads_path = self.paths.downloads_dir
-        self.music_path = self.paths.get_music_path("Danny Stewart")
-        self.onedrive_folder = self.paths.get_onedrive_path(self.onedrive_subfolder)
-        self.onedrive_path = self.onedrive_folder / self.onedrive_subfolder
+
+    @property
+    def onedrive_folder(self) -> Path:
+        """Get the OneDrive folder path for admin downloads."""
+        return self.paths.get_onedrive_path(self.ONEDRIVE_SUBFOLDER)
+
+    @classmethod
+    def create(cls, is_admin: bool = False) -> DownloadConfig:
+        """Create a new download configuration."""
+        config = cls(is_admin=is_admin)
+
+        if not is_admin:
+            menu = MenuHelper(config)
+            config.versions = menu.prompt_for_versions()
+            config.audio_format = menu.prompt_for_format()
+            config.location = menu.prompt_for_location()
+
+        return config

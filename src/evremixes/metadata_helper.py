@@ -17,17 +17,17 @@ from evremixes.types import AlbumInfo, TrackMetadata
 if TYPE_CHECKING:
     from pathlib import Path
 
-    from evremixes.config import EvRemixesConfig
+    from evremixes.config import DownloadConfig
 
 
 class MetadataHelper:
     """Helper class for applying metadata to downloaded tracks."""
 
-    def __init__(self, config: EvRemixesConfig) -> None:
+    def __init__(self, config: DownloadConfig) -> None:
         self.config = config
 
-    def download_metadata(self) -> AlbumInfo:
-        """Download the JSON file with track details.
+    def get_metadata(self) -> AlbumInfo:
+        """Download the JSON file with all track and album details.
 
         Raises:
             SystemExit: If the download fails.
@@ -52,7 +52,7 @@ class MetadataHelper:
             tracks=[TrackMetadata(**track) for track in track_data["tracks"]],
         )
 
-    def download_cover_art(self, cover_url: str) -> bytes:
+    def get_cover_art(self, cover_url: str) -> bytes:
         """Download and process the album cover art.
 
         Raises:
@@ -87,17 +87,14 @@ class MetadataHelper:
         cover_data: bytes,
         is_instrumental: bool,
     ) -> bool:
-        """Add metadata and cover art to the downloaded track file.
+        """Add metadata and cover art to the downloaded track file. Returns success status.
 
         Args:
-            track: Track details.
-            album_info: Metadata for the album.
+            track: The metadata for the track.
+            album_info: The metadata for the album.
             output_path: The path of the downloaded track file.
             cover_data: The cover art, resized and encoded as JPEG.
             is_instrumental: Whether the track is an instrumental.
-
-        Returns:
-            True if metadata was added successfully, False otherwise.
         """
         try:
             audio_format = output_path.suffix[1:].lower()
