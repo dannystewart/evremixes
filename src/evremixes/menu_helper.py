@@ -10,8 +10,8 @@ import inquirer
 
 from dsutil.paths import DSPaths
 
-from evremixes.config import DownloadConfig
-from evremixes.types import Format, Location, TrackType
+from evremixes.config import UserChoices
+from evremixes.types import AudioFormat, Location, VersionType
 
 if TYPE_CHECKING:
     from evremixes.config import EvRemixesConfig
@@ -25,20 +25,20 @@ class MenuHelper:
         self.paths = DSPaths("evremixes")
         self.admin_mode: bool = config.admin
 
-    def get_selections(self) -> DownloadConfig:
+    def get_selections(self) -> UserChoices:
         """Get all user selections in sequence."""
         track_type = self._prompt_track_type()
         format_choice = self._prompt_format()
         location = self._prompt_location()
 
-        return DownloadConfig(track_type, format_choice, location)
+        return UserChoices(track_type, format_choice, location)
 
-    def _prompt_track_type(self) -> TrackType:
-        choices = list(TrackType)
+    def _prompt_track_type(self) -> VersionType:
+        choices = list(VersionType)
         return self._get_selection("Choose which versions to download", choices)
 
-    def _prompt_format(self) -> Format:
-        choices = list(Format)
+    def _prompt_format(self) -> AudioFormat:
+        choices = list(AudioFormat)
         if platform.system() == "Darwin":
             choices.reverse()
 

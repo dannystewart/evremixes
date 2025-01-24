@@ -1,18 +1,28 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import TYPE_CHECKING, ClassVar
 
 from dsutil.paths import DSPaths
 
 if TYPE_CHECKING:
-    from evremixes.types import Format, TrackType
+    from pathlib import Path
+
+    from evremixes.types import AudioFormat, VersionType
+
+
+@dataclass
+class UserChoices:
+    """Dataclass to hold the user's download choices at runtime."""
+
+    version: VersionType
+    audio_format: AudioFormat
+    location: Path
 
 
 @dataclass
 class EvRemixesConfig:
-    """Configuration for EvRemixes."""
+    """Configuration for the downloader."""
 
     TRACKLIST_URL: ClassVar[str] = (
         "https://gitlab.dannystewart.com/danny/evremixes/raw/main/evtracks.json"
@@ -25,8 +35,8 @@ class EvRemixesConfig:
     instrumentals: bool = False
 
     # Local folders
-    downloads_folder: Path = field(init=False)
-    music_folder: Path = field(init=False)
+    downloads_path: Path = field(init=False)
+    music_path: Path = field(init=False)
 
     # OneDrive folders (admin only)
     onedrive_folder: Path = field(init=False)
@@ -35,16 +45,7 @@ class EvRemixesConfig:
 
     def __post_init__(self):
         self.paths = DSPaths("evremixes")
-        self.downloads_folder = Path(self.paths.downloads_dir)
-        self.music_folder = Path(self.paths.music_dir)
-        self.onedrive_folder = Path(self.paths.get_onedrive_path(self.onedrive_subfolder))
-        self.onedrive_path = Path(self.onedrive_folder) / self.onedrive_subfolder
-
-
-@dataclass
-class DownloadConfig:
-    """User's download configuration choices."""
-
-    track_type: TrackType
-    format: Format
-    location: Path
+        self.downloads_path = self.paths.downloads_dir
+        self.music_path = self.paths.get_music_path("Danny Stewart")
+        self.onedrive_folder = self.paths.get_onedrive_path(self.onedrive_subfolder)
+        self.onedrive_path = self.onedrive_folder / self.onedrive_subfolder

@@ -33,7 +33,7 @@ class EvRemixes:
     def download_tracks(self) -> None:
         """Download the tracks."""
         if self.config.admin:
-            self.download_helper.download_admin_tracks(self.album_info)
+            self.download_helper.download_tracks_for_admin(self.album_info)
         else:
             self.download_helper.download_tracks(self.album_info, self.download_config)
 

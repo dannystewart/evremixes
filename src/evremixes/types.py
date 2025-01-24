@@ -5,7 +5,7 @@ from enum import StrEnum
 from typing import Literal
 
 
-class Format(StrEnum):
+class AudioFormat(StrEnum):
     """File format choices."""
 
     FLAC = "flac"
@@ -14,12 +14,12 @@ class Format(StrEnum):
     @property
     def menu_name(self) -> str:
         """Return the display name for the format."""
-        return "FLAC" if self == Format.FLAC else "ALAC (Apple Lossless)"
+        return "FLAC" if self == AudioFormat.FLAC else "ALAC (Apple Lossless)"
 
     @property
     def display_name(self) -> str:
         """Return the display name for the format."""
-        return "FLAC" if self == Format.FLAC else "ALAC"
+        return "FLAC" if self == AudioFormat.FLAC else "ALAC"
 
     @property
     def extension(self) -> str:
@@ -27,7 +27,7 @@ class Format(StrEnum):
         return self.value
 
 
-class TrackType(StrEnum):
+class VersionType(StrEnum):
     """Track type choices."""
 
     ORIGINAL = "Original versions"

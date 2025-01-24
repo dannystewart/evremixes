@@ -19,13 +19,12 @@ from dsutil.shell import handle_keyboard_interrupt
 from dsutil.text import print_colored
 
 from evremixes.metadata_helper import MetadataHelper
-from evremixes.types import Format, TrackType
+from evremixes.types import AudioFormat, VersionType
 
 if TYPE_CHECKING:
     from logging import Logger
 
-    from evremixes.audio_data import FileFormat
-    from evremixes.config import DownloadConfig, EvRemixesConfig
+    from evremixes.config import EvRemixesConfig, UserChoices
     from evremixes.types import AlbumInfo
 
 
@@ -38,31 +37,34 @@ class DownloadHelper:
         self.logger: Logger = LocalLogger().get_logger()
 
     @handle_keyboard_interrupt()
-    def download_tracks(self, album_info: AlbumInfo, config: DownloadConfig) -> None:
+    def download_tracks(self, album_info: AlbumInfo, user_choices: UserChoices) -> None:
         """Download tracks according to configuration."""
         # Sanitize album name for folder creation
         valid_chars = f"-_.() {string.ascii_letters}{string.digits}"
         album_name = "".join(c for c in album_info.album_name if c in valid_chars)
 
         # Get base output folder
-        base_folder = config.location / album_name
+        base_folder = user_choices.location / album_name
 
-        match config.track_type:
-            case TrackType.ORIGINAL:
+        match user_choices.version:
+            case VersionType.ORIGINAL:
                 self._download_track_set(
-                    album_info, base_folder, config.format, is_instrumental=False
+                    album_info, base_folder, user_choices.audio_format, is_instrumental=False
                 )
-            case TrackType.INSTRUMENTAL:
+            case VersionType.INSTRUMENTAL:
                 self._download_track_set(
-                    album_info, base_folder, config.format, is_instrumental=True
+                    album_info, base_folder, user_choices.audio_format, is_instrumental=True
                 )
-            case TrackType.BOTH:
+            case VersionType.BOTH:
                 self._download_track_set(
-                    album_info, base_folder, config.format, is_instrumental=False
+                    album_info, base_folder, user_choices.audio_format, is_instrumental=False
                 )
                 print()
                 self._download_track_set(
-                    album_info, base_folder / "Instrumentals", config.format, is_instrumental=True
+                    album_info,
+                    base_folder / "Instrumentals",
+                    user_choices.audio_format,
+                    is_instrumental=True,
                 )
 
         if not self.config.admin:
@@ -72,13 +74,17 @@ class DownloadHelper:
 
     @handle_keyboard_interrupt()
     def _download_track_set(
-        self, album_info: AlbumInfo, output_folder: Path, file_format: Format, is_instrumental: bool
+        self,
+        album_info: AlbumInfo,
+        output_folder: Path,
+        file_format: AudioFormat,
+        is_instrumental: bool,
     ) -> None:
         """Download a single set of tracks."""
         output_folder.mkdir(parents=True, exist_ok=True)
         self.remove_previous_downloads(output_folder)
 
-        display_folder = self.get_display_path(output_folder)
+        display_folder = self.format_path_for_display(output_folder)
         print_colored(f"Downloading in {file_format.display_name} to {display_folder}...\n", "cyan")
 
         # Choose appropriate cover art based on track type
@@ -124,19 +130,20 @@ class DownloadHelper:
                 spinner.fail(colored(f"Failed to download {track_name}.", "red"))
 
         spinner.stop()
-        track_type = "instrumentals" if is_instrumental else "remixes"
-        print_colored(
-            f"\nAll {total_tracks} {track_type} downloaded in {file_format.display_name} to {display_folder}.",
-            "green",
+
+        end_message = (
+            f"All {total_tracks} {"instrumentals" if is_instrumental else "remixes"} "
+            f"downloaded in {file_format.display_name} to {display_folder}."
         )
+        print_colored(f"\n{end_message}", "green")
 
     @handle_keyboard_interrupt()
-    def download_admin_tracks(self, album_info: AlbumInfo) -> None:
+    def download_tracks_for_admin(self, album_info: AlbumInfo) -> None:
         """Download all track versions to the custom OneDrive location."""
         base_path = self.config.onedrive_folder
 
         # Download all combinations
-        for file_format in Format:
+        for file_format in AudioFormat:
             # Original tracks
             output_folder = base_path / Path(file_format.display_name)
             self._download_track_set(album_info, output_folder, file_format, is_instrumental=False)
@@ -183,15 +190,10 @@ class DownloadHelper:
             elif os_type == "Linux" and "DISPLAY" in os.environ:
                 subprocess.run(["xdg-open", str(output_folder)], check=False)
 
-    def get_display_path(self, path: Path) -> str:
+    def format_path_for_display(self, path: Path) -> str:
         """Convert a path to a user-friendly display format with ~ for home directory."""
         path_delimiter = "/" if platform.system() != "Windows" else "\\"
         try:
             return f"~{path_delimiter}{path.relative_to(Path.home())}"
         except ValueError:
             return str(path)
-
-    @property
-    def supported_format_names(self) -> dict[FileFormat, str]:
-        """Map file extensions to their display names."""
-        return {"flac": "FLAC", "m4a": "ALAC (Apple Lossless)"}
