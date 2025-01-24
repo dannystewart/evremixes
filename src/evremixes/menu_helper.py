@@ -48,7 +48,12 @@ class MenuHelper:
         return format_map[selected]
 
     def _prompt_location(self) -> Path:
-        choices = [Location.DOWNLOADS, Location.MUSIC, Location.CUSTOM]
+        choices = (
+            [Location.DOWNLOADS, Location.MUSIC]
+            if platform.system() == "Darwin"
+            else [Location.MUSIC, Location.DOWNLOADS]
+        )
+        choices.append(Location.CUSTOM)
         if self.admin_mode:
             choices.insert(2, Location.ONEDRIVE)
 
