@@ -35,7 +35,7 @@ class MenuHelper:
 
     def _prompt_track_type(self) -> TrackType:
         choices = list(TrackType)
-        return self._get_selection("Choose track type", choices)
+        return self._get_selection("Choose which versions to download", choices)
 
     def _prompt_format(self) -> Format:
         choices = list(Format)
@@ -43,7 +43,7 @@ class MenuHelper:
             choices.reverse()
 
         format_map = {f.menu_name: f for f in choices}
-        selected = self._get_selection("Choose format", list(format_map.keys()))
+        selected = self._get_selection("Choose a format", list(format_map.keys()))
 
         return format_map[selected]
 

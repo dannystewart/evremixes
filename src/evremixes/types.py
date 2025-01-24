@@ -30,9 +30,9 @@ class Format(StrEnum):
 class TrackType(StrEnum):
     """Track type choices."""
 
-    ORIGINAL = "Originals"
-    INSTRUMENTAL = "Instrumentals"
-    BOTH = "Both"
+    ORIGINAL = "Original versions"
+    INSTRUMENTAL = "Instrumental versions"
+    BOTH = "Both versions"
 
 
 class Location(StrEnum):

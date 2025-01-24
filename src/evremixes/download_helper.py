@@ -121,6 +121,8 @@ class DownloadHelper:
                 spinner.fail(colored(f"Failed to download {track_name}.", "red"))
 
         spinner.stop()
+        download_message = f"All {total_tracks} remixes downloaded in {file_format.display_name} to {display_folder}."
+        download_message += "" if self.config.admin else " Enjoy!"
         print_colored(
             f"\nAll {total_tracks} remixes downloaded in {file_format.display_name} to {display_folder}. Enjoy!",
             "green",
