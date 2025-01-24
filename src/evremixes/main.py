@@ -4,8 +4,8 @@ from dsutil import configure_traceback
 from dsutil.env import DSEnv
 
 from evremixes.config import EvRemixesConfig
-from evremixes.download_helper import DownloadHelper
 from evremixes.menu_helper import MenuHelper
+from evremixes.track_downloader import TrackDownloader
 
 configure_traceback()
 
@@ -21,7 +21,7 @@ class EvRemixes:
         # Initialize config and helpers
         self.config = EvRemixesConfig(admin=self.env.admin)
         self.menu_helper = MenuHelper(self.config)
-        self.download_helper = DownloadHelper(self.config)
+        self.download_helper = TrackDownloader(self.config)
 
         # Get track metadata and download config
         self.album_info = self.download_helper.metadata.download_metadata()

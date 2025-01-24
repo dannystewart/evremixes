@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from evremixes.types import AlbumInfo
 
 
-class DownloadHelper:
+class TrackDownloader:
     """Helper class for downloading tracks."""
 
     def __init__(self, config: EvRemixesConfig) -> None:
