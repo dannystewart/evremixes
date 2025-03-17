@@ -9,20 +9,10 @@ You're presented with the choice of FLAC or ALAC (Apple Lossless), as well as wh
 To install, make sure you have Python set up, then run the following.[^1]
 
 ```bash
-pip install git+https://gitlab.dannystewart.com/danny/evremixes.git
+pip install git+https://github.com/dannystewart/evremixes.git
 ```
 And then simply run:
 
 ```bash
 evremixes
 ```
-
-### Instrumentals
-
-You can also use an environment variable to download the instrumental versions:
-
-```bash
-EVREMIXES_GET_INSTRUMENTALS=1 evremixes
-```
-
-[^1]: Note that as of version 4.3.0, precompiled binaries are no longer provided or supported. Things are now packaged for proper installation directly via `pip`.
