@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from dsutil import configure_traceback
-from dsutil.env import DSEnv
+from dsbase import configure_traceback
+from dsbase.env import DSEnv
 
 from evremixes.config import DownloadConfig
 from evremixes.metadata_helper import MetadataHelper

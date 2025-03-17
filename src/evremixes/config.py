@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, ClassVar
 
-from dsutil.paths import DSPaths
+from dsbase.paths import DSPaths
 
 from evremixes.menu_helper import MenuHelper
 

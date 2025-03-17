@@ -14,9 +14,9 @@ import requests
 from halo import Halo
 from termcolor import colored
 
-from dsutil import LocalLogger
-from dsutil.shell import handle_keyboard_interrupt
-from dsutil.text import print_colored
+from dsbase import LocalLogger
+from dsbase.shell import handle_keyboard_interrupt
+from dsbase.text import print_colored
 
 from evremixes.metadata_helper import MetadataHelper
 from evremixes.types import AudioFormat, TrackVersions
@@ -140,7 +140,7 @@ class TrackDownloader:
         spinner.stop()
 
         end_message = (
-            f"All {total_tracks} {"instrumentals" if is_instrumental else "remixes"} "
+            f"All {total_tracks} {'instrumentals' if is_instrumental else 'remixes'} "
             f"downloaded in {file_format.display_name} to {display_folder}."
         )
         print_colored(f"\n{end_message}", "green")
