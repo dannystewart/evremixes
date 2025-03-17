@@ -1,4 +1,4 @@
-# Ruff config version: 11
+# Ruff config version: 13
 # -----------------------
 
 # Files and directories to exclude
@@ -102,6 +102,7 @@ ignore = [
     "COM812",  # Trailing comma missing
     "COM819",  # Trailing comma prohibited (redundant with Ruff formatter)
     "DOC201",  # Return is not documented in docstring
+    "DOC402",  # Yield is not documented in docstring
     "D100",    # Missing docstring in public module
     "D104",    # Missing docstring in public package
     "D105",    # Missing docstring in magic method
@@ -160,7 +161,7 @@ fixable = ["ALL"]
 # Prevent removal of unused variables (to avoid removing while working)
 unfixable = ["F841"]
 
-# Allow unused variables when underscore-prefixed.
+# Allow unused variables when underscore-prefixed
 dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
 
 [lint.per-file-ignores]
@@ -180,16 +181,18 @@ docstring-quotes = "single"
 [lint.isort]
 required-imports = ["from __future__ import annotations"]
 section-order = [
-  "future",
-  "standard-library",
-  "third-party",
-  "personal",
-  "first-party",
-  "local-folder",
+    "future",
+    "standard-library",
+    "third-party",
+    "personal_util",
+    "personal_bin",
+    "first-party",
+    "local-folder",
 ]
 
 [lint.isort.sections]
-personal = ["dsutil"]
+personal_util = ["dsbase", "dsutil"]
+personal_bin = ["dsbin"]
 
 [lint.mccabe]
 max-complexity = 10
