@@ -4,6 +4,7 @@ version = "4.4.2"
 description = "Evanescence Remix Downloader"
 authors = [{ name = "Danny Stewart", email = "danny@stewart.cc" }]
 readme = "README.md"
+license = "MIT"
 requires-python = ">=3.12,<3.13"
 include = [{ include = "evremixes", from = "src" }]
 dependencies = [
@@ -17,8 +18,9 @@ dependencies = [
     "types-requests (>=2.32.0.20250306,<3.0.0.0)",
 ]
 
-[tool.poetry]
-packages = [{ include = "evremixes", from = "src" }]
+[project.urls]
+Homepage = "https://music.dannystewart.com/evanescence/"
+Repository = "https://github.com/dannystewart/evremixes.git"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^1.15.0"
