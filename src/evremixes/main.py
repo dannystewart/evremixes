@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from dsbase import configure_traceback
 from dsbase.env import DSEnv
+from dsbase.util import dsbase_setup
 
 from evremixes.config import DownloadConfig
 from evremixes.metadata_helper import MetadataHelper
 from evremixes.track_downloader import TrackDownloader
 
-configure_traceback()
+dsbase_setup()
 
 
 class EvRemixes:

@@ -12,9 +12,9 @@ import requests
 from halo import Halo
 from termcolor import colored
 
-from dsbase import LocalLogger
-from dsbase.shell import handle_keyboard_interrupt
+from dsbase.log import LocalLogger
 from dsbase.text import print_colored
+from dsbase.util import handle_interrupt
 
 from evremixes.metadata_helper import MetadataHelper
 from evremixes.types import AudioFormat, TrackVersions
@@ -34,7 +34,7 @@ class TrackDownloader:
         self.metadata = MetadataHelper(config)
         self.logger: Logger = LocalLogger().get_logger()
 
-    @handle_keyboard_interrupt()
+    @handle_interrupt()
     def download_tracks(self, album_info: AlbumInfo, config: DownloadConfig) -> None:
         """Download tracks according to configuration.
 
@@ -78,7 +78,7 @@ class TrackDownloader:
 
         self.open_folder_in_os(base_folder)
 
-    @handle_keyboard_interrupt()
+    @handle_interrupt()
     def _download_track_set(
         self,
         album_info: AlbumInfo,
@@ -143,7 +143,7 @@ class TrackDownloader:
         )
         print_colored(f"\n{end_message}", "green")
 
-    @handle_keyboard_interrupt()
+    @handle_interrupt()
     def download_tracks_for_admin(self, album_info: AlbumInfo) -> None:
         """Download all track versions to the custom OneDrive location."""
         base_path = self.config.onedrive_folder

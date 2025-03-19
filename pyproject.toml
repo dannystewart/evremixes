@@ -6,9 +6,8 @@ authors = [{ name = "Danny Stewart", email = "danny@stewart.cc" }]
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.12,<3.13"
-include = [{ include = "evremixes", from = "src" }]
 dependencies = [
-    "dsbase (>=0.1.2,<0.2.0)",
+    "dsbase (>=0.2.2,<0.3.0)",
     "halo (>=0.0.31,<0.0.32)",
     "inquirer (>=3.4.0,<4.0.0)",
     "mutagen (>=1.47.0,<2.0.0)",
