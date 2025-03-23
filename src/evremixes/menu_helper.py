@@ -53,9 +53,9 @@ class MenuHelper:
             case DownloadLocation.DOWNLOADS:
                 return self.paths.downloads_dir
             case DownloadLocation.MUSIC:
-                return self.paths.get_music_path("Danny Stewart")
+                return self.paths.from_music("Danny Stewart")
             case DownloadLocation.ONEDRIVE:
-                return self.paths.get_onedrive_path()
+                return self.paths.onedrive_dir
             case DownloadLocation.CUSTOM:
                 return Path(inquirer.text("Enter custom path")).expanduser()
 

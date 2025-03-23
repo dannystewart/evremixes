@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, ClassVar
 
-from dsbase.paths import DSPaths
+from dsbase.paths import PathKeeper
 
 from evremixes.menu_helper import MenuHelper
 
@@ -23,7 +23,7 @@ class DownloadConfig:
     ONEDRIVE_SUBFOLDER: ClassVar[str] = "Music/Danny Stewart/Evanescence Remixes"
 
     # Path helper
-    paths: DSPaths = field(init=False)
+    paths: PathKeeper = field(init=False)
 
     # Whether to download as admin (all tracks and formats direct to OneDrive)
     is_admin: bool
@@ -34,12 +34,12 @@ class DownloadConfig:
     location: Path | None = None
 
     def __post_init__(self):
-        self.paths = DSPaths("evremixes")
+        self.paths = PathKeeper("evremixes")
 
     @property
     def onedrive_folder(self) -> Path:
         """Get the OneDrive folder path for admin downloads."""
-        return self.paths.get_onedrive_path(self.ONEDRIVE_SUBFOLDER)
+        return self.paths.from_onedrive(self.ONEDRIVE_SUBFOLDER)
 
     @classmethod
     def create(cls, is_admin: bool = False) -> DownloadConfig:

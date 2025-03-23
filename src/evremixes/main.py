@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dsbase.env import DSEnv
+from dsbase.env import EnvManager
 from dsbase.util import dsbase_setup
 
 from evremixes.config import DownloadConfig
@@ -14,7 +14,7 @@ class EvRemixes:
     """Evanescence Remix Downloader."""
 
     def __init__(self) -> None:
-        self.env = DSEnv()
+        self.env = EnvManager()
         self.env.add_bool("EVREMIXES_ADMIN", attr_name="admin", required=False)
 
         # Initialize configuration and helpers
