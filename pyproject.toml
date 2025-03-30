@@ -6,7 +6,7 @@ authors = [{ name = "Danny Stewart", email = "danny@stewart.cc" }]
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
-requires-python = ">=3.12,<3.13"
+requires-python = ">=3.12,<3.14"
 dependencies = [
     "dsbase (>=0.4.1,<0.5.0)",
     "halo (>=0.0.31,<0.0.32)",
