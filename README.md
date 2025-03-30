@@ -6,12 +6,13 @@ You're presented with the choice of FLAC or ALAC (Apple Lossless), as well as wh
 
 ## Installation and Usage
 
-To install, make sure you have Python set up, then run the following.[^1]
+Just install it:
 
 ```bash
-pip install git+https://github.com/dannystewart/evremixes.git
+pip install evremixes
 ```
-And then simply run:
+
+Then run it:
 
 ```bash
 evremixes
