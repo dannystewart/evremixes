@@ -14,7 +14,7 @@ import requests
 from halo import Halo
 from termcolor import colored
 
-from dsbase.log import LocalLogger
+from dsbase import LocalLogger
 from dsbase.text import print_colored
 from dsbase.util import handle_interrupt
 

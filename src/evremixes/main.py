@@ -9,9 +9,8 @@ Website: https://music.dannystewart.com/evanescence/
 
 from __future__ import annotations
 
-from dsbase.env import EnvManager
+from dsbase import ArgParser, EnvManager
 from dsbase.util import dsbase_setup
-from dsbase.util.argparser import ArgParser
 
 from evremixes.config import DownloadConfig
 from evremixes.metadata_helper import MetadataHelper
