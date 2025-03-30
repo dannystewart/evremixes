@@ -1,10 +1,10 @@
-"""The official versions of my remixes are the ones published on my website at
-https://music.dannystewart.com/evanescence. This script grabs them from there, using the
-evtracks.json file holding the current list of available remixes, metadata, and URLs.
+"""Download the latest versions of Danny Stewart's Evanescence remixes directly from his website.
 
-You're presented with the choice of FLAC or ALAC (Apple Lossless), as well as where you want the
-files to be saved. The default options are your Downloads and Music folders, but you can also enter
-a custom path. After downloading, it will apply the correct metadata, album art, and filenames.
+This script downloads remixes in FLAC or ALAC (Apple Lossless) to your Downloads or Music folders,
+or enter a custom path. After downloading, the most recent metadata will be used to rename and tag
+the files, as well as add album art, ready for use in your music library.
+
+Website: https://music.dannystewart.com/evanescence/
 """
 
 from __future__ import annotations
