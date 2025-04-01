@@ -16,7 +16,7 @@ from halo import Halo
 from dsbase.text import color, print_colored
 from dsbase.util import handle_interrupt
 
-import logician
+from logician import Logician
 
 from evremixes.metadata_helper import MetadataHelper
 from evremixes.types import AudioFormat, TrackVersions
@@ -34,7 +34,7 @@ class TrackDownloader:
     def __init__(self, config: DownloadConfig) -> None:
         self.config = config
         self.metadata = MetadataHelper(config)
-        self.logger: Logger = logician.Logger()
+        self.logger: Logger = Logician.get_logger()
 
     @handle_interrupt()
     def download_tracks(self, album_info: AlbumInfo, config: DownloadConfig) -> None:

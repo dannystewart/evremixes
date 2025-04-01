@@ -169,7 +169,7 @@ develop = true
 [package.dependencies]
 dsroot = ">=0.0.3,<0.0.4"
 halo = ">=0.0.31"
-logician = ">=0.1.0,<0.2.0"
+logician = ">=0.2.1,<0.3.0"
 mysql-connector-python = ">=9.2.0,<10.0.0"
 natsort = ">=8.4.0,<9.0.0"
 packaging = ">=24.2,<25.0"
@@ -328,14 +328,14 @@ colorama = ">=0.3.9"
 
 [[package]]
 name = "logician"
-version = "0.1.0"
+version = "0.2.1"
 description = "The logical choice for Python logging"
 optional = false
 python-versions = ">=3.12"
 groups = ["main", "dev"]
 files = [
-    {file = "logician-0.1.0-py3-none-any.whl", hash = "sha256:1873572feb5cd8943da9e6ca9d06047240ccbf1bd67d260ecc43db465fc51f31"},
-    {file = "logician-0.1.0.tar.gz", hash = "sha256:eee9b64df52b351715b0c7c2711d0c814ab861bc229c3dd6bf54a6a32b47a47f"},
+    {file = "logician-0.2.1-py3-none-any.whl", hash = "sha256:46e7896cbe2d30bb40c6f11e9a31a29c2fbc77221d10c27b86bb20c8cdc8e05c"},
+    {file = "logician-0.2.1.tar.gz", hash = "sha256:8becf9f1ad8c6b82e69e88d0ef927a0c5df0b5afe17c026f8e5b84e8eabccbd5"},
 ]
 
 [package.dependencies]
@@ -1092,4 +1092,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.12,<3.14"
-content-hash = "fa7040d36c081c89d44af83eedda7dd3cd465805b5714dec0976249020fb661c"
+content-hash = "ba0eb6be445e9be61d0f7291c2e93212f6dbb0f0186e16dacd184c2da567409f"
