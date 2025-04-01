@@ -12,10 +12,9 @@ from typing import TYPE_CHECKING
 
 import requests
 from halo import Halo
-from termcolor import colored
 
 from dsbase import LocalLogger
-from dsbase.text import print_colored
+from dsbase.text import color, print_colored
 from dsbase.util import handle_interrupt
 
 from evremixes.metadata_helper import MetadataHelper
@@ -162,7 +161,7 @@ class TrackDownloader:
 
             output_path = output_folder / f"{track_number} - {track_name}.{file_format.extension}"
 
-            spinner.text = colored(f"Downloading {track_name}... ({index}/{total_tracks})", "cyan")
+            spinner.text = color(f"Downloading {track_name}... ({index}/{total_tracks})", "cyan")
             spinner.start()
 
             try:
@@ -170,20 +169,20 @@ class TrackDownloader:
                 response.raise_for_status()
                 output_path.write_bytes(response.content)
 
-                spinner.text = colored("Applying metadata...", "cyan")
+                spinner.text = color("Applying metadata...", "cyan")
                 success = self.metadata.apply_metadata(
                     track, album_info, output_path, cover_data, is_instrumental
                 )
 
                 if not success:
-                    spinner.fail(colored(f"Failed to add metadata to {track_name}.", "red"))
+                    spinner.fail(color(f"Failed to add metadata to {track_name}.", "red"))
                     all_successful = False
                     continue
 
-                spinner.succeed(colored(f"Downloaded {track_name}", "green"))
+                spinner.succeed(color(f"Downloaded {track_name}", "green"))
 
             except requests.RequestException:
-                spinner.fail(colored(f"Failed to download {track_name}.", "red"))
+                spinner.fail(color(f"Failed to download {track_name}.", "red"))
                 all_successful = False
 
         spinner.stop()
