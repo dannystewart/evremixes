@@ -1,6 +1,6 @@
 [project]
 name = "evremixes"
-version = "1.0.1"
+version = "1.0.2"
 description = "Evanescence Remix Downloader"
 authors = [{ name = "Danny Stewart", email = "danny@stewart.cc" }]
 readme = "README.md"
