@@ -9,21 +9,18 @@ Website: https://music.dannystewart.com/evanescence/
 
 from __future__ import annotations
 
-from dsbase import ArgParser, EnvManager
-from dsbase.util import dsbase_setup
+from enviromancer import Enviromancer
 
 from evremixes.config import DownloadConfig
 from evremixes.metadata_helper import MetadataHelper
 from evremixes.track_downloader import TrackDownloader
-
-dsbase_setup()
 
 
 class EvRemixes:
     """Evanescence Remix Downloader."""
 
     def __init__(self) -> None:
-        self.env = EnvManager()
+        self.env = Enviromancer()
         self.env.add_bool("EVREMIXES_ADMIN", attr_name="admin", required=False)
 
         # Initialize configuration and helpers
@@ -44,10 +41,5 @@ class EvRemixes:
 
 def main() -> None:
     """Run the Evanescence Remix Downloader."""
-    # Set up argument parser for `--version`
-    parser = ArgParser(description=__doc__)
-    parser.parse_args()
-
-    # Initialize the downloader
     evremixes = EvRemixes()
     evremixes.download_tracks()

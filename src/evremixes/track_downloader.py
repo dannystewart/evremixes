@@ -12,11 +12,9 @@ from typing import TYPE_CHECKING
 
 import requests
 from halo import Halo
-
-from dsbase.text import color, print_colored
-from dsbase.util import handle_interrupt
-
 from logician import Logician
+from shelper import handle_interrupt
+from textparse import color, print_color
 
 from evremixes.metadata_helper import MetadataHelper
 from evremixes.types import AudioFormat, TrackVersions
@@ -77,10 +75,10 @@ class TrackDownloader:
                 )
 
         if overall_success and not config.is_admin:
-            print_colored("\nEnjoy!", "green")
+            print_color("\nEnjoy!", "green")
             self.open_folder_in_os(base_folder)
         elif not overall_success:
-            print_colored("\nSome downloads were not completed successfully.", "yellow")
+            print_color("\nSome downloads were not completed successfully.", "yellow")
 
     def _download_and_move_set(
         self,
@@ -91,7 +89,7 @@ class TrackDownloader:
     ) -> bool:
         """Download a track set to temp location and move to final location if successful."""
         display_folder = self.format_path_for_display(final_folder)
-        print_colored(f"Downloading in {file_format.display_name} to {display_folder}...\n", "cyan")
+        print_color(f"Downloading in {file_format.display_name} to {display_folder}...\n", "cyan")
 
         with tempfile.TemporaryDirectory() as temp_dir:
             temp_folder = Path(temp_dir) / final_folder.name
@@ -105,7 +103,7 @@ class TrackDownloader:
                 self._move_files_to_destination(temp_folder, final_folder)
                 return True
 
-            print_colored(
+            print_color(
                 "\nDownload incomplete. No changes were made to your existing files.", "yellow"
             )
             return False
@@ -192,7 +190,7 @@ class TrackDownloader:
             f"All {total_tracks} {'instrumentals' if is_instrumental else 'remixes'} "
             f"downloaded in {file_format.display_name} to {display_folder}."
         )
-        print_colored(f"\n{end_message}", "green")
+        print_color(f"\n{end_message}", "green")
 
         return all_successful
 
@@ -221,10 +219,10 @@ class TrackDownloader:
             print()
 
         if overall_success:
-            print_colored("All downloads completed successfully!", "green")
+            print_color("All downloads completed successfully!", "green")
             self.open_folder_in_os(base_path)
         else:
-            print_colored("Some downloads were not completed successfully.", "yellow")
+            print_color("Some downloads were not completed successfully.", "yellow")
 
     def remove_previous_downloads(self, output_folder: str | Path) -> None:
         """Remove any existing files with the specified file extension in the output folder."""
