@@ -8,15 +8,15 @@ license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.12,<3.14"
 dependencies = [
-    "enviromancer (>=0.1.4)",
+    "enviromancer (>=0.1.5)",
     "halo (>=0.0.31,<0.0.32)",
     "inquirer (>=3.4.0,<4.0.0)",
-    "logician (>=0.3.0)",
+    "logician (>=0.3.3)",
     "mutagen (>=1.47.0,<2.0.0)",
     "pathkeeper (>=0.1.0)",
     "pillow (>=11.1.0,<12.0.0)",
     "requests (>=2.32.3,<3.0.0)",
-    "textparse (>=0.1.1)",
+    "textparse (>=0.1.2)",
     "types-requests (>=2.32.0.20250328,<3.0.0.0)",
 ]
 classifiers = [
