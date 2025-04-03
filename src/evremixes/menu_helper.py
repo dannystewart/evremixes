@@ -1,10 +1,12 @@
 from __future__ import annotations
 
 import platform
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import inquirer
+from textparse import print_color
 
 from evremixes.types import AudioFormat, DownloadLocation, TrackVersions
 
@@ -23,7 +25,11 @@ class MenuHelper:
     def prompt_for_versions(self) -> TrackVersions:
         """Prompt the user to choose which versions to download."""
         choices = list(TrackVersions)
-        return self._get_selection("Choose which versions to download", choices)
+        result = self._get_selection("Choose which versions to download", choices)
+        if result == TrackVersions.QUIT:
+            print_color("Goodbye!", "blue")
+            sys.exit(0)
+        return result
 
     def prompt_for_format(self) -> AudioFormat:
         """Prompt the user to choose an audio format."""

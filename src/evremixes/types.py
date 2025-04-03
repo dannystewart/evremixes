@@ -33,6 +33,7 @@ class TrackVersions(StrEnum):
     ORIGINAL = "Original versions"
     INSTRUMENTAL = "Instrumental versions"
     BOTH = "Both sets"
+    QUIT = "Quit"
 
 
 class DownloadLocation(StrEnum):

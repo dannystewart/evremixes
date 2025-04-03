@@ -73,6 +73,8 @@ class TrackDownloader:
                     config.audio_format,
                     is_instrumental=True,
                 )
+            case _:
+                return
 
         if overall_success and not config.is_admin:
             print_color("\nEnjoy!", "green")
