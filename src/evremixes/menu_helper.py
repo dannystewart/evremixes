@@ -6,7 +6,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import inquirer
-from textparse import print_color
+from polykit.parsers import print_color
 
 from evremixes.types import AudioFormat, DownloadLocation, TrackVersions
 
