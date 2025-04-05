@@ -8,16 +8,22 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 
 ## [1.0.6] (2025-04-04)
 
+### Changed
+
+- Updates import statements across multiple modules (`MenuHelper` and `TrackDownloader`) to use `polykit` instead of older dependencies like `textparse` and `shelper`.
+- Updates `pyproject.toml` to include the latest dependency versions.
+- Updates `poetry.lock` with new package versions and adds `polykit`.
+- Updates `ruff.toml` with a newer config version and adjusted section names.
+
+## [1.0.5] (2025-04-02)
+
 ### Added
 
 - Adds a quit option to the version selection prompt in `MenuHelper`.
 
 ### Changed
 
-- Updates import statements across multiple modules (`MenuHelper`, `TrackDownloader`) to use `polykit` for consistency and maintainability.
-- Updates dependencies in `pyproject.toml` and `poetry.lock` to the latest versions, including adding `polykit`.
-- Updates `ruff.toml` configuration to a newer version and adjusts section names for improved clarity.
-- Expands `.gitignore` rules to include additional build and environment files.
+- Updates dependencies in `pyproject.toml` to the latest compatible versions.
 
 <!-- Links -->
 [Keep a Changelog]: https://keepachangelog.com/en/1.1.0/
@@ -26,3 +32,4 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 <!-- Versions -->
 [unreleased]: https://github.com/dannystewart/evremixes/compare/v1.0.6...HEAD
 [1.0.6]: https://github.com/dannystewart/evremixes/releases/tag/v1.0.6
+[1.0.5]: https://github.com/dannystewart/evremixes/compare/v1.0.6...v1.0.5
