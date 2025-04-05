@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 import requests
 from halo import Halo
 from polykit.formatters import color, print_color
-from polykit.log import Logician
+from polykit.log import PolyLog
 from polykit.shell import handle_interrupt
 
 from evremixes.metadata_helper import MetadataHelper
@@ -32,7 +32,7 @@ class TrackDownloader:
     def __init__(self, config: DownloadConfig) -> None:
         self.config = config
         self.metadata = MetadataHelper(config)
-        self.logger: Logger = Logician.get_logger()
+        self.logger: Logger = PolyLog.get_logger()
 
     @handle_interrupt()
     def download_tracks(self, album_info: AlbumInfo, config: DownloadConfig) -> None:

@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, ClassVar
 
-from polykit.paths import PathKeeper
+from polykit.paths import PolyPath
 
 from evremixes.menu_helper import MenuHelper
 
@@ -23,7 +23,7 @@ class DownloadConfig:
     ONEDRIVE_SUBFOLDER: ClassVar[str] = "Music/Danny Stewart/Evanescence Remixes"
 
     # Path helper
-    paths: PathKeeper = field(init=False)
+    paths: PolyPath = field(init=False)
 
     # Whether to download as admin (all tracks and formats direct to OneDrive)
     is_admin: bool
@@ -34,7 +34,7 @@ class DownloadConfig:
     location: Path | None = None
 
     def __post_init__(self):
-        self.paths = PathKeeper("evremixes")
+        self.paths = PolyPath("evremixes")
 
     @property
     def onedrive_folder(self) -> Path:

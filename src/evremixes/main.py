@@ -9,7 +9,7 @@ Website: https://music.dannystewart.com/evanescence/
 
 from __future__ import annotations
 
-from polykit.env import Enviromancer
+from polykit.env import PolyEnv
 
 from evremixes.config import DownloadConfig
 from evremixes.metadata_helper import MetadataHelper
@@ -20,7 +20,7 @@ class EvRemixes:
     """Evanescence Remix Downloader."""
 
     def __init__(self) -> None:
-        self.env = Enviromancer()
+        self.env = PolyEnv()
         self.env.add_bool("EVREMIXES_ADMIN", attr_name="admin", required=False)
 
         # Initialize configuration and helpers
