@@ -9,7 +9,7 @@ Website: https://music.dannystewart.com/evanescence/
 
 from __future__ import annotations
 
-from enviromancer import Enviromancer
+from polykit.env import Enviromancer
 
 from evremixes.config import DownloadConfig
 from evremixes.metadata_helper import MetadataHelper

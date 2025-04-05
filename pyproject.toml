@@ -6,16 +6,13 @@ authors = [{ name = "Danny Stewart", email = "danny@stewart.cc" }]
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
-requires-python = ">=3.12,<3.14"
+requires-python = ">=3.12"
 dependencies = [
-    "enviromancer (>=0.1.7)",
     "halo (>=0.0.31)",
     "inquirer (>=3.4.0,<4.0.0)",
-    "logician (>=0.3.4)",
     "mutagen (>=1.47.0,<2.0.0)",
-    "pathkeeper (>=0.1.0)",
     "pillow (>=11.1.0,<12.0.0)",
-    "polykit (>=0.1.1)",
+    "polykit (>=0.6.0)",
     "requests (>=2.32.3,<3.0.0)",
     "types-requests (>=2.32.0.20250328,<3.0.0.0)",
 ]
@@ -42,11 +39,7 @@ Repository = "https://github.com/dannystewart/evremixes/"
 mypy = ">=1.15.0"
 pre-commit = ">=4.2.0"
 ruff = ">=0.11.4"
-enviromancer = { path = "../enviromancer", develop = true }
-logician = { path = "../logician", develop = true }
-pathkeeper = { path = "../pathkeeper", develop = true }
 polykit = { path = "../polykit", develop = true }
-walking-man = { path = "../walking-man", develop = true }
 
 [build-system]
 requires = ["poetry-core>=2.0"]
