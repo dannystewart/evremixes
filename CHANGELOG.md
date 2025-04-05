@@ -6,6 +6,19 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 
 ## [Unreleased]
 
+## [1.0.8] (2025-04-05)
+
+### Changed
+
+- Updates `polykit` to version 0.7.0, including module imports to reflect renamed classes.
+- Refactors configuration and logging to use the updated `polykit` API, improving maintainability and compatibility with updated dependencies.
+
+## [1.0.7] (2025-04-04)
+
+### Changed
+
+- Minor dependency updates to `pyproject.toml` and `poetry.lock`.
+
 ## [1.0.6] (2025-04-04)
 
 ### Changed
@@ -30,6 +43,8 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 
 <!-- Versions -->
-[unreleased]: https://github.com/dannystewart/evremixes/compare/v1.0.6...HEAD
-[1.0.6]: https://github.com/dannystewart/evremixes/releases/tag/v1.0.6
+[unreleased]: https://github.com/dannystewart/evremixes/compare/v1.0.8...HEAD
+[1.0.8]: https://github.com/dannystewart/evremixes/compare/v1.0.7...v1.0.8
+[1.0.7]: https://github.com/dannystewart/evremixes/compare/v1.0.6...v1.0.7
+[1.0.6]: https://github.com/dannystewart/evremixes/compare/v1.0.5...v1.0.6
 [1.0.5]: https://github.com/dannystewart/evremixes/compare/v1.0.6...v1.0.5
