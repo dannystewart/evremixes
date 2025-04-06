@@ -8,7 +8,7 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 
 ### Changed
 
-- Updates `polykit` dependency to v0.7.3 for improved compatibility.
+- Updates `polykit` dependency to v0.7.4 for improved compatibility.
 
 ## [1.0.9] (2025-04-05)
 
