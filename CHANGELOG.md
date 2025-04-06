@@ -6,6 +6,16 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 
 ## [Unreleased]
 
+### Changed
+
+- Updates `polykit` dependency to v0.7.3 for improved compatibility.
+
+## [1.0.9] (2025-04-05)
+
+### Changed
+
+- Updates `polykit` dependency to version 0.7.1, ensuring compatibility with the latest features and fixes.
+
 ## [1.0.8] (2025-04-05)
 
 ### Changed
@@ -43,7 +53,8 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 
 <!-- Versions -->
-[unreleased]: https://github.com/dannystewart/evremixes/compare/v1.0.8...HEAD
+[unreleased]: https://github.com/dannystewart/evremixes/compare/v1.0.9...HEAD
+[1.0.9]: https://github.com/dannystewart/evremixes/compare/v1.0.8...v1.0.9
 [1.0.8]: https://github.com/dannystewart/evremixes/compare/v1.0.7...v1.0.8
 [1.0.7]: https://github.com/dannystewart/evremixes/compare/v1.0.6...v1.0.7
 [1.0.6]: https://github.com/dannystewart/evremixes/compare/v1.0.5...v1.0.6
