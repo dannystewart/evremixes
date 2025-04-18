@@ -11,8 +11,8 @@ dependencies = [
     "halo (>=0.0.31)",
     "inquirer (>=3.4.0,<4.0.0)",
     "mutagen (>=1.47.0,<2.0.0)",
-    "pillow (>=11.1.0,<12.0.0)",
-    "polykit (>=0.8.0)",
+    "pillow (>=11.2.1,<12.0.0)",
+    "polykit (>=0.10.2)",
     "requests (>=2.32.3,<3.0.0)",
     "types-requests (>=2.32.0.20250328,<3.0.0.0)",
 ]
@@ -38,7 +38,7 @@ Repository = "https://github.com/dannystewart/evremixes/"
 [tool.poetry.group.dev.dependencies]
 mypy = ">=1.15.0"
 pre-commit = ">=4.2.0"
-ruff = ">=0.11.4"
+ruff = ">=0.11.6"
 polykit = { path = "../polykit", develop = true }
 
 [build-system]

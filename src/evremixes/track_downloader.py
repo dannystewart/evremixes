@@ -12,9 +12,9 @@ from typing import TYPE_CHECKING
 
 import requests
 from halo import Halo
+from polykit.cli import handle_interrupt
 from polykit.formatters import color, print_color
 from polykit.log import PolyLog
-from polykit.shell import handle_interrupt
 
 from evremixes.metadata_helper import MetadataHelper
 from evremixes.types import AudioFormat, TrackVersions
