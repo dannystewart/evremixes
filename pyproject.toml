@@ -36,9 +36,9 @@ Homepage = "https://music.dannystewart.com/evanescence/"
 Repository = "https://github.com/dannystewart/evremixes/"
 
 [tool.poetry.group.dev.dependencies]
-mypy = ">=1.15.0"
+mypy = ">=1.16.0"
 pre-commit = ">=4.2.0"
-ruff = ">=0.11.10"
+ruff = ">=0.11.12"
 polykit = { path = "../polykit", develop = true }
 
 [build-system]
