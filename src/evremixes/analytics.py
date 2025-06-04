@@ -70,12 +70,6 @@ class AnalyticsHelper:
         if success:
             self._successful_downloads += 1
 
-        # Log the download event
-        status = "✓" if success else "✗"
-        self.logger.info(
-            "Analytics: %s %s (%s, %s)", status, track_name, audio_format.value, versions.value
-        )
-
         # Send to remote analytics endpoint if configured
         self._send_remote_analytics(track_name, audio_format, versions, success)
 
