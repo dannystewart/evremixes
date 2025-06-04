@@ -21,6 +21,7 @@ class DownloadConfig:
         "https://gitlab.dannystewart.com/danny/evremixes/raw/main/evtracks.json"
     )
     ONEDRIVE_SUBFOLDER: ClassVar[str] = "Music/Danny Stewart/Evanescence Remixes"
+    ANALYTICS_ENDPOINT: ClassVar[str] = "https://bots.dannystewart.com/web/api/evremixes/analytics"
 
     # Path helper
     paths: PolyPath = field(init=False)
@@ -32,9 +33,6 @@ class DownloadConfig:
     versions: TrackVersions | None = None
     audio_format: AudioFormat | None = None
     location: Path | None = None
-
-    # Optional analytics endpoint for remote tracking
-    analytics_endpoint: str | None = None
 
     def __post_init__(self):
         self.paths = PolyPath("evremixes")

@@ -4,6 +4,8 @@
 This simulates what would happen when EvRemixes sends data to your Flask endpoint.
 """
 
+from __future__ import annotations
+
 import json
 import sys
 from pathlib import Path
@@ -22,9 +24,7 @@ def test_analytics_payload():
     print("=" * 50)
 
     # Create a test config with analytics endpoint
-    config = DownloadConfig(
-        is_admin=False, analytics_endpoint="https://your-server.com/api/evremixes/analytics"
-    )
+    config = DownloadConfig(is_admin=False)
 
     # Create analytics helper
     analytics = AnalyticsHelper(config)

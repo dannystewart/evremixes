@@ -12,10 +12,11 @@ from typing import TYPE_CHECKING
 import requests
 from polykit.log import PolyLog
 
+from evremixes.config import DownloadConfig
+
 if TYPE_CHECKING:
     from logging import Logger
 
-    from evremixes.config import DownloadConfig
     from evremixes.types import AudioFormat, TrackMetadata, TrackVersions
 
 
@@ -87,7 +88,7 @@ class AnalyticsHelper:
     ) -> None:
         """Send analytics data to remote endpoint."""
         # Check if remote analytics is enabled
-        remote_url = getattr(self.config, "analytics_endpoint", None)
+        remote_url = DownloadConfig.ANALYTICS_ENDPOINT
         if not remote_url:
             return
 
