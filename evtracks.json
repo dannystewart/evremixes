@@ -4,7 +4,7 @@
         "album_artist": "Danny Stewart",
         "artist_name": "Danny Stewart",
         "genre": "Electronic",
-        "year": 2024,
+        "year": 2025,
         "cover_art_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Evanescence-Remixes.png",
         "inst_art_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Evanescence-Remixes-Instrumentals.png"
     },
@@ -63,21 +63,21 @@
             "file_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Lithium.flac",
             "inst_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Lithium_Inst.flac",
             "start_date": "2021-09-26",
-            "track_number": 15
+            "track_number": 16
         },
         {
             "track_name": "Lost In Paradise",
             "file_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Lost-In-Paradise.flac",
             "inst_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Lost-In-Paradise_Inst.flac",
             "start_date": "2023-11-28",
-            "track_number": 17
+            "track_number": 18
         },
         {
             "track_name": "My Heart Is Broken",
             "file_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/My-Heart-Is-Broken.flac",
             "inst_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/My-Heart-Is-Broken_Inst.flac",
             "start_date": "2023-08-11",
-            "track_number": 16
+            "track_number": 17
         },
         {
             "track_name": "My Last Breath",
@@ -105,7 +105,7 @@
             "file_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/The-End-of-the-Dream.flac",
             "inst_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/The-End-of-the-Dream_Inst.flac",
             "start_date": "2023-10-31",
-            "track_number": 18
+            "track_number": 19
         },
         {
             "track_name": "The Game Is Over",
@@ -127,6 +127,13 @@
             "inst_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/What-You-Want_Inst.flac",
             "start_date": "2021-09-26",
             "track_number": 5
+        },
+        {
+            "track_name": "Whisper",
+            "file_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Whisper.flac",
+            "inst_url": "https://music.dannystewart.com/wp-content/uploads/sites/2/Whisper_Inst.flac",
+            "start_date": "2025-05-30",
+            "track_number": 15
         },
         {
             "track_name": "Yeah Right",
