@@ -64,9 +64,6 @@ def test_analytics_payload():
     print(json.dumps(payload, indent=2))
     print()
 
-    # Test session completion tracking
-    analytics.track_session_completion(success=True)
-
     # Get session summary
     summary = analytics.get_session_summary()
     print("📈 Session Summary:")

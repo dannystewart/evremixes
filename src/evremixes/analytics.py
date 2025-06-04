@@ -219,16 +219,6 @@ class AnalyticsHelper:
             # Never let analytics failures affect downloads
             self.logger.debug("Analytics event failed: %s", str(e))
 
-    def track_session_completion(self, success: bool = True) -> None:
-        """Track the completion of a download session."""
-        status = "✓" if success else "✗"
-        self.logger.info(
-            "Analytics: Session completed %s (%d downloads, %d successful)",
-            status,
-            self._download_count,
-            self._successful_downloads,
-        )
-
     def get_session_summary(self) -> dict[str, str | int]:
         """Get a summary of the current download session.
 

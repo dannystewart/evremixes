@@ -81,10 +81,8 @@ class TrackDownloader:
         if overall_success and not config.is_admin:
             print_color("\nEnjoy!", "green")
             self.open_folder_in_os(base_folder)
-            self.analytics.track_session_completion(success=overall_success)
         elif not overall_success:
             print_color("\nSome downloads were not completed successfully.", "yellow")
-            self.analytics.track_session_completion(success=overall_success)
 
     def _download_and_move_set(
         self,
@@ -234,10 +232,8 @@ class TrackDownloader:
         if overall_success:
             print_color("All downloads completed successfully!", "green")
             self.open_folder_in_os(base_path)
-            self.analytics.track_session_completion(success=overall_success)
         else:
             print_color("Some downloads were not completed successfully.", "yellow")
-            self.analytics.track_session_completion(success=overall_success)
 
     def remove_previous_downloads(self, output_folder: str | Path) -> None:
         """Remove any existing files with the specified file extension in the output folder."""
