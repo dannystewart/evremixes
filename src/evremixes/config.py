@@ -18,7 +18,7 @@ class DownloadConfig:
     """Configuration for the downloader."""
 
     TRACKLIST_URL: ClassVar[str] = (
-        "https://gitlab.dannystewart.com/danny/evremixes/raw/main/evtracks.json"
+        "https://raw.githubusercontent.com/dannystewart/evremixes/refs/heads/main/evtracks.json"
     )
     ONEDRIVE_SUBFOLDER: ClassVar[str] = "Music/Danny Stewart/Evanescence Remixes"
     ANALYTICS_ENDPOINT: ClassVar[str] = "https://bots.dannystewart.com/web/api/evremixes/analytics"
