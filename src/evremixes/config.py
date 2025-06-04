@@ -33,6 +33,9 @@ class DownloadConfig:
     audio_format: AudioFormat | None = None
     location: Path | None = None
 
+    # Optional analytics endpoint for remote tracking
+    analytics_endpoint: str | None = None
+
     def __post_init__(self):
         self.paths = PolyPath("evremixes")
 

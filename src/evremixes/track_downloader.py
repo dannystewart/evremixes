@@ -16,6 +16,7 @@ from polykit.cli import handle_interrupt
 from polykit.formatters import color, print_color
 from polykit.log import PolyLog
 
+from evremixes.analytics import AnalyticsHelper
 from evremixes.metadata_helper import MetadataHelper
 from evremixes.types import AudioFormat, TrackVersions
 
@@ -32,6 +33,7 @@ class TrackDownloader:
     def __init__(self, config: DownloadConfig) -> None:
         self.config = config
         self.metadata = MetadataHelper(config)
+        self.analytics = AnalyticsHelper(config)
         self.logger: Logger = PolyLog.get_logger()
 
     @handle_interrupt()
@@ -79,8 +81,10 @@ class TrackDownloader:
         if overall_success and not config.is_admin:
             print_color("\nEnjoy!", "green")
             self.open_folder_in_os(base_folder)
+            self.analytics.track_session_completion(success=overall_success)
         elif not overall_success:
             print_color("\nSome downloads were not completed successfully.", "yellow")
+            self.analytics.track_session_completion(success=overall_success)
 
     def _download_and_move_set(
         self,
@@ -166,7 +170,13 @@ class TrackDownloader:
             spinner.start()
 
             try:
-                response = requests.get(file_url, stream=True, timeout=30)
+                # Add analytics headers to track downloads
+                headers = self.analytics.get_analytics_headers(
+                    track_name,
+                    file_format,
+                    TrackVersions.ORIGINAL if not is_instrumental else TrackVersions.INSTRUMENTAL,
+                )
+                response = requests.get(file_url, stream=True, timeout=30, headers=headers)
                 response.raise_for_status()
                 output_path.write_bytes(response.content)
 
@@ -181,6 +191,7 @@ class TrackDownloader:
                     continue
 
                 spinner.succeed(color(f"Downloaded {track_name}", "green"))
+                self.analytics.track_track_download(track, file_format)
 
             except requests.RequestException:
                 spinner.fail(color(f"Failed to download {track_name}.", "red"))
@@ -223,8 +234,10 @@ class TrackDownloader:
         if overall_success:
             print_color("All downloads completed successfully!", "green")
             self.open_folder_in_os(base_path)
+            self.analytics.track_session_completion(success=overall_success)
         else:
             print_color("Some downloads were not completed successfully.", "yellow")
+            self.analytics.track_session_completion(success=overall_success)
 
     def remove_previous_downloads(self, output_folder: str | Path) -> None:
         """Remove any existing files with the specified file extension in the output folder."""
