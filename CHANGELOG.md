@@ -6,6 +6,24 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 
 ## [Unreleased]
 
+## [1.0.11] (2025-06-25)
+
+### Added
+
+- **New track:** "Whisper" has been added to the collection as track 15.
+- Adds preliminary privacy-respecting analytics to track remix downloads, preferences, and platform statistics. Also includes an analytics viewer script.
+
+**NOTE:** The analytics feature is unfinished and does not currently do anything. *If* it's ever finished, it will be in a later release.
+
+### Changed
+
+- Updates collection release year from 2024 to 2025 now that a new track has been added.
+- Updates multiple dependencies to their latest versions, including `urllib3` to address a security vulnerability, and removes `pygments` dependency.
+
+### Fixed
+
+- Updates tracklist URL from GitLab to GitHub raw file endpoint to ensure the script is fetching track information from the current repository location.
+
 ## [1.0.10] (2025-05-21)
 
 ### Changed
@@ -60,7 +78,8 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 
 <!-- Versions -->
-[unreleased]: https://github.com/dannystewart/evremixes/compare/v1.0.10...HEAD
+[unreleased]: https://github.com/dannystewart/evremixes/compare/v1.0.11...HEAD
+[1.0.11]: https://github.com/dannystewart/evremixes/compare/v1.0.10...v1.0.11
 [1.0.10]: https://github.com/dannystewart/evremixes/compare/v1.0.9...v1.0.10
 [1.0.9]: https://github.com/dannystewart/evremixes/compare/v1.0.8...v1.0.9
 [1.0.8]: https://github.com/dannystewart/evremixes/compare/v1.0.7...v1.0.8
