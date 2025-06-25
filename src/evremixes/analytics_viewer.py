@@ -7,7 +7,7 @@ import operator
 from pathlib import Path
 from typing import Any
 
-from polykit.formatters import print_color
+from polykit.text import print_color
 
 
 class AnalyticsViewer:
