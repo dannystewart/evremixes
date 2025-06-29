@@ -17,11 +17,10 @@ if TYPE_CHECKING:
 class DownloadConfig:
     """Configuration for the downloader."""
 
-    TRACKLIST_URL: ClassVar[str] = (
-        "https://raw.githubusercontent.com/dannystewart/evremixes/refs/heads/main/evtracks.json"
-    )
+    REPO_BASE: ClassVar[str] = "https://github.com/dannystewart/evremixes/raw/refs/heads/main"
+    TRACKLIST_URL: ClassVar[str] = f"{REPO_BASE}/evtracks.json"
     ONEDRIVE_SUBFOLDER: ClassVar[str] = "Music/Danny Stewart/Evanescence Remixes"
-    ANALYTICS_ENDPOINT: ClassVar[str] = "https://bots.dannystewart.com/web/api/evremixes/analytics"
+    ANALYTICS_ENDPOINT: ClassVar[str] = "https://prismbot.app/evremixes/analytics"
 
     # Path helper
     paths: PolyPath = field(init=False)
