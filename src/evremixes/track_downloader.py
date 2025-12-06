@@ -13,7 +13,7 @@ from typing import TYPE_CHECKING
 import requests
 from halo import Halo
 from polykit.cli import handle_interrupt
-from polykit.formatters import color, print_color
+from polykit.text import color, print_color
 from polykit.log import PolyLog
 
 from evremixes.analytics import AnalyticsHelper

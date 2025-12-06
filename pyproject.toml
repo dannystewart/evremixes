@@ -6,15 +6,15 @@ authors = [{ name = "Danny Stewart", email = "danny@stewart.cc" }]
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
-requires-python = ">=3.12"
+requires-python = ">=3.12,<4.0"
 dependencies = [
     "halo (>=0.0.31)",
-    "inquirer (>=3.4.0,<4.0.0)",
+    "inquirer (>=3.4.1,<4.0.0)",
     "mutagen (>=1.47.0,<2.0.0)",
-    "pillow (>=11.3.0,<12.0.0)",
-    "polykit (>=0.11.4)",
-    "requests (>=2.32.4,<3.0.0)",
-    "types-requests (>=2.32.4.20250611,<3.0.0.0)",
+    "pillow (>=12.0.0,<13.0.0)",
+    "polykit (>=0.14.6)",
+    "requests (>=2.32.5,<3.0.0)",
+    "types-requests (>=2.32.4.20250913,<3.0.0.0)",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -36,9 +36,9 @@ Homepage = "https://music.dannystewart.com/evanescence/"
 Repository = "https://github.com/dannystewart/evremixes/"
 
 [tool.poetry.group.dev.dependencies]
-mypy = ">=1.16.1"
-pre-commit = ">=4.2.0"
-ruff = ">=0.12.1"
+mypy = ">=1.19.0"
+pre-commit = ">=4.5.0"
+ruff = ">=0.14.8"
 polykit = { path = "../polykit", develop = true }
 
 [build-system]
