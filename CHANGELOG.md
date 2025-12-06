@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 
 ## [Unreleased]
 
+## [1.0.13] (2025-12-06)
+
+### Fixed
+
+- Adds `urllib3` as explicit dependency to ensure it meets minimum version requirements.
+
 ## [1.0.12] (2025-12-06)
 
 ### Fixed
@@ -84,7 +90,8 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 
 <!-- Versions -->
-[unreleased]: https://github.com/dannystewart/evremixes/compare/v1.0.12...HEAD
+[unreleased]: https://github.com/dannystewart/evremixes/compare/v1.0.13...HEAD
+[1.0.13]: https://github.com/dannystewart/evremixes/compare/v1.0.12...v1.0.13
 [1.0.12]: https://github.com/dannystewart/evremixes/compare/v1.0.11...v1.0.12
 [1.0.11]: https://github.com/dannystewart/evremixes/compare/v1.0.10...v1.0.11
 [1.0.10]: https://github.com/dannystewart/evremixes/compare/v1.0.9...v1.0.10
