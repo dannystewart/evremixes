@@ -15,7 +15,7 @@ dependencies = [
     "polykit (>=0.14.6)",
     "requests (>=2.32.5,<3.0.0)",
     "types-requests (>=2.32.4.20250913,<3.0.0.0)",
-    "urllib3 (>=2.6.0,<3.0.0)",
+    "urllib3 (>=2.6.2,<3.0.0)",
 ]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
@@ -37,9 +37,9 @@ Homepage = "https://music.dannystewart.com/evanescence/"
 Repository = "https://github.com/dannystewart/evremixes/"
 
 [tool.poetry.group.dev.dependencies]
-mypy = ">=1.19.0"
-pre-commit = ">=4.5.0"
-ruff = ">=0.14.8"
+mypy = ">=1.19.1"
+pre-commit = ">=4.5.1"
+ruff = ">=0.14.10"
 polykit = { path = "../polykit", develop = true }
 
 [build-system]
