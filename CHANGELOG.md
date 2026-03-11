@@ -12,6 +12,10 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 
 - Removes the experimental analytics system and viewer as it was never used and the server-side endpoint has been disabled and removed.
 
+### Fixed
+
+- Updates dependencies for `pillow`, `polykit`, `ruff`, `types-requests`, and `urllib3`.
+
 ## [1.0.13] (2025-12-06)
 
 ### Fixed
