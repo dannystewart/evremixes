@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 
 ## [Unreleased]
 
+## [1.0.14] (2026-03-11)
+
+### Removed
+
+- Removes the experimental analytics system and viewer as it was never used and the server-side endpoint has been disabled and removed.
+
 ## [1.0.13] (2025-12-06)
 
 ### Fixed
@@ -23,9 +29,6 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 ### Added
 
 - **New track:** "Whisper" has been added to the collection as track 15.
-- Adds preliminary privacy-respecting analytics to track remix downloads, preferences, and platform statistics. Also includes an analytics viewer script.
-
-**NOTE:** The analytics feature is unfinished and does not currently do anything. *If* it's ever finished, it will be in a later release.
 
 ### Changed
 
@@ -90,7 +93,8 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 
 <!-- Versions -->
-[unreleased]: https://github.com/dannystewart/evremixes/compare/v1.0.13...HEAD
+[unreleased]: https://github.com/dannystewart/evremixes/compare/v1.0.14...HEAD
+[1.0.14]: https://github.com/dannystewart/evremixes/compare/v1.0.13...v1.0.14
 [1.0.13]: https://github.com/dannystewart/evremixes/compare/v1.0.12...v1.0.13
 [1.0.12]: https://github.com/dannystewart/evremixes/compare/v1.0.11...v1.0.12
 [1.0.11]: https://github.com/dannystewart/evremixes/compare/v1.0.10...v1.0.11

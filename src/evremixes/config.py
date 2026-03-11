@@ -20,7 +20,6 @@ class DownloadConfig:
     REPO_BASE: ClassVar[str] = "https://github.com/dannystewart/evremixes/raw/refs/heads/main"
     TRACKLIST_URL: ClassVar[str] = f"{REPO_BASE}/evtracks.json"
     ONEDRIVE_SUBFOLDER: ClassVar[str] = "Music/Danny Stewart/Evanescence Remixes"
-    ANALYTICS_ENDPOINT: ClassVar[str] = "https://prismbot.app/evremixes/analytics"
 
     # Path helper
     paths: PolyPath = field(init=False)

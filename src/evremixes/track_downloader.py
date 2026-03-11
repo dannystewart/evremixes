@@ -13,10 +13,9 @@ from typing import TYPE_CHECKING
 import requests
 from halo import Halo
 from polykit.cli import handle_interrupt
-from polykit.text import color, print_color
 from polykit.log import PolyLog
+from polykit.text import color, print_color
 
-from evremixes.analytics import AnalyticsHelper
 from evremixes.metadata_helper import MetadataHelper
 from evremixes.types import AudioFormat, TrackVersions
 
@@ -33,7 +32,6 @@ class TrackDownloader:
     def __init__(self, config: DownloadConfig) -> None:
         self.config = config
         self.metadata = MetadataHelper(config)
-        self.analytics = AnalyticsHelper(config)
         self.logger: Logger = PolyLog.get_logger()
 
     @handle_interrupt()
@@ -168,13 +166,7 @@ class TrackDownloader:
             spinner.start()
 
             try:
-                # Add analytics headers to track downloads
-                headers = self.analytics.get_analytics_headers(
-                    track_name,
-                    file_format,
-                    TrackVersions.ORIGINAL if not is_instrumental else TrackVersions.INSTRUMENTAL,
-                )
-                response = requests.get(file_url, stream=True, timeout=30, headers=headers)
+                response = requests.get(file_url, stream=True, timeout=30)
                 response.raise_for_status()
                 output_path.write_bytes(response.content)
 
@@ -189,7 +181,6 @@ class TrackDownloader:
                     continue
 
                 spinner.succeed(color(f"Downloaded {track_name}", "green"))
-                self.analytics.track_track_download(track, file_format)
 
             except requests.RequestException:
                 spinner.fail(color(f"Failed to download {track_name}.", "red"))
@@ -249,7 +240,7 @@ class TrackDownloader:
                 try:
                     file_path.unlink()
                 except Exception as e:
-                    self.logger.error("Failed to delete %s: %s", file_path, str(e))
+                    self.logger.error("Failed to delete %s: %s", file_path, e)
 
         # Remove empty directories from bottom up
         for dirpath in sorted(
