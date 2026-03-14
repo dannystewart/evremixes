@@ -6,6 +6,12 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 
 ## [Unreleased]
 
+## [1.0.15] (2026-03-14)
+
+### Changed
+
+- Updates `polykit` to 0.15.0 and `ruff` to 0.15.6. Note that `polykit` 0.15 removes a ton of transitive dependencies that are no longer required, including Supabase-related packages, `websockets`, `yarl`, and various other libraries.
+
 ## [1.0.14] (2026-03-11)
 
 ### Removed
@@ -97,7 +103,8 @@ The format is based on [Keep a Changelog], and this project adheres to [Semantic
 [Semantic Versioning]: https://semver.org/spec/v2.0.0.html
 
 <!-- Versions -->
-[unreleased]: https://github.com/dannystewart/evremixes/compare/v1.0.14...HEAD
+[unreleased]: https://github.com/dannystewart/evremixes/compare/v1.0.15...HEAD
+[1.0.15]: https://github.com/dannystewart/evremixes/compare/v1.0.14...v1.0.15
 [1.0.14]: https://github.com/dannystewart/evremixes/compare/v1.0.13...v1.0.14
 [1.0.13]: https://github.com/dannystewart/evremixes/compare/v1.0.12...v1.0.13
 [1.0.12]: https://github.com/dannystewart/evremixes/compare/v1.0.11...v1.0.12
